@@ -14,8 +14,17 @@ fs.copyFileSync(new URL(".openai/hosting.json", root), new URL("hosting.json", d
 const worker = `const html = ${JSON.stringify(html)};
 const schema = ${JSON.stringify(schema)};
 
+function withRuntimeConfig(body, env) {
+  const config = {
+    supabaseUrl: env.CATALINA_SUPABASE_URL || env.SUPABASE_URL || "",
+    supabasePublishableKey: env.CATALINA_SUPABASE_PUBLISHABLE_KEY || env.SUPABASE_PUBLISHABLE_KEY || ""
+  };
+  const script = \`<script>window.__CATALINA_CONFIG__=\${JSON.stringify(config)};</script>\`;
+  return body.replace("</head>", \`\${script}</head>\`);
+}
+
 export default {
-  async fetch(request) {
+  async fetch(request, env) {
     const url = new URL(request.url);
 
     if (url.pathname === "/supabase-schema.sql") {
@@ -27,7 +36,7 @@ export default {
       });
     }
 
-    return new Response(html, {
+    return new Response(withRuntimeConfig(html, env || {}), {
       headers: {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "public, max-age=300"

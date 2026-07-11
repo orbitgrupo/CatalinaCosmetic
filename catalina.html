@@ -168,6 +168,24 @@
           </div>
           <div class="rounded-lg border border-line bg-white px-4 py-3 text-sm text-muted" id="sync-status">Modo local listo para Supabase</div>
         </div>
+        <section class="mt-8 grid grid-cols-1 gap-4 rounded-xl bg-white p-5 shadow-sm lg:grid-cols-12 lg:items-end">
+          <div class="lg:col-span-5">
+            <h3 class="font-extrabold">Conexion Supabase</h3>
+            <p class="mt-2 text-sm leading-6 text-muted">Usa Auth para cargar datos reales. El rol admin debe vivir en <code>app_metadata.role</code>.</p>
+          </div>
+          <div class="grid gap-3 lg:col-span-5 sm:grid-cols-2">
+            <input id="auth-email" class="rounded-lg border-line" type="email" placeholder="Email admin" />
+            <input id="auth-password" class="rounded-lg border-line" type="password" placeholder="Password" />
+          </div>
+          <div class="flex gap-2 lg:col-span-2">
+            <button id="auth-login" class="flex-1 rounded-lg bg-ink px-4 py-3 text-sm font-bold text-white">Entrar</button>
+            <button id="auth-logout" class="flex-1 rounded-lg border border-line px-4 py-3 text-sm font-bold">Salir</button>
+          </div>
+          <div class="lg:col-span-12 flex flex-wrap items-center gap-3">
+            <button id="sync-pull" class="rounded-lg border border-line px-4 py-3 text-sm font-bold">Sincronizar desde Supabase</button>
+            <p id="auth-state" class="text-sm text-muted">Sin sesion activa.</p>
+          </div>
+        </section>
         <div class="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-12">
           <section class="rounded-xl bg-white p-5 shadow-sm xl:col-span-4">
             <h3 class="font-extrabold">Productos</h3>
@@ -240,6 +258,7 @@
     let state = loadState();
     let cart = [];
     let supabaseClient = null;
+    let currentUser = null;
 
     function makeOrder(customerId, products, status = "Recibido") {
       const createdAt = new Date(Date.now() - Math.floor(Math.random() * 5) * 86400000).toISOString();
@@ -497,7 +516,7 @@
       showToast("Pedido creado");
     }
 
-    function saveProduct(event) {
+    async function saveProduct(event) {
       event.preventDefault();
       const id = document.getElementById("product-id").value || crypto.randomUUID();
       const product = {
@@ -512,13 +531,14 @@
       const index = state.products.findIndex(item => item.id === id);
       if (index >= 0) state.products[index] = product;
       else state.products.unshift(product);
+      await saveProductToSupabase(product);
       event.target.reset();
       document.getElementById("product-id").value = "";
       persist();
       showToast("Producto guardado");
     }
 
-    function saveCustomer(event) {
+    async function saveCustomer(event) {
       event.preventDefault();
       const id = document.getElementById("customer-id").value || crypto.randomUUID();
       const customer = {
@@ -531,6 +551,7 @@
       const index = state.customers.findIndex(item => item.id === id);
       if (index >= 0) state.customers[index] = customer;
       else state.customers.unshift(customer);
+      await saveCustomerToSupabase(customer);
       event.target.reset();
       document.getElementById("customer-id").value = "";
       persist();
@@ -559,21 +580,165 @@
       document.getElementById("customer-address").value = customer.address;
     }
 
-    function updateOrder(id, key, value) {
+    async function updateOrder(id, key, value) {
       const order = state.orders.find(item => item.id === id);
       if (!order) return;
       order[key] = value;
       if (key === "status") order.history = buildHistory(value, order.createdAt);
+      await updateOrderInSupabase(order, key);
       persist();
       showToast("Pedido actualizado");
     }
 
-    function initSupabase() {
-      const url = window.CATALINA_SUPABASE_URL || "";
-      const key = window.CATALINA_SUPABASE_PUBLISHABLE_KEY || "";
+    async function initSupabase() {
+      const config = window.__CATALINA_CONFIG__ || {};
+      const url = window.CATALINA_SUPABASE_URL || config.supabaseUrl || "";
+      const key = window.CATALINA_SUPABASE_PUBLISHABLE_KEY || config.supabasePublishableKey || "";
       if (url && key && window.supabase) {
         supabaseClient = window.supabase.createClient(url, key);
         document.getElementById("sync-status").textContent = "Supabase configurado";
+        const { data } = await supabaseClient.auth.getSession();
+        currentUser = data.session?.user || null;
+        renderAuthState();
+        await pullFromSupabase();
+      } else {
+        renderAuthState();
+      }
+    }
+
+    function renderAuthState() {
+      const stateText = currentUser ? `Sesion activa: ${currentUser.email}` : "Sin sesion activa.";
+      const configured = supabaseClient ? "Supabase configurado" : "Modo local listo para Supabase";
+      document.getElementById("auth-state").textContent = stateText;
+      document.getElementById("sync-status").textContent = configured;
+    }
+
+    async function loginSupabase() {
+      if (!supabaseClient) return showToast("Configura Supabase en Sites");
+      const email = document.getElementById("auth-email").value.trim();
+      const password = document.getElementById("auth-password").value;
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (error) return showToast(error.message);
+      currentUser = data.user;
+      renderAuthState();
+      await pullFromSupabase();
+      showToast("Sesion iniciada");
+    }
+
+    async function logoutSupabase() {
+      if (!supabaseClient) return;
+      await supabaseClient.auth.signOut();
+      currentUser = null;
+      renderAuthState();
+      showToast("Sesion cerrada");
+    }
+
+    async function pullFromSupabase() {
+      if (!supabaseClient) return;
+      const { data: products, error: productError } = await supabaseClient
+        .from("products")
+        .select("id,name,category,description,price,stock,image_url,is_active")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
+      if (!productError && products?.length) {
+        state.products = products.map(product => ({
+          id: product.id,
+          name: product.name,
+          category: product.category,
+          description: product.description || "",
+          price: Number(product.price),
+          stock: Number(product.stock),
+          image: product.image_url || images.skin
+        }));
+      }
+
+      if (currentUser) {
+        const { data: customers } = await supabaseClient
+          .from("customer_profiles")
+          .select("id,full_name,email,phone,shipping_address")
+          .order("created_at", { ascending: false });
+        if (customers?.length) {
+          state.customers = customers.map(customer => ({
+            id: customer.id,
+            name: customer.full_name,
+            email: customer.email,
+            phone: customer.phone || "",
+            address: customer.shipping_address || ""
+          }));
+        }
+
+        const { data: orders } = await supabaseClient
+          .from("orders")
+          .select("id,order_number,customer_id,status,carrier,tracking_code,estimated_delivery,created_at,order_items(product_id,product_name,unit_price,quantity),shipment_events(status,note,event_at)")
+          .order("created_at", { ascending: false });
+        if (orders?.length) {
+          state.orders = orders.map(order => ({
+            id: order.order_number,
+            remoteId: order.id,
+            customerId: order.customer_id,
+            status: order.status,
+            carrier: order.carrier || "Catalina Express",
+            trackingCode: order.tracking_code || "",
+            createdAt: order.created_at,
+            eta: order.estimated_delivery || "",
+            items: (order.order_items || []).map(item => ({
+              productId: item.product_id,
+              name: item.product_name,
+              price: Number(item.unit_price),
+              qty: Number(item.quantity),
+              image: state.products.find(product => product.id === item.product_id)?.image || images.skin
+            })),
+            history: (order.shipment_events || []).map(event => ({
+              status: event.status,
+              note: event.note || statusNote(event.status),
+              at: event.event_at
+            }))
+          }));
+        }
+      }
+
+      persist();
+      showToast("Datos sincronizados");
+    }
+
+    async function saveProductToSupabase(product) {
+      if (!supabaseClient || !currentUser) return;
+      const { error } = await supabaseClient.from("products").upsert({
+        id: product.id,
+        name: product.name,
+        category: product.category,
+        description: product.description,
+        price: product.price,
+        stock: product.stock,
+        image_url: product.image,
+        is_active: true
+      });
+      if (error) showToast(error.message);
+    }
+
+    async function saveCustomerToSupabase(customer) {
+      if (!supabaseClient || !currentUser) return;
+      const { error } = await supabaseClient.from("customer_profiles").upsert({
+        id: customer.id,
+        full_name: customer.name,
+        email: customer.email,
+        phone: customer.phone,
+        shipping_address: customer.address
+      });
+      if (error) showToast(error.message);
+    }
+
+    async function updateOrderInSupabase(order, changedKey) {
+      if (!supabaseClient || !currentUser || !order.remoteId) return;
+      const payload = changedKey === "carrier" ? { carrier: order.carrier } : { status: order.status, carrier: order.carrier };
+      const { error } = await supabaseClient.from("orders").update(payload).eq("id", order.remoteId);
+      if (error) return showToast(error.message);
+      if (changedKey === "status") {
+        await supabaseClient.from("shipment_events").insert({
+          order_id: order.remoteId,
+          status: order.status,
+          note: statusNote(order.status)
+        });
       }
     }
 
@@ -605,11 +770,14 @@
     document.getElementById("checkout-btn").addEventListener("click", createOrderFromCart);
     document.getElementById("product-form").addEventListener("submit", saveProduct);
     document.getElementById("customer-form").addEventListener("submit", saveCustomer);
+    document.getElementById("auth-login").addEventListener("click", loginSupabase);
+    document.getElementById("auth-logout").addEventListener("click", logoutSupabase);
+    document.getElementById("sync-pull").addEventListener("click", pullFromSupabase);
     document.getElementById("product-reset").addEventListener("click", () => { document.getElementById("product-form").reset(); document.getElementById("product-id").value = ""; });
     document.getElementById("customer-reset").addEventListener("click", () => { document.getElementById("customer-form").reset(); document.getElementById("customer-id").value = ""; });
 
-    initSupabase();
     renderAll();
+    initSupabase();
   </script>
 </body>
 </html>
