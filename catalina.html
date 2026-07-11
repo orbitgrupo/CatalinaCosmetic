@@ -985,6 +985,84 @@
 </div>
 
 <script>
+  (() => {
+    const HOME_STORAGE_KEY = 'catalina-home-content-v1';
+    const saved = localStorage.getItem(HOME_STORAGE_KEY);
+    if (!saved) return;
+
+    let content;
+    try { content = JSON.parse(saved); } catch { return; }
+
+    const home = document.getElementById('page-home');
+    if (!home) return;
+
+    const setText = (selector, value, root = document) => {
+      const node = root.querySelector(selector);
+      if (node && value) node.textContent = value;
+    };
+    const setHTMLLines = (selector, value, root = document) => {
+      const node = root.querySelector(selector);
+      if (!node || !value) return;
+      node.textContent = '';
+      String(value).split('\n').forEach((line, index) => {
+        if (index) node.appendChild(document.createElement('br'));
+        node.appendChild(document.createTextNode(line));
+      });
+    };
+    const setImage = (selector, value, root = document) => {
+      const node = root.querySelector(selector);
+      if (node && value) node.src = value;
+    };
+
+    if (content.siteTitle) document.title = content.siteTitle;
+    setText('nav [data-page="home"]', content.brandName);
+    setText('section:first-of-type span.label-md', content.heroEyebrow, home);
+    setHTMLLines('section:first-of-type h1', content.heroTitle, home);
+    setText('section:first-of-type p.text-xl', content.heroBody, home);
+    setText('section:first-of-type button[data-page="catalog"]', content.heroCta, home);
+    setImage('section:first-of-type img', content.heroImage, home);
+    setText('section:first-of-type .absolute.-bottom-4 span', content.batchLabel, home);
+    setText('section:first-of-type .absolute.-bottom-4 p', content.batchCopy, home);
+
+    const newSection = home.querySelectorAll('section')[1];
+    if (newSection) {
+      setText('span.label-md', content.newEyebrow, newSection);
+      setText('h2', content.newTitle, newSection);
+      setText('[data-page="catalog"].cursor-pointer', content.newLink, newSection);
+      setText('.md\\:col-span-2.md\\:row-span-2 span', content.featuredBadge, newSection);
+      setText('.md\\:col-span-2.md\\:row-span-2 h3', content.featuredTitle, newSection);
+      setText('.md\\:col-span-2.md\\:row-span-2 button span:first-child', content.featuredCta, newSection);
+      setText('.md\\:col-span-2.group h3', content.secondaryTitle, newSection);
+      setText('.md\\:col-span-2.group p', content.secondaryBody, newSection);
+      setText('.md\\:col-span-2.group span.text-primary.text-sm', content.secondaryPrice, newSection);
+    }
+
+    const bundlesSection = home.querySelectorAll('section')[2];
+    if (bundlesSection) {
+      setText('span.label-md', content.bundlesEyebrow, bundlesSection);
+      setText('h2', content.bundlesTitle, bundlesSection);
+      setText('.max-w-3xl p', content.bundlesBody, bundlesSection);
+      const cards = bundlesSection.querySelectorAll('.grid > div.bg-white');
+      const bundleValues = [
+        ['bundleOneTitle', 'bundleOnePrice', 'bundleOneBody'],
+        ['bundleTwoTitle', 'bundleTwoPrice', 'bundleTwoBody'],
+        ['bundleThreeTitle', 'bundleThreePrice', 'bundleThreeBody']
+      ];
+      cards.forEach((card, index) => {
+        const keys = bundleValues[index];
+        if (!keys) return;
+        setText('h3', content[keys[0]], card);
+        setText('span.text-primary.font-bold', content[keys[1]], card);
+        setText('p.italic', content[keys[2]], card);
+      });
+    }
+
+    setText('footer .text-xl', content.footerBrand);
+    setText('footer p', content.footerCopy);
+  })();
+</script>
+
+<script>
   // ─── Cart State ───────────────────────────────────────────────
   let cart = [];
 

@@ -54,6 +54,7 @@
       </div>
       <nav class="space-y-1 px-3 py-5 text-sm font-semibold text-muted">
         <button class="side-link active flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left" data-view="overview"><span class="material-symbols-outlined text-lg">dashboard</span>Dashboard</button>
+        <button class="side-link flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left" data-view="home"><span class="material-symbols-outlined text-lg">home</span>Inicio</button>
         <button class="side-link flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left" data-view="orders"><span class="material-symbols-outlined text-lg">local_shipping</span>Pedidos <span id="side-orders" class="ml-auto rounded-full bg-violet px-2 py-0.5 text-[10px] text-white">0</span></button>
         <button class="side-link flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left" data-view="products"><span class="material-symbols-outlined text-lg">inventory_2</span>Productos <span id="side-products" class="ml-auto rounded-full bg-violet px-2 py-0.5 text-[10px] text-white">0</span></button>
         <button class="side-link flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left" data-view="customers"><span class="material-symbols-outlined text-lg">groups</span>Clientes <span id="side-customers" class="ml-auto rounded-full bg-violet px-2 py-0.5 text-[10px] text-white">0</span></button>
@@ -146,6 +147,76 @@
           </section>
         </section>
 
+        <section id="view-home" class="view">
+          <div class="mb-5 flex flex-col justify-between gap-3 md:flex-row md:items-end">
+            <div>
+              <h1 class="text-2xl font-extrabold">Pagina de inicio</h1>
+              <p class="text-sm text-muted">Edita los textos, llamadas a la accion e imagenes principales de la tienda.</p>
+            </div>
+            <div class="flex gap-2">
+              <button id="home-reset" class="rounded-lg border border-line bg-white px-4 py-3 text-sm font-bold text-muted">Restaurar</button>
+              <button id="home-save" class="rounded-lg bg-violet px-5 py-3 text-sm font-bold text-white">Guardar inicio</button>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
+            <form id="home-form" class="grid gap-4 rounded-sm bg-white p-5 shadow-soft">
+              <h2 class="text-xl font-extrabold">Marca y hero</h2>
+              <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Nombre de marca<input id="home-brand-name" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+              <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Titulo del navegador<input id="home-site-title" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+              <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Eyebrow<input id="home-hero-eyebrow" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+              <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Titulo hero<textarea id="home-hero-title" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" rows="2"></textarea></label>
+              <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Descripcion hero<textarea id="home-hero-body" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" rows="3"></textarea></label>
+              <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Texto del boton<input id="home-hero-cta" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+              <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Imagen principal<input id="home-hero-image" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+              <div class="grid gap-4 md:grid-cols-2">
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Batch ID<input id="home-batch-label" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Nota batch<input id="home-batch-copy" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+              </div>
+            </form>
+
+            <form class="grid gap-4 rounded-sm bg-white p-5 shadow-soft">
+              <h2 class="text-xl font-extrabold">Secciones y destacados</h2>
+              <div class="grid gap-4 md:grid-cols-2">
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Etiqueta novedades<input id="home-new-eyebrow" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Titulo novedades<input id="home-new-title" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+              </div>
+              <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Link ver todo<input id="home-new-link" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+              <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Badge destacado<input id="home-featured-badge" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+              <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Producto destacado<input id="home-featured-title" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+              <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Boton destacado<input id="home-featured-cta" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+              <div class="grid gap-4 md:grid-cols-3">
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Tarjeta titulo<input id="home-secondary-title" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Tarjeta texto<input id="home-secondary-body" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Tarjeta precio<input id="home-secondary-price" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+              </div>
+              <div class="grid gap-4 md:grid-cols-2">
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Etiqueta bundles<input id="home-bundles-eyebrow" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Titulo bundles<input id="home-bundles-title" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+              </div>
+              <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Descripcion bundles<textarea id="home-bundles-body" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" rows="3"></textarea></label>
+            </form>
+
+            <form class="grid gap-4 rounded-sm bg-white p-5 shadow-soft xl:col-span-2">
+              <h2 class="text-xl font-extrabold">Bundles y footer</h2>
+              <div class="grid gap-4 md:grid-cols-3">
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Bundle 1<input id="home-bundle-one-title" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Precio 1<input id="home-bundle-one-price" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Descripcion 1<input id="home-bundle-one-body" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Bundle 2<input id="home-bundle-two-title" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Precio 2<input id="home-bundle-two-price" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Descripcion 2<input id="home-bundle-two-body" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Bundle 3<input id="home-bundle-three-title" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Precio 3<input id="home-bundle-three-price" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Descripcion 3<input id="home-bundle-three-body" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+              </div>
+              <div class="grid gap-4 md:grid-cols-2">
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Footer marca<input id="home-footer-brand" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Footer texto<input id="home-footer-copy" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+              </div>
+            </form>
+          </div>
+        </section>
+
         <section id="view-orders" class="view">
           <div class="mb-5 flex items-center justify-between">
             <div><h1 class="text-2xl font-extrabold">Pedidos y envios</h1><p class="text-sm text-muted">Actualiza estados, transportista y tracking.</p></div>
@@ -228,7 +299,42 @@
 
   <script>
     const STORAGE_KEY = "catalina-admin-v2";
+    const HOME_STORAGE_KEY = "catalina-home-content-v1";
     const orderStatuses = ["Recibido", "Preparando", "Enviado", "En ruta", "Entregado"];
+    const defaultHomeContent = {
+      brandName: "CATALINA",
+      siteTitle: "CATALINA LABS",
+      heroEyebrow: "Clinical Precision",
+      heroTitle: "The Science of\nPure Radiance.",
+      heroBody: "Formulated at the intersection of molecular biology and aesthetic dermatology. Transparency in every drop, precision in every result.",
+      heroCta: "Explore Formulations",
+      heroImage: "https://lh3.googleusercontent.com/aida-public/AB6AXuBnJFE6BP05X7e4PPbB7UZpRDagPOc05fMKVMX6XD8130If9E27dGKm0Dv01CxZhtSoqL_NgKc5r0s5DQd4vwAfz4HqpzVAOJRtTIjF7QyAvof7U_vEXsOZ_cIatALocajbTvSJctm6ffTSmmIT_UmeceItf9VZ5sqC0Au_dy1jNIJXTZBQxUPGnBMLY84nEx6rXswlrZ1jUyraur7KC1DwNIMXZg6SteodXBI1Wy7kA6UHsKPZeYiLSbnU_3v_dKxrJlw7m3QKSOQ",
+      batchLabel: "Batch ID: CL-2024X",
+      batchCopy: "\"98% Pure Hyaluronic Acid derived through bio-fermentation.\"",
+      newEyebrow: "New Arrivals",
+      newTitle: "New Formulations",
+      newLink: "View All Research",
+      featuredBadge: "Active Ingredient: Retinol+",
+      featuredTitle: "Molecular Resurfacing Complex",
+      featuredCta: "Study Results",
+      secondaryTitle: "pH Balance Mist",
+      secondaryBody: "Restores skin barrier in under 60 seconds.",
+      secondaryPrice: "€48.00",
+      bundlesEyebrow: "The Regimens",
+      bundlesTitle: "Curated Bundles",
+      bundlesBody: "Systematic approaches to complex skin concerns. Our bundles are designed to work in synergy, maximizing bioavailability and structural integrity of the epidermis.",
+      bundleOneTitle: "The Hydration Core",
+      bundleOnePrice: "€145.00",
+      bundleOneBody: "Deep cell replenishment system.",
+      bundleTwoTitle: "Advanced Age-Logic",
+      bundleTwoPrice: "€210.00",
+      bundleTwoBody: "Telomere support and repair.",
+      bundleThreeTitle: "Clinical Clarity",
+      bundleThreePrice: "€98.00",
+      bundleThreeBody: "Balancing protocol for clear skin.",
+      footerBrand: "CATALINA LABS",
+      footerCopy: "© 2024 CATALINA LABS. FORMULATED WITH SCIENTIFIC PRECISION."
+    };
     const images = {
       skin: "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=900&q=80",
       hair: "https://images.unsplash.com/photo-1522338242992-e1a54906a8da?auto=format&fit=crop&w=900&q=80"
@@ -253,8 +359,21 @@
     }];
 
     let state = loadState();
+    let homeContent = loadHomeContent();
     let supabaseClient = null;
     let currentUser = null;
+
+    function loadHomeContent() {
+      const saved = localStorage.getItem(HOME_STORAGE_KEY);
+      if (!saved) return { ...defaultHomeContent };
+      try { return { ...defaultHomeContent, ...JSON.parse(saved) }; } catch { return { ...defaultHomeContent }; }
+    }
+
+    function persistHomeContent() {
+      localStorage.setItem(HOME_STORAGE_KEY, JSON.stringify(homeContent));
+      renderHomeEditor();
+      showToast("Inicio actualizado");
+    }
 
     function loadState() {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -302,6 +421,7 @@
 
     function renderAll() {
       renderMetrics();
+      renderHomeEditor();
       renderOverviewOrders();
       renderProducts();
       renderCustomers();
@@ -321,6 +441,97 @@
       document.getElementById("side-orders").textContent = state.orders.length;
       document.getElementById("side-products").textContent = state.products.length;
       document.getElementById("side-customers").textContent = state.customers.length;
+    }
+
+    function renderHomeEditor() {
+      const fieldMap = {
+        brandName: "home-brand-name",
+        siteTitle: "home-site-title",
+        heroEyebrow: "home-hero-eyebrow",
+        heroTitle: "home-hero-title",
+        heroBody: "home-hero-body",
+        heroCta: "home-hero-cta",
+        heroImage: "home-hero-image",
+        batchLabel: "home-batch-label",
+        batchCopy: "home-batch-copy",
+        newEyebrow: "home-new-eyebrow",
+        newTitle: "home-new-title",
+        newLink: "home-new-link",
+        featuredBadge: "home-featured-badge",
+        featuredTitle: "home-featured-title",
+        featuredCta: "home-featured-cta",
+        secondaryTitle: "home-secondary-title",
+        secondaryBody: "home-secondary-body",
+        secondaryPrice: "home-secondary-price",
+        bundlesEyebrow: "home-bundles-eyebrow",
+        bundlesTitle: "home-bundles-title",
+        bundlesBody: "home-bundles-body",
+        bundleOneTitle: "home-bundle-one-title",
+        bundleOnePrice: "home-bundle-one-price",
+        bundleOneBody: "home-bundle-one-body",
+        bundleTwoTitle: "home-bundle-two-title",
+        bundleTwoPrice: "home-bundle-two-price",
+        bundleTwoBody: "home-bundle-two-body",
+        bundleThreeTitle: "home-bundle-three-title",
+        bundleThreePrice: "home-bundle-three-price",
+        bundleThreeBody: "home-bundle-three-body",
+        footerBrand: "home-footer-brand",
+        footerCopy: "home-footer-copy"
+      };
+      Object.entries(fieldMap).forEach(([key, id]) => {
+        const field = document.getElementById(id);
+        if (field && document.activeElement !== field) field.value = homeContent[key] || "";
+      });
+    }
+
+    function collectHomeContent() {
+      const fieldMap = {
+        brandName: "home-brand-name",
+        siteTitle: "home-site-title",
+        heroEyebrow: "home-hero-eyebrow",
+        heroTitle: "home-hero-title",
+        heroBody: "home-hero-body",
+        heroCta: "home-hero-cta",
+        heroImage: "home-hero-image",
+        batchLabel: "home-batch-label",
+        batchCopy: "home-batch-copy",
+        newEyebrow: "home-new-eyebrow",
+        newTitle: "home-new-title",
+        newLink: "home-new-link",
+        featuredBadge: "home-featured-badge",
+        featuredTitle: "home-featured-title",
+        featuredCta: "home-featured-cta",
+        secondaryTitle: "home-secondary-title",
+        secondaryBody: "home-secondary-body",
+        secondaryPrice: "home-secondary-price",
+        bundlesEyebrow: "home-bundles-eyebrow",
+        bundlesTitle: "home-bundles-title",
+        bundlesBody: "home-bundles-body",
+        bundleOneTitle: "home-bundle-one-title",
+        bundleOnePrice: "home-bundle-one-price",
+        bundleOneBody: "home-bundle-one-body",
+        bundleTwoTitle: "home-bundle-two-title",
+        bundleTwoPrice: "home-bundle-two-price",
+        bundleTwoBody: "home-bundle-two-body",
+        bundleThreeTitle: "home-bundle-three-title",
+        bundleThreePrice: "home-bundle-three-price",
+        bundleThreeBody: "home-bundle-three-body",
+        footerBrand: "home-footer-brand",
+        footerCopy: "home-footer-copy"
+      };
+      const next = {};
+      Object.entries(fieldMap).forEach(([key, id]) => {
+        next[key] = document.getElementById(id)?.value || "";
+      });
+      homeContent = { ...defaultHomeContent, ...next };
+      persistHomeContent();
+    }
+
+    function resetHomeContent() {
+      homeContent = { ...defaultHomeContent };
+      localStorage.removeItem(HOME_STORAGE_KEY);
+      renderHomeEditor();
+      showToast("Inicio restaurado");
     }
 
     function renderOverviewOrders() {
@@ -383,7 +594,7 @@
       document.querySelectorAll(".view").forEach(view => view.classList.remove("active"));
       document.getElementById("view-" + id).classList.add("active");
       document.querySelectorAll(".side-link").forEach(link => link.classList.toggle("active", link.dataset.view === id));
-      const names = { overview: "Dashboard", orders: "Pedidos", products: "Productos", customers: "Clientes", settings: "Supabase" };
+      const names = { overview: "Dashboard", home: "Inicio", orders: "Pedidos", products: "Productos", customers: "Clientes", settings: "Supabase" };
       document.getElementById("current-section").textContent = names[id] || "Dashboard";
     }
 
@@ -575,6 +786,8 @@
 
     document.getElementById("product-form").addEventListener("submit", saveProduct);
     document.getElementById("customer-form").addEventListener("submit", saveCustomer);
+    document.getElementById("home-save").addEventListener("click", collectHomeContent);
+    document.getElementById("home-reset").addEventListener("click", resetHomeContent);
     document.getElementById("auth-login").addEventListener("click", loginSupabase);
     document.getElementById("auth-signup").addEventListener("click", signupSupabase);
     document.getElementById("auth-logout").addEventListener("click", logoutSupabase);
