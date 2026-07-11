@@ -19,4 +19,6 @@ CATALINA_SUPABASE_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
 
 7. Redeploy the latest Sites version after setting the variables.
 
+Customers can create accounts from the site with the `Crear` button. After signing in, they should use `Usar mi sesion` in the profile form, complete their shipping details, and save the profile before placing an order.
+
 The public client must only use the publishable key. Do not place the service role key in Sites or in `catalina.html`.

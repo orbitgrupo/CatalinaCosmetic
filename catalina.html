@@ -174,11 +174,12 @@
             <p class="mt-2 text-sm leading-6 text-muted">Usa Auth para cargar datos reales. El rol admin debe vivir en <code>app_metadata.role</code>.</p>
           </div>
           <div class="grid gap-3 lg:col-span-5 sm:grid-cols-2">
-            <input id="auth-email" class="rounded-lg border-line" type="email" placeholder="Email admin" />
+            <input id="auth-email" class="rounded-lg border-line" type="email" placeholder="Email" />
             <input id="auth-password" class="rounded-lg border-line" type="password" placeholder="Password" />
           </div>
-          <div class="flex gap-2 lg:col-span-2">
+          <div class="grid grid-cols-3 gap-2 lg:col-span-2">
             <button id="auth-login" class="flex-1 rounded-lg bg-ink px-4 py-3 text-sm font-bold text-white">Entrar</button>
+            <button id="auth-signup" class="flex-1 rounded-lg bg-sage px-4 py-3 text-sm font-bold text-white">Crear</button>
             <button id="auth-logout" class="flex-1 rounded-lg border border-line px-4 py-3 text-sm font-bold">Salir</button>
           </div>
           <div class="lg:col-span-12 flex flex-wrap items-center gap-3">
@@ -213,6 +214,7 @@
               <input id="customer-phone" class="rounded-lg border-line" placeholder="Telefono" />
               <textarea id="customer-address" class="rounded-lg border-line" rows="3" placeholder="Direccion de envio"></textarea>
               <button class="rounded-lg bg-sage px-5 py-3 font-bold text-white">Guardar cliente</button>
+              <button type="button" id="customer-use-session" class="rounded-lg border border-line px-5 py-3 font-bold">Usar mi sesion</button>
               <button type="button" id="customer-reset" class="rounded-lg border border-line px-5 py-3 font-bold">Limpiar</button>
             </form>
             <div id="admin-customers" class="mt-5 max-h-[430px] space-y-3 overflow-auto pr-1 scroll-thin"></div>
@@ -402,15 +404,27 @@
     }
 
     function renderSelectors() {
-      const customerOptions = state.customers.map(customer => `<option value="${customer.id}">${customer.name}</option>`).join("");
+      const customers = currentUser && !isCurrentAdmin()
+        ? state.customers.filter(customer => customer.id === currentUser.id)
+        : state.customers;
+      const customerOptions = customers.map(customer => `<option value="${customer.id}">${customer.name}</option>`).join("");
       ["checkout-customer", "profile-customer-select"].forEach(id => document.getElementById(id).innerHTML = customerOptions);
-      document.getElementById("tracking-order-select").innerHTML = state.orders.map(order => `<option value="${order.id}">${order.id} - ${customerName(order.customerId)}</option>`).join("");
+      const visibleOrders = currentUser && !isCurrentAdmin()
+        ? state.orders.filter(order => order.customerId === currentUser.id)
+        : state.orders;
+      document.getElementById("tracking-order-select").innerHTML = visibleOrders.map(order => `<option value="${order.id}">${order.id} - ${customerName(order.customerId)}</option>`).join("");
     }
 
     function renderProfile() {
-      const customerId = document.getElementById("profile-customer-select").value || state.customers[0]?.id;
+      const customerId = currentUser && !isCurrentAdmin()
+        ? currentUser.id
+        : document.getElementById("profile-customer-select").value || state.customers[0]?.id;
       const customer = state.customers.find(item => item.id === customerId);
-      if (!customer) return;
+      if (!customer) {
+        document.getElementById("profile-card").innerHTML = emptyBlock("Crea tu perfil para guardar direccion y ver pedidos.");
+        document.getElementById("customer-orders").innerHTML = emptyBlock("No hay pedidos para este perfil.");
+        return;
+      }
       document.getElementById("profile-card").innerHTML = `<div class="rounded-lg bg-porcelain p-5">
         <h3 class="text-2xl font-extrabold">${customer.name}</h3>
         <p class="mt-2 text-sm text-muted">${customer.email}</p>
@@ -431,8 +445,11 @@
     }
 
     function renderTracking() {
-      const orderId = document.getElementById("tracking-order-select").value || state.orders[0]?.id;
-      const order = state.orders.find(item => item.id === orderId);
+      const visibleOrders = currentUser && !isCurrentAdmin()
+        ? state.orders.filter(item => item.customerId === currentUser.id)
+        : state.orders;
+      const orderId = document.getElementById("tracking-order-select").value || visibleOrders[0]?.id;
+      const order = visibleOrders.find(item => item.id === orderId);
       const target = document.getElementById("tracking-view");
       if (!order) { target.innerHTML = emptyBlock("No hay pedidos para rastrear."); return; }
       const progress = Math.max(orderStatuses.indexOf(order.status), 0);
@@ -460,18 +477,28 @@
     }
 
     function renderAdmin() {
+      const isCustomerSession = currentUser && !isCurrentAdmin();
+      const customerPanelTitle = currentUser && !isCurrentAdmin() ? "Mi perfil" : "Clientes";
+      document.querySelectorAll("#product-form input, #product-form select, #product-form textarea, #product-form button").forEach(field => field.disabled = isCustomerSession);
       document.getElementById("admin-products").innerHTML = state.products.map(product => `<div class="rounded-lg border border-line p-3">
-        <div class="flex justify-between gap-3"><div><p class="font-bold">${product.name}</p><p class="text-xs text-muted">${product.category} - ${money(product.price)} - Stock ${product.stock}</p></div><button class="edit-product text-sm font-bold text-sage" data-id="${product.id}">Editar</button></div>
+        <div class="flex justify-between gap-3"><div><p class="font-bold">${product.name}</p><p class="text-xs text-muted">${product.category} - ${money(product.price)} - Stock ${product.stock}</p></div>${isCustomerSession ? "" : `<button class="edit-product text-sm font-bold text-sage" data-id="${product.id}">Editar</button>`}</div>
       </div>`).join("");
-      document.getElementById("admin-customers").innerHTML = state.customers.map(customer => `<div class="rounded-lg border border-line p-3">
+      const visibleCustomers = currentUser && !isCurrentAdmin()
+        ? state.customers.filter(customer => customer.id === currentUser.id)
+        : state.customers;
+      document.querySelector("#customer-form").closest("section").querySelector("h3").textContent = customerPanelTitle;
+      document.getElementById("admin-customers").innerHTML = visibleCustomers.map(customer => `<div class="rounded-lg border border-line p-3">
         <div class="flex justify-between gap-3"><div><p class="font-bold">${customer.name}</p><p class="text-xs text-muted">${customer.email}</p></div><button class="edit-customer text-sm font-bold text-sage" data-id="${customer.id}">Editar</button></div>
       </div>`).join("");
-      document.getElementById("admin-orders").innerHTML = state.orders.map(order => `<div class="rounded-lg border border-line p-4">
+      const visibleOrders = currentUser && !isCurrentAdmin()
+        ? state.orders.filter(order => order.customerId === currentUser.id)
+        : state.orders;
+      document.getElementById("admin-orders").innerHTML = visibleOrders.map(order => `<div class="rounded-lg border border-line p-4">
         <div class="flex items-start justify-between gap-4"><div><p class="font-extrabold">${order.id}</p><p class="text-sm text-muted">${customerName(order.customerId)} - ${money(orderTotal(order))}</p></div><span class="rounded-full bg-mist px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest">${order.status}</span></div>
         <label class="mt-4 block text-xs font-bold uppercase tracking-widest text-muted">Estado</label>
-        <select class="order-status mt-2 w-full rounded-lg border-line bg-porcelain text-sm" data-id="${order.id}">${orderStatuses.map(status => `<option ${status === order.status ? "selected" : ""}>${status}</option>`).join("")}</select>
+        <select class="order-status mt-2 w-full rounded-lg border-line bg-porcelain text-sm" data-id="${order.id}" ${currentUser && !isCurrentAdmin() ? "disabled" : ""}>${orderStatuses.map(status => `<option ${status === order.status ? "selected" : ""}>${status}</option>`).join("")}</select>
         <label class="mt-3 block text-xs font-bold uppercase tracking-widest text-muted">Transportista</label>
-        <input class="order-carrier mt-2 w-full rounded-lg border-line text-sm" data-id="${order.id}" value="${order.carrier}">
+        <input class="order-carrier mt-2 w-full rounded-lg border-line text-sm" data-id="${order.id}" value="${order.carrier}" ${currentUser && !isCurrentAdmin() ? "disabled" : ""}>
       </div>`).join("");
     }
 
@@ -639,11 +666,25 @@
       showToast("Sesion iniciada");
     }
 
+    async function signupSupabase() {
+      if (!supabaseClient) return showToast("Configura Supabase en Sites");
+      const email = document.getElementById("auth-email").value.trim();
+      const password = document.getElementById("auth-password").value;
+      const { data, error } = await supabaseClient.auth.signUp({ email, password });
+      if (error) return showToast(error.message);
+      currentUser = data.user || null;
+      renderAuthState();
+      prepareOwnProfileForm();
+      if (currentUser) showToast("Cuenta creada");
+      else showToast("Revisa tu email para confirmar la cuenta");
+    }
+
     async function logoutSupabase() {
       if (!supabaseClient) return;
       await supabaseClient.auth.signOut();
       currentUser = null;
       renderAuthState();
+      renderAll();
       showToast("Sesion cerrada");
     }
 
@@ -680,6 +721,9 @@
             address: customer.shipping_address || ""
           }));
         }
+        if (!isCurrentAdmin() && !state.customers.some(customer => customer.id === currentUser.id)) {
+          prepareOwnProfileForm();
+        }
 
         const { data: orders } = await supabaseClient
           .from("orders")
@@ -713,6 +757,18 @@
 
       persist();
       showToast("Datos sincronizados");
+    }
+
+    function prepareOwnProfileForm() {
+      if (!currentUser) return;
+      const existing = state.customers.find(customer => customer.id === currentUser.id);
+      document.getElementById("customer-id").value = currentUser.id;
+      document.getElementById("customer-auth-id").value = currentUser.id;
+      document.getElementById("customer-name").value = existing?.name || currentUser.email?.split("@")[0] || "";
+      document.getElementById("customer-email").value = existing?.email || currentUser.email || "";
+      document.getElementById("customer-phone").value = existing?.phone || "";
+      document.getElementById("customer-address").value = existing?.address || "";
+      showPage("admin");
     }
 
     async function saveProductToSupabase(product) {
@@ -829,9 +885,11 @@
     document.getElementById("product-form").addEventListener("submit", saveProduct);
     document.getElementById("customer-form").addEventListener("submit", saveCustomer);
     document.getElementById("auth-login").addEventListener("click", loginSupabase);
+    document.getElementById("auth-signup").addEventListener("click", signupSupabase);
     document.getElementById("auth-logout").addEventListener("click", logoutSupabase);
     document.getElementById("sync-pull").addEventListener("click", pullFromSupabase);
     document.getElementById("product-reset").addEventListener("click", () => { document.getElementById("product-form").reset(); document.getElementById("product-id").value = ""; });
+    document.getElementById("customer-use-session").addEventListener("click", prepareOwnProfileForm);
     document.getElementById("customer-reset").addEventListener("click", () => { document.getElementById("customer-form").reset(); document.getElementById("customer-id").value = ""; document.getElementById("customer-auth-id").value = ""; });
 
     renderAll();
