@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Catalina Cosmetic</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Material+Symbols+Outlined:wght@300;400;500&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: "#1f2a2e",
+            muted: "#617078",
+            line: "#d9e2e7",
+            porcelain: "#f7fafb",
+            mist: "#e9f0f3",
+            sage: "#496b62",
+            clay: "#a96f5d",
+            cream: "#fffdf8"
+          },
+          borderRadius: { DEFAULT: "0.125rem", lg: "0.25rem", xl: "0.5rem" },
+          fontFamily: { sans: ["Manrope", "sans-serif"] }
+        }
+      }
+    };
+  </script>
+  <style>
+    body { font-family: Manrope, sans-serif; }
+    .material-symbols-outlined { font-variation-settings: "FILL" 0, "wght" 350, "GRAD" 0, "opsz" 24; }
+    .page { display: none; }
+    .page.active { display: block; }
+    .nav-link, button, select { cursor: pointer; }
+    .scroll-thin::-webkit-scrollbar { height: 8px; width: 8px; }
+    .scroll-thin::-webkit-scrollbar-thumb { background: #b9c7cd; border-radius: 999px; }
+  </style>
+</head>
+<body class="bg-porcelain text-ink">
+  <nav class="fixed top-0 z-50 w-full border-b border-line/70 bg-cream/90 backdrop-blur">
+    <div class="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 md:px-8">
+      <button class="nav-link text-left text-2xl font-extrabold tracking-tight uppercase" data-page="home">Catalina</button>
+      <div class="hidden items-center gap-7 text-sm font-semibold text-muted md:flex">
+        <button class="nav-link hover:text-ink" data-page="catalog">Productos</button>
+        <button class="nav-link hover:text-ink" data-page="profile">Mi perfil</button>
+        <button class="nav-link hover:text-ink" data-page="tracking">Rastrear pedido</button>
+        <button class="nav-link hover:text-ink" data-page="admin">Admin</button>
+      </div>
+      <div class="flex items-center gap-3">
+        <button class="nav-link rounded-lg border border-line bg-white px-3 py-2 text-sm font-bold hover:border-sage" data-page="cart">
+          <span class="material-symbols-outlined align-middle text-lg">shopping_bag</span>
+          <span id="cart-pill">0</span>
+        </button>
+        <button class="nav-link rounded-lg bg-sage px-4 py-2 text-sm font-bold text-white md:hidden" data-page="admin">Admin</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="pt-20">
+    <section id="page-home" class="page active">
+      <div class="mx-auto grid min-h-[calc(100vh-5rem)] max-w-7xl grid-cols-1 items-center gap-10 px-5 py-12 md:px-8 lg:grid-cols-12">
+        <div class="lg:col-span-6">
+          <p class="mb-4 text-xs font-extrabold uppercase tracking-[0.22em] text-clay">Skin care & hair care</p>
+          <h1 class="max-w-3xl text-5xl font-extrabold leading-[0.95] tracking-tight md:text-7xl">Rutinas limpias, pedidos claros.</h1>
+          <p class="mt-7 max-w-xl text-lg leading-8 text-muted">Ecommerce para formulas de cuidado facial y capilar con carrito, perfiles de cliente, seguimiento de pedidos y administracion operativa.</p>
+          <div class="mt-9 flex flex-wrap gap-3">
+            <button class="nav-link rounded-lg bg-sage px-6 py-4 font-bold text-white hover:bg-ink" data-page="catalog">Ver productos</button>
+            <button class="nav-link rounded-lg border border-line bg-white px-6 py-4 font-bold hover:border-sage" data-page="tracking">Consultar pedido</button>
+          </div>
+        </div>
+        <div class="lg:col-span-6">
+          <div class="relative overflow-hidden rounded-xl bg-mist">
+            <img class="h-[560px] w-full object-cover" src="https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=1200&q=80" alt="Productos de cuidado personal Catalina" />
+            <div class="absolute bottom-5 left-5 right-5 grid grid-cols-3 gap-3 rounded-lg bg-white/90 p-4 shadow-xl backdrop-blur">
+              <div><p class="text-xs font-bold uppercase text-muted">Pedidos</p><p class="text-2xl font-extrabold" id="metric-orders">0</p></div>
+              <div><p class="text-xs font-bold uppercase text-muted">Clientes</p><p class="text-2xl font-extrabold" id="metric-customers">0</p></div>
+              <div><p class="text-xs font-bold uppercase text-muted">Ingresos</p><p class="text-2xl font-extrabold" id="metric-revenue">$0</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-catalog" class="page">
+      <div class="mx-auto max-w-7xl px-5 py-12 md:px-8">
+        <div class="flex flex-col justify-between gap-5 md:flex-row md:items-end">
+          <div>
+            <p class="text-xs font-extrabold uppercase tracking-[0.2em] text-clay">Catalogo</p>
+            <h2 class="mt-2 text-4xl font-extrabold tracking-tight">Productos Catalina</h2>
+          </div>
+          <div class="flex flex-col gap-3 sm:flex-row">
+            <input id="catalog-search" class="rounded-lg border-line bg-white px-4 py-3 text-sm" placeholder="Buscar producto" />
+            <select id="catalog-filter" class="rounded-lg border-line bg-white px-4 py-3 text-sm">
+              <option value="all">Todas las categorias</option>
+              <option value="Piel">Piel</option>
+              <option value="Cabello">Cabello</option>
+              <option value="Kit">Kit</option>
+            </select>
+          </div>
+        </div>
+        <div id="product-grid" class="mt-9 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"></div>
+      </div>
+    </section>
+
+    <section id="page-cart" class="page">
+      <div class="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-5 py-12 md:px-8 lg:grid-cols-12">
+        <div class="lg:col-span-8">
+          <h2 class="text-4xl font-extrabold tracking-tight">Carrito</h2>
+          <div id="cart-items" class="mt-8 space-y-4"></div>
+          <div id="cart-empty" class="mt-8 rounded-xl border border-dashed border-line bg-white p-12 text-center text-muted">Tu carrito esta vacio.</div>
+        </div>
+        <aside class="h-fit rounded-xl bg-white p-6 shadow-sm lg:col-span-4">
+          <h3 class="text-xs font-extrabold uppercase tracking-[0.2em] text-muted">Resumen</h3>
+          <div class="mt-6 space-y-4 text-sm">
+            <div class="flex justify-between"><span class="text-muted">Subtotal</span><strong id="summary-subtotal">$0.00</strong></div>
+            <div class="flex justify-between"><span class="text-muted">Envio</span><strong id="summary-shipping">$0.00</strong></div>
+            <div class="flex justify-between border-t border-line pt-4 text-lg"><span>Total</span><strong id="summary-total">$0.00</strong></div>
+          </div>
+          <label class="mt-6 block text-xs font-bold uppercase tracking-widest text-muted">Cliente</label>
+          <select id="checkout-customer" class="mt-2 w-full rounded-lg border-line bg-porcelain px-3 py-3 text-sm"></select>
+          <button id="checkout-btn" class="mt-5 w-full rounded-lg bg-sage px-5 py-4 font-extrabold uppercase tracking-widest text-white hover:bg-ink">Crear pedido</button>
+        </aside>
+      </div>
+    </section>
+
+    <section id="page-profile" class="page">
+      <div class="mx-auto max-w-7xl px-5 py-12 md:px-8">
+        <div class="grid grid-cols-1 gap-8 lg:grid-cols-12">
+          <aside class="rounded-xl bg-white p-6 shadow-sm lg:col-span-4">
+            <p class="text-xs font-extrabold uppercase tracking-[0.2em] text-clay">Perfil del cliente</p>
+            <select id="profile-customer-select" class="mt-5 w-full rounded-lg border-line bg-porcelain px-3 py-3 text-sm"></select>
+            <div id="profile-card" class="mt-6"></div>
+          </aside>
+          <section class="lg:col-span-8">
+            <div class="flex items-end justify-between gap-4">
+              <div>
+                <h2 class="text-4xl font-extrabold tracking-tight">Mis pedidos</h2>
+                <p class="mt-2 text-muted">Cada cliente puede ver sus ordenes y el estado actual.</p>
+              </div>
+              <button class="nav-link rounded-lg border border-line bg-white px-4 py-3 text-sm font-bold" data-page="tracking">Rastrear</button>
+            </div>
+            <div id="customer-orders" class="mt-7 space-y-4"></div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-tracking" class="page">
+      <div class="mx-auto max-w-7xl px-5 py-12 md:px-8">
+        <div class="flex flex-col justify-between gap-5 md:flex-row md:items-end">
+          <div>
+            <p class="text-xs font-extrabold uppercase tracking-[0.2em] text-clay">Estado del pedido</p>
+            <h2 class="mt-2 text-4xl font-extrabold tracking-tight">Seguimiento</h2>
+          </div>
+          <select id="tracking-order-select" class="rounded-lg border-line bg-white px-4 py-3 text-sm"></select>
+        </div>
+        <div id="tracking-view" class="mt-8"></div>
+      </div>
+    </section>
+
+    <section id="page-admin" class="page">
+      <div class="mx-auto max-w-7xl px-5 py-12 md:px-8">
+        <div class="flex flex-col justify-between gap-5 md:flex-row md:items-end">
+          <div>
+            <p class="text-xs font-extrabold uppercase tracking-[0.2em] text-clay">Panel administrativo</p>
+            <h2 class="mt-2 text-4xl font-extrabold tracking-tight">Operaciones</h2>
+          </div>
+          <div class="rounded-lg border border-line bg-white px-4 py-3 text-sm text-muted" id="sync-status">Modo local listo para Supabase</div>
+        </div>
+        <div class="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-12">
+          <section class="rounded-xl bg-white p-5 shadow-sm xl:col-span-4">
+            <h3 class="font-extrabold">Productos</h3>
+            <form id="product-form" class="mt-5 grid gap-3">
+              <input type="hidden" id="product-id" />
+              <input id="product-name" class="rounded-lg border-line" placeholder="Nombre" required />
+              <select id="product-category" class="rounded-lg border-line" required><option>Piel</option><option>Cabello</option><option>Kit</option></select>
+              <input id="product-price" class="rounded-lg border-line" type="number" min="0" step="0.01" placeholder="Precio" required />
+              <input id="product-stock" class="rounded-lg border-line" type="number" min="0" step="1" placeholder="Inventario" required />
+              <input id="product-image" class="rounded-lg border-line" placeholder="URL de imagen" />
+              <textarea id="product-description" class="rounded-lg border-line" rows="3" placeholder="Descripcion"></textarea>
+              <button class="rounded-lg bg-sage px-5 py-3 font-bold text-white">Guardar producto</button>
+              <button type="button" id="product-reset" class="rounded-lg border border-line px-5 py-3 font-bold">Limpiar</button>
+            </form>
+            <div id="admin-products" class="mt-5 max-h-[430px] space-y-3 overflow-auto pr-1 scroll-thin"></div>
+          </section>
+
+          <section class="rounded-xl bg-white p-5 shadow-sm xl:col-span-4">
+            <h3 class="font-extrabold">Clientes</h3>
+            <form id="customer-form" class="mt-5 grid gap-3">
+              <input type="hidden" id="customer-id" />
+              <input id="customer-name" class="rounded-lg border-line" placeholder="Nombre completo" required />
+              <input id="customer-email" class="rounded-lg border-line" type="email" placeholder="Email" required />
+              <input id="customer-phone" class="rounded-lg border-line" placeholder="Telefono" />
+              <textarea id="customer-address" class="rounded-lg border-line" rows="3" placeholder="Direccion de envio"></textarea>
+              <button class="rounded-lg bg-sage px-5 py-3 font-bold text-white">Guardar cliente</button>
+              <button type="button" id="customer-reset" class="rounded-lg border border-line px-5 py-3 font-bold">Limpiar</button>
+            </form>
+            <div id="admin-customers" class="mt-5 max-h-[430px] space-y-3 overflow-auto pr-1 scroll-thin"></div>
+          </section>
+
+          <section class="rounded-xl bg-white p-5 shadow-sm xl:col-span-4">
+            <h3 class="font-extrabold">Pedidos y envios</h3>
+            <div id="admin-orders" class="mt-5 max-h-[760px] space-y-4 overflow-auto pr-1 scroll-thin"></div>
+          </section>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="pointer-events-none fixed bottom-6 right-6 z-50 translate-y-3 rounded-lg bg-ink px-5 py-4 text-sm font-bold text-white opacity-0 shadow-2xl transition-all"></div>
+
+  <script>
+    const STORAGE_KEY = "catalina-commerce-v2";
+    const orderStatuses = ["Recibido", "Preparando", "Enviado", "En ruta", "Entregado"];
+    const images = {
+      skin: "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=900&q=80",
+      hair: "https://images.unsplash.com/photo-1522338242992-e1a54906a8da?auto=format&fit=crop&w=900&q=80",
+      kit: "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=900&q=80"
+    };
+    const seedState = {
+      products: [
+        { id: crypto.randomUUID(), name: "Serum Barrera Ceramide 5%", category: "Piel", price: 42, stock: 24, image: images.skin, description: "Repara la barrera cutanea con ceramidas, niacinamida y pantenol." },
+        { id: crypto.randomUUID(), name: "Limpieza Amino Gel", category: "Piel", price: 26, stock: 38, image: "https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?auto=format&fit=crop&w=900&q=80", description: "Gel suave para limpieza diaria sin resecar." },
+        { id: crypto.randomUUID(), name: "Aceite Capilar Biomimetic", category: "Cabello", price: 36, stock: 18, image: images.hair, description: "Tratamiento para brillo, puntas secas y control de frizz." },
+        { id: crypto.randomUUID(), name: "Mascarilla Scalp Reset", category: "Cabello", price: 31, stock: 21, image: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=900&q=80", description: "Mascarilla de cuero cabelludo con arcillas suaves y prebioticos." },
+        { id: crypto.randomUUID(), name: "Kit Rutina Glow", category: "Kit", price: 89, stock: 12, image: images.kit, description: "Rutina completa con limpieza, serum y crema hidratante." }
+      ],
+      customers: [
+        { id: crypto.randomUUID(), name: "Camila Torres", email: "camila@example.com", phone: "+1 305 555 0144", address: "1200 Brickell Ave, Miami, FL" },
+        { id: crypto.randomUUID(), name: "Lucia Herrera", email: "lucia@example.com", phone: "+1 786 555 0182", address: "88 Miracle Mile, Coral Gables, FL" }
+      ],
+      orders: []
+    };
+    seedState.orders = [
+      makeOrder(seedState.customers[0].id, [seedState.products[0], seedState.products[2]], "En ruta"),
+      makeOrder(seedState.customers[1].id, [seedState.products[4]], "Preparando")
+    ];
+
+    let state = loadState();
+    let cart = [];
+    let supabaseClient = null;
+
+    function makeOrder(customerId, products, status = "Recibido") {
+      const createdAt = new Date(Date.now() - Math.floor(Math.random() * 5) * 86400000).toISOString();
+      return {
+        id: "CAT-" + Math.floor(100000 + Math.random() * 899999),
+        customerId,
+        status,
+        trackingCode: "CL" + Math.floor(10000000 + Math.random() * 89999999),
+        carrier: "Catalina Express",
+        createdAt,
+        eta: new Date(Date.now() + 4 * 86400000).toISOString().slice(0, 10),
+        items: products.map(product => ({ productId: product.id, name: product.name, price: product.price, qty: 1, image: product.image })),
+        history: buildHistory(status, createdAt)
+      };
+    }
+
+    function buildHistory(status, createdAt) {
+      const index = orderStatuses.indexOf(status);
+      return orderStatuses.slice(0, Math.max(index + 1, 1)).map((name, i) => ({
+        status: name,
+        note: statusNote(name),
+        at: new Date(new Date(createdAt).getTime() + i * 7200000).toISOString()
+      }));
+    }
+
+    function statusNote(status) {
+      return {
+        Recibido: "Pedido recibido y pago validado.",
+        Preparando: "Productos separados y control de calidad iniciado.",
+        Enviado: "Paquete entregado al transportista.",
+        "En ruta": "Pedido en camino al destino.",
+        Entregado: "Entrega completada."
+      }[status] || "Actualizacion registrada.";
+    }
+
+    function loadState() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) return seedState;
+      try { return JSON.parse(saved); } catch { return seedState; }
+    }
+
+    function persist() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      renderAll();
+    }
+
+    function money(value) {
+      return new Intl.NumberFormat("es-US", { style: "currency", currency: "USD" }).format(value);
+    }
+
+    function showPage(id) {
+      document.querySelectorAll(".page").forEach(page => page.classList.remove("active"));
+      const target = document.getElementById("page-" + id);
+      if (target) target.classList.add("active");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.remove("opacity-0", "translate-y-3");
+      setTimeout(() => toast.classList.add("opacity-0", "translate-y-3"), 2100);
+    }
+
+    function productCard(product) {
+      return `<article class="overflow-hidden rounded-xl bg-white shadow-sm">
+        <img class="h-64 w-full object-cover" src="${product.image || images.skin}" alt="${product.name}">
+        <div class="p-5">
+          <div class="flex items-start justify-between gap-4">
+            <div><p class="text-xs font-bold uppercase tracking-widest text-clay">${product.category}</p><h3 class="mt-1 text-xl font-extrabold">${product.name}</h3></div>
+            <strong>${money(product.price)}</strong>
+          </div>
+          <p class="mt-3 min-h-[48px] text-sm leading-6 text-muted">${product.description || ""}</p>
+          <div class="mt-5 flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-widest ${product.stock > 0 ? "text-sage" : "text-clay"}">${product.stock} disponibles</span>
+            <button class="add-to-cart rounded-lg bg-ink px-4 py-3 text-sm font-bold text-white hover:bg-sage" data-id="${product.id}" ${product.stock <= 0 ? "disabled" : ""}>Agregar</button>
+          </div>
+        </div>
+      </article>`;
+    }
+
+    function renderCatalog() {
+      const term = document.getElementById("catalog-search").value.toLowerCase();
+      const category = document.getElementById("catalog-filter").value;
+      const products = state.products.filter(product => {
+        const matchesTerm = [product.name, product.description, product.category].join(" ").toLowerCase().includes(term);
+        const matchesCategory = category === "all" || product.category === category;
+        return matchesTerm && matchesCategory;
+      });
+      document.getElementById("product-grid").innerHTML = products.map(productCard).join("") || emptyBlock("No hay productos con ese filtro.");
+    }
+
+    function addToCart(productId) {
+      const product = state.products.find(item => item.id === productId);
+      if (!product || product.stock <= 0) return;
+      const existing = cart.find(item => item.productId === productId);
+      if (existing) existing.qty += 1;
+      else cart.push({ productId, name: product.name, price: product.price, qty: 1, image: product.image });
+      renderCart();
+      showToast("Producto agregado");
+    }
+
+    function changeCartQty(productId, delta) {
+      const item = cart.find(line => line.productId === productId);
+      if (!item) return;
+      item.qty += delta;
+      if (item.qty <= 0) cart = cart.filter(line => line.productId !== productId);
+      renderCart();
+    }
+
+    function renderCart() {
+      const items = document.getElementById("cart-items");
+      const empty = document.getElementById("cart-empty");
+      const count = cart.reduce((sum, item) => sum + item.qty, 0);
+      const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+      const shipping = subtotal > 0 ? 6.95 : 0;
+      document.getElementById("cart-pill").textContent = count;
+      document.getElementById("summary-subtotal").textContent = money(subtotal);
+      document.getElementById("summary-shipping").textContent = money(shipping);
+      document.getElementById("summary-total").textContent = money(subtotal + shipping);
+      empty.classList.toggle("hidden", cart.length > 0);
+      items.innerHTML = cart.map(item => `<div class="flex gap-4 rounded-xl bg-white p-4 shadow-sm">
+        <img class="h-28 w-24 rounded-lg object-cover" src="${item.image}" alt="${item.name}">
+        <div class="flex flex-1 flex-col justify-between">
+          <div class="flex justify-between gap-4"><h3 class="font-extrabold">${item.name}</h3><strong>${money(item.price * item.qty)}</strong></div>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center rounded-lg bg-mist">
+              <button class="cart-qty px-3 py-2" data-id="${item.productId}" data-delta="-1"><span class="material-symbols-outlined text-base">remove</span></button>
+              <span class="px-2 text-sm font-bold">${item.qty}</span>
+              <button class="cart-qty px-3 py-2" data-id="${item.productId}" data-delta="1"><span class="material-symbols-outlined text-base">add</span></button>
+            </div>
+            <button class="cart-remove text-sm font-bold text-clay" data-id="${item.productId}">Quitar</button>
+          </div>
+        </div>
+      </div>`).join("");
+    }
+
+    function renderSelectors() {
+      const customerOptions = state.customers.map(customer => `<option value="${customer.id}">${customer.name}</option>`).join("");
+      ["checkout-customer", "profile-customer-select"].forEach(id => document.getElementById(id).innerHTML = customerOptions);
+      document.getElementById("tracking-order-select").innerHTML = state.orders.map(order => `<option value="${order.id}">${order.id} - ${customerName(order.customerId)}</option>`).join("");
+    }
+
+    function renderProfile() {
+      const customerId = document.getElementById("profile-customer-select").value || state.customers[0]?.id;
+      const customer = state.customers.find(item => item.id === customerId);
+      if (!customer) return;
+      document.getElementById("profile-card").innerHTML = `<div class="rounded-lg bg-porcelain p-5">
+        <h3 class="text-2xl font-extrabold">${customer.name}</h3>
+        <p class="mt-2 text-sm text-muted">${customer.email}</p>
+        <p class="mt-1 text-sm text-muted">${customer.phone || ""}</p>
+        <p class="mt-5 text-sm leading-6">${customer.address || "Sin direccion guardada"}</p>
+      </div>`;
+      const orders = state.orders.filter(order => order.customerId === customerId);
+      document.getElementById("customer-orders").innerHTML = orders.map(orderSummary).join("") || emptyBlock("Este cliente aun no tiene pedidos.");
+    }
+
+    function orderSummary(order) {
+      return `<article class="rounded-xl bg-white p-5 shadow-sm">
+        <div class="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+          <div><p class="text-xs font-bold uppercase tracking-widest text-muted">${new Date(order.createdAt).toLocaleDateString()}</p><h3 class="mt-1 text-xl font-extrabold">${order.id}</h3><p class="text-sm text-muted">${order.items.length} producto(s) - ${money(orderTotal(order))}</p></div>
+          <div class="flex items-center gap-3"><span class="rounded-full bg-mist px-3 py-1 text-xs font-extrabold uppercase tracking-widest text-sage">${order.status}</span><button class="track-order rounded-lg border border-line px-4 py-3 text-sm font-bold" data-id="${order.id}">Ver estado</button></div>
+        </div>
+      </article>`;
+    }
+
+    function renderTracking() {
+      const orderId = document.getElementById("tracking-order-select").value || state.orders[0]?.id;
+      const order = state.orders.find(item => item.id === orderId);
+      const target = document.getElementById("tracking-view");
+      if (!order) { target.innerHTML = emptyBlock("No hay pedidos para rastrear."); return; }
+      const progress = Math.max(orderStatuses.indexOf(order.status), 0);
+      target.innerHTML = `<div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <section class="rounded-xl bg-white p-6 shadow-sm lg:col-span-8">
+          <div class="flex flex-col justify-between gap-4 md:flex-row md:items-start">
+            <div><p class="text-xs font-bold uppercase tracking-widest text-muted">Pedido ${order.id}</p><h3 class="mt-1 text-3xl font-extrabold">${order.status}</h3><p class="mt-2 text-muted">Entrega estimada: ${order.eta}</p></div>
+            <div class="rounded-lg bg-mist px-4 py-3 text-sm font-bold">Tracking ${order.trackingCode}</div>
+          </div>
+          <div class="mt-10 grid grid-cols-5 gap-2">
+            ${orderStatuses.map((status, i) => `<div class="text-center">
+              <div class="mx-auto flex h-11 w-11 items-center justify-center rounded-full ${i <= progress ? "bg-sage text-white" : "bg-mist text-muted"}"><span class="material-symbols-outlined text-lg">${i <= progress ? "check" : "radio_button_unchecked"}</span></div>
+              <p class="mt-3 text-[10px] font-extrabold uppercase tracking-widest ${i === progress ? "text-sage" : "text-muted"}">${status}</p>
+            </div>`).join("")}
+          </div>
+          <div class="mt-10 space-y-5">${order.history.slice().reverse().map(event => `<div class="border-l-2 border-sage pl-5"><p class="font-extrabold">${event.status}</p><p class="text-sm text-muted">${event.note}</p><p class="mt-1 text-xs font-bold uppercase tracking-widest text-muted">${new Date(event.at).toLocaleString()}</p></div>`).join("")}</div>
+        </section>
+        <aside class="rounded-xl bg-white p-6 shadow-sm lg:col-span-4">
+          <h3 class="font-extrabold">Resumen</h3>
+          <p class="mt-2 text-sm text-muted">${customerName(order.customerId)}</p>
+          <div class="mt-6 space-y-4">${order.items.map(item => `<div class="flex gap-3"><img class="h-16 w-14 rounded object-cover" src="${item.image}" alt="${item.name}"><div class="flex-1"><p class="text-sm font-bold">${item.name}</p><p class="text-xs text-muted">Qty ${item.qty} - ${money(item.price)}</p></div></div>`).join("")}</div>
+          <div class="mt-6 border-t border-line pt-5"><div class="flex justify-between font-extrabold"><span>Total</span><span>${money(orderTotal(order))}</span></div></div>
+        </aside>
+      </div>`;
+    }
+
+    function renderAdmin() {
+      document.getElementById("admin-products").innerHTML = state.products.map(product => `<div class="rounded-lg border border-line p-3">
+        <div class="flex justify-between gap-3"><div><p class="font-bold">${product.name}</p><p class="text-xs text-muted">${product.category} - ${money(product.price)} - Stock ${product.stock}</p></div><button class="edit-product text-sm font-bold text-sage" data-id="${product.id}">Editar</button></div>
+      </div>`).join("");
+      document.getElementById("admin-customers").innerHTML = state.customers.map(customer => `<div class="rounded-lg border border-line p-3">
+        <div class="flex justify-between gap-3"><div><p class="font-bold">${customer.name}</p><p class="text-xs text-muted">${customer.email}</p></div><button class="edit-customer text-sm font-bold text-sage" data-id="${customer.id}">Editar</button></div>
+      </div>`).join("");
+      document.getElementById("admin-orders").innerHTML = state.orders.map(order => `<div class="rounded-lg border border-line p-4">
+        <div class="flex items-start justify-between gap-4"><div><p class="font-extrabold">${order.id}</p><p class="text-sm text-muted">${customerName(order.customerId)} - ${money(orderTotal(order))}</p></div><span class="rounded-full bg-mist px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest">${order.status}</span></div>
+        <label class="mt-4 block text-xs font-bold uppercase tracking-widest text-muted">Estado</label>
+        <select class="order-status mt-2 w-full rounded-lg border-line bg-porcelain text-sm" data-id="${order.id}">${orderStatuses.map(status => `<option ${status === order.status ? "selected" : ""}>${status}</option>`).join("")}</select>
+        <label class="mt-3 block text-xs font-bold uppercase tracking-widest text-muted">Transportista</label>
+        <input class="order-carrier mt-2 w-full rounded-lg border-line text-sm" data-id="${order.id}" value="${order.carrier}">
+      </div>`).join("");
+    }
+
+    function renderMetrics() {
+      document.getElementById("metric-orders").textContent = state.orders.length;
+      document.getElementById("metric-customers").textContent = state.customers.length;
+      document.getElementById("metric-revenue").textContent = money(state.orders.reduce((sum, order) => sum + orderTotal(order), 0));
+    }
+
+    function renderAll() {
+      renderMetrics();
+      renderCatalog();
+      renderSelectors();
+      renderCart();
+      renderProfile();
+      renderTracking();
+      renderAdmin();
+    }
+
+    function orderTotal(order) {
+      return order.items.reduce((sum, item) => sum + item.price * item.qty, 0);
+    }
+
+    function customerName(id) {
+      return state.customers.find(customer => customer.id === id)?.name || "Cliente eliminado";
+    }
+
+    function emptyBlock(message) {
+      return `<div class="rounded-xl border border-dashed border-line bg-white p-8 text-center text-muted">${message}</div>`;
+    }
+
+    function createOrderFromCart() {
+      if (!cart.length) return showToast("Agrega productos primero");
+      const customerId = document.getElementById("checkout-customer").value;
+      const products = cart.map(item => state.products.find(product => product.id === item.productId)).filter(Boolean);
+      const order = makeOrder(customerId, products);
+      order.items = cart.map(item => ({ ...item }));
+      state.orders.unshift(order);
+      cart.forEach(item => {
+        const product = state.products.find(product => product.id === item.productId);
+        if (product) product.stock = Math.max(0, product.stock - item.qty);
+      });
+      cart = [];
+      persist();
+      document.getElementById("tracking-order-select").value = order.id;
+      showPage("tracking");
+      showToast("Pedido creado");
+    }
+
+    function saveProduct(event) {
+      event.preventDefault();
+      const id = document.getElementById("product-id").value || crypto.randomUUID();
+      const product = {
+        id,
+        name: document.getElementById("product-name").value.trim(),
+        category: document.getElementById("product-category").value,
+        price: Number(document.getElementById("product-price").value),
+        stock: Number(document.getElementById("product-stock").value),
+        image: document.getElementById("product-image").value.trim() || images.skin,
+        description: document.getElementById("product-description").value.trim()
+      };
+      const index = state.products.findIndex(item => item.id === id);
+      if (index >= 0) state.products[index] = product;
+      else state.products.unshift(product);
+      event.target.reset();
+      document.getElementById("product-id").value = "";
+      persist();
+      showToast("Producto guardado");
+    }
+
+    function saveCustomer(event) {
+      event.preventDefault();
+      const id = document.getElementById("customer-id").value || crypto.randomUUID();
+      const customer = {
+        id,
+        name: document.getElementById("customer-name").value.trim(),
+        email: document.getElementById("customer-email").value.trim(),
+        phone: document.getElementById("customer-phone").value.trim(),
+        address: document.getElementById("customer-address").value.trim()
+      };
+      const index = state.customers.findIndex(item => item.id === id);
+      if (index >= 0) state.customers[index] = customer;
+      else state.customers.unshift(customer);
+      event.target.reset();
+      document.getElementById("customer-id").value = "";
+      persist();
+      showToast("Cliente guardado");
+    }
+
+    function fillProduct(id) {
+      const product = state.products.find(item => item.id === id);
+      if (!product) return;
+      document.getElementById("product-id").value = product.id;
+      document.getElementById("product-name").value = product.name;
+      document.getElementById("product-category").value = product.category;
+      document.getElementById("product-price").value = product.price;
+      document.getElementById("product-stock").value = product.stock;
+      document.getElementById("product-image").value = product.image;
+      document.getElementById("product-description").value = product.description;
+    }
+
+    function fillCustomer(id) {
+      const customer = state.customers.find(item => item.id === id);
+      if (!customer) return;
+      document.getElementById("customer-id").value = customer.id;
+      document.getElementById("customer-name").value = customer.name;
+      document.getElementById("customer-email").value = customer.email;
+      document.getElementById("customer-phone").value = customer.phone;
+      document.getElementById("customer-address").value = customer.address;
+    }
+
+    function updateOrder(id, key, value) {
+      const order = state.orders.find(item => item.id === id);
+      if (!order) return;
+      order[key] = value;
+      if (key === "status") order.history = buildHistory(value, order.createdAt);
+      persist();
+      showToast("Pedido actualizado");
+    }
+
+    function initSupabase() {
+      const url = window.CATALINA_SUPABASE_URL || "";
+      const key = window.CATALINA_SUPABASE_PUBLISHABLE_KEY || "";
+      if (url && key && window.supabase) {
+        supabaseClient = window.supabase.createClient(url, key);
+        document.getElementById("sync-status").textContent = "Supabase configurado";
+      }
+    }
+
+    document.addEventListener("click", event => {
+      const link = event.target.closest(".nav-link");
+      if (link?.dataset.page) showPage(link.dataset.page);
+      const add = event.target.closest(".add-to-cart");
+      if (add?.dataset.id) addToCart(add.dataset.id);
+      const qty = event.target.closest(".cart-qty");
+      if (qty) changeCartQty(qty.dataset.id, Number(qty.dataset.delta));
+      const remove = event.target.closest(".cart-remove");
+      if (remove) { cart = cart.filter(item => item.productId !== remove.dataset.id); renderCart(); }
+      const track = event.target.closest(".track-order");
+      if (track) { document.getElementById("tracking-order-select").value = track.dataset.id; showPage("tracking"); renderTracking(); }
+      const editProduct = event.target.closest(".edit-product");
+      if (editProduct) fillProduct(editProduct.dataset.id);
+      const editCustomer = event.target.closest(".edit-customer");
+      if (editCustomer) fillCustomer(editCustomer.dataset.id);
+    });
+
+    document.addEventListener("change", event => {
+      if (event.target.id === "profile-customer-select") renderProfile();
+      if (event.target.id === "tracking-order-select") renderTracking();
+      if (event.target.classList.contains("order-status")) updateOrder(event.target.dataset.id, "status", event.target.value);
+      if (event.target.classList.contains("order-carrier")) updateOrder(event.target.dataset.id, "carrier", event.target.value);
+    });
+    document.getElementById("catalog-search").addEventListener("input", renderCatalog);
+    document.getElementById("catalog-filter").addEventListener("change", renderCatalog);
+    document.getElementById("checkout-btn").addEventListener("click", createOrderFromCart);
+    document.getElementById("product-form").addEventListener("submit", saveProduct);
+    document.getElementById("customer-form").addEventListener("submit", saveCustomer);
+    document.getElementById("product-reset").addEventListener("click", () => { document.getElementById("product-form").reset(); document.getElementById("product-id").value = ""; });
+    document.getElementById("customer-reset").addEventListener("click", () => { document.getElementById("customer-form").reset(); document.getElementById("customer-id").value = ""; });
+
+    initSupabase();
+    renderAll();
+  </script>
+</body>
+</html>
