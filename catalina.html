@@ -207,6 +207,7 @@
             <h3 class="font-extrabold">Clientes</h3>
             <form id="customer-form" class="mt-5 grid gap-3">
               <input type="hidden" id="customer-id" />
+              <input id="customer-auth-id" class="rounded-lg border-line" placeholder="ID usuario Supabase (opcional)" />
               <input id="customer-name" class="rounded-lg border-line" placeholder="Nombre completo" required />
               <input id="customer-email" class="rounded-lg border-line" type="email" placeholder="Email" required />
               <input id="customer-phone" class="rounded-lg border-line" placeholder="Telefono" />
@@ -273,6 +274,10 @@
         items: products.map(product => ({ productId: product.id, name: product.name, price: product.price, qty: 1, image: product.image })),
         history: buildHistory(status, createdAt)
       };
+    }
+
+    function isCurrentAdmin() {
+      return currentUser?.app_metadata?.role === "admin";
     }
 
     function buildHistory(status, createdAt) {
@@ -498,12 +503,17 @@
       return `<div class="rounded-xl border border-dashed border-line bg-white p-8 text-center text-muted">${message}</div>`;
     }
 
-    function createOrderFromCart() {
+    async function createOrderFromCart() {
       if (!cart.length) return showToast("Agrega productos primero");
-      const customerId = document.getElementById("checkout-customer").value;
+      const selectedCustomerId = document.getElementById("checkout-customer").value;
+      const customerId = currentUser && !isCurrentAdmin() ? currentUser.id : selectedCustomerId;
+      if (supabaseClient && currentUser && !state.customers.some(customer => customer.id === customerId)) {
+        return showToast("Crea el perfil del cliente antes del pedido");
+      }
       const products = cart.map(item => state.products.find(product => product.id === item.productId)).filter(Boolean);
       const order = makeOrder(customerId, products);
       order.items = cart.map(item => ({ ...item }));
+      await saveOrderToSupabase(order);
       state.orders.unshift(order);
       cart.forEach(item => {
         const product = state.products.find(product => product.id === item.productId);
@@ -540,7 +550,9 @@
 
     async function saveCustomer(event) {
       event.preventDefault();
-      const id = document.getElementById("customer-id").value || crypto.randomUUID();
+      const existingId = document.getElementById("customer-id").value;
+      const authId = document.getElementById("customer-auth-id").value.trim();
+      const id = existingId || authId || (supabaseClient && currentUser && !isCurrentAdmin() ? currentUser.id : crypto.randomUUID());
       const customer = {
         id,
         name: document.getElementById("customer-name").value.trim(),
@@ -554,6 +566,7 @@
       await saveCustomerToSupabase(customer);
       event.target.reset();
       document.getElementById("customer-id").value = "";
+      document.getElementById("customer-auth-id").value = "";
       persist();
       showToast("Cliente guardado");
     }
@@ -574,6 +587,7 @@
       const customer = state.customers.find(item => item.id === id);
       if (!customer) return;
       document.getElementById("customer-id").value = customer.id;
+      document.getElementById("customer-auth-id").value = customer.id;
       document.getElementById("customer-name").value = customer.name;
       document.getElementById("customer-email").value = customer.email;
       document.getElementById("customer-phone").value = customer.phone;
@@ -692,7 +706,7 @@
               status: event.status,
               note: event.note || statusNote(event.status),
               at: event.event_at
-            }))
+            })).sort((a, b) => new Date(a.at) - new Date(b.at))
           }));
         }
       }
@@ -714,6 +728,50 @@
         is_active: true
       });
       if (error) showToast(error.message);
+    }
+
+    async function saveOrderToSupabase(order) {
+      if (!supabaseClient || !currentUser) return;
+      const subtotal = order.items.reduce((sum, item) => sum + item.price * item.qty, 0);
+      const shippingAmount = subtotal > 0 ? 6.95 : 0;
+      const { data: createdOrder, error: orderError } = await supabaseClient
+        .from("orders")
+        .insert({
+          order_number: order.id,
+          customer_id: order.customerId,
+          status: order.status,
+          carrier: order.carrier,
+          tracking_code: order.trackingCode,
+          subtotal,
+          shipping_amount: shippingAmount,
+          estimated_delivery: order.eta
+        })
+        .select("id")
+        .single();
+
+      if (orderError) {
+        showToast(orderError.message);
+        return;
+      }
+
+      order.remoteId = createdOrder.id;
+      const { error: itemsError } = await supabaseClient.from("order_items").insert(
+        order.items.map(item => ({
+          order_id: createdOrder.id,
+          product_id: item.productId,
+          product_name: item.name,
+          unit_price: item.price,
+          quantity: item.qty
+        }))
+      );
+      if (itemsError) showToast(itemsError.message);
+
+      const { error: eventError } = await supabaseClient.from("shipment_events").insert({
+        order_id: createdOrder.id,
+        status: "Recibido",
+        note: statusNote("Recibido")
+      });
+      if (eventError) showToast(eventError.message);
     }
 
     async function saveCustomerToSupabase(customer) {
@@ -774,7 +832,7 @@
     document.getElementById("auth-logout").addEventListener("click", logoutSupabase);
     document.getElementById("sync-pull").addEventListener("click", pullFromSupabase);
     document.getElementById("product-reset").addEventListener("click", () => { document.getElementById("product-form").reset(); document.getElementById("product-id").value = ""; });
-    document.getElementById("customer-reset").addEventListener("click", () => { document.getElementById("customer-form").reset(); document.getElementById("customer-id").value = ""; });
+    document.getElementById("customer-reset").addEventListener("click", () => { document.getElementById("customer-form").reset(); document.getElementById("customer-id").value = ""; document.getElementById("customer-auth-id").value = ""; });
 
     renderAll();
     initSupabase();

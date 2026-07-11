@@ -65,6 +65,31 @@ create index if not exists idx_orders_customer_created on public.orders (custome
 create index if not exists idx_order_items_order on public.order_items (order_id);
 create index if not exists idx_shipment_events_order_event on public.shipment_events (order_id, event_at desc);
 
+create or replace function public.set_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists set_products_updated_at on public.products;
+create trigger set_products_updated_at
+before update on public.products
+for each row execute function public.set_updated_at();
+
+drop trigger if exists set_customer_profiles_updated_at on public.customer_profiles;
+create trigger set_customer_profiles_updated_at
+before update on public.customer_profiles
+for each row execute function public.set_updated_at();
+
+drop trigger if exists set_orders_updated_at on public.orders;
+create trigger set_orders_updated_at
+before update on public.orders
+for each row execute function public.set_updated_at();
+
 alter table public.products enable row level security;
 alter table public.customer_profiles enable row level security;
 alter table public.orders enable row level security;
@@ -117,6 +142,12 @@ on public.orders for select
 to authenticated
 using (customer_id = (select auth.uid()) or public.is_admin());
 
+drop policy if exists "Customers create own orders" on public.orders;
+create policy "Customers create own orders"
+on public.orders for insert
+to authenticated
+with check (customer_id = (select auth.uid()) or public.is_admin());
+
 drop policy if exists "Admins manage orders" on public.orders;
 create policy "Admins manage orders"
 on public.orders for all
@@ -129,6 +160,19 @@ create policy "Customers read own order items"
 on public.order_items for select
 to authenticated
 using (
+  exists (
+    select 1
+    from public.orders
+    where orders.id = order_items.order_id
+      and (orders.customer_id = (select auth.uid()) or public.is_admin())
+  )
+);
+
+drop policy if exists "Customers create own order items" on public.order_items;
+create policy "Customers create own order items"
+on public.order_items for insert
+to authenticated
+with check (
   exists (
     select 1
     from public.orders
@@ -157,9 +201,32 @@ using (
   )
 );
 
+drop policy if exists "Customers create initial shipment event" on public.shipment_events;
+create policy "Customers create initial shipment event"
+on public.shipment_events for insert
+to authenticated
+with check (
+  status = 'Recibido'
+  and exists (
+    select 1
+    from public.orders
+    where orders.id = shipment_events.order_id
+      and (orders.customer_id = (select auth.uid()) or public.is_admin())
+  )
+);
+
 drop policy if exists "Admins manage shipment events" on public.shipment_events;
 create policy "Admins manage shipment events"
 on public.shipment_events for all
 to authenticated
 using (public.is_admin())
 with check (public.is_admin());
+
+grant usage on schema public to anon, authenticated;
+grant execute on function public.is_admin() to authenticated;
+grant select on public.products to anon;
+grant all on public.products to authenticated;
+grant all on public.customer_profiles to authenticated;
+grant all on public.orders to authenticated;
+grant all on public.order_items to authenticated;
+grant all on public.shipment_events to authenticated;

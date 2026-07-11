@@ -4,6 +4,8 @@ import path from "node:path";
 const root = new URL("..", import.meta.url);
 const html = fs.readFileSync(new URL("catalina.html", root), "utf8");
 const schema = fs.readFileSync(new URL("supabase-schema.sql", root), "utf8");
+const seed = fs.readFileSync(new URL("supabase-seed.sql", root), "utf8");
+const setup = fs.readFileSync(new URL("SUPABASE_SETUP.md", root), "utf8");
 const distServer = new URL("dist/server/", root);
 const distOpenAI = new URL("dist/.openai/", root);
 
@@ -13,6 +15,8 @@ fs.copyFileSync(new URL(".openai/hosting.json", root), new URL("hosting.json", d
 
 const worker = `const html = ${JSON.stringify(html)};
 const schema = ${JSON.stringify(schema)};
+const seed = ${JSON.stringify(seed)};
+const setup = ${JSON.stringify(setup)};
 
 function withRuntimeConfig(body, env) {
   const config = {
@@ -31,6 +35,24 @@ export default {
       return new Response(schema, {
         headers: {
           "content-type": "text/plain; charset=utf-8",
+          "cache-control": "public, max-age=300"
+        }
+      });
+    }
+
+    if (url.pathname === "/supabase-seed.sql") {
+      return new Response(seed, {
+        headers: {
+          "content-type": "text/plain; charset=utf-8",
+          "cache-control": "public, max-age=300"
+        }
+      });
+    }
+
+    if (url.pathname === "/SUPABASE_SETUP.md") {
+      return new Response(setup, {
+        headers: {
+          "content-type": "text/markdown; charset=utf-8",
           "cache-control": "public, max-age=300"
         }
       });
