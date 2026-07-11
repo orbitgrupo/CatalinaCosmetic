@@ -6,133 +6,251 @@
   <title>Catalina Admin</title>
   <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Material+Symbols+Outlined:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Material+Symbols+Outlined:wght@300;400;500&display=swap" rel="stylesheet" />
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
-            ink: "#1f2a2e",
-            muted: "#617078",
-            line: "#d9e2e7",
-            porcelain: "#f7fafb",
-            mist: "#e9f0f3",
-            sage: "#496b62",
-            clay: "#a96f5d",
-            cream: "#fffdf8"
+            ink: "#19223c",
+            muted: "#8a94aa",
+            line: "#e8edf6",
+            shell: "#f5f8fd",
+            blue: "#3f7fda",
+            violet: "#6653e9",
+            coral: "#ec5b49",
+            green: "#34ad59",
+            navy: "#25345f"
           },
-          borderRadius: { DEFAULT: "0.125rem", lg: "0.25rem", xl: "0.5rem" },
-          fontFamily: { sans: ["Manrope", "sans-serif"] }
+          boxShadow: {
+            soft: "0 18px 40px rgba(31, 45, 84, 0.07)"
+          },
+          fontFamily: { sans: ["Inter", "sans-serif"] }
         }
       }
     };
   </script>
   <style>
-    body { font-family: Manrope, sans-serif; }
+    body { font-family: Inter, sans-serif; }
     .material-symbols-outlined { font-variation-settings: "FILL" 0, "wght" 350, "GRAD" 0, "opsz" 24; }
+    .view { display: none; }
+    .view.active { display: block; }
+    .side-link.active { color: #6653e9; background: #f2f0ff; }
     .scroll-thin::-webkit-scrollbar { height: 8px; width: 8px; }
-    .scroll-thin::-webkit-scrollbar-thumb { background: #b9c7cd; border-radius: 999px; }
+    .scroll-thin::-webkit-scrollbar-thumb { background: #c8d1e3; border-radius: 999px; }
   </style>
 </head>
-<body class="bg-porcelain text-ink">
-  <header class="border-b border-line bg-cream/95">
-    <div class="mx-auto flex min-h-20 max-w-7xl flex-col gap-4 px-5 py-5 md:flex-row md:items-center md:justify-between md:px-8">
-      <div>
-        <p class="text-xs font-extrabold uppercase tracking-[0.22em] text-clay">Catalina Cosmetic</p>
-        <h1 class="text-3xl font-extrabold tracking-tight">Panel administrativo</h1>
+<body class="bg-shell text-ink">
+  <div class="min-h-screen lg:grid lg:grid-cols-[180px_1fr]">
+    <aside class="border-r border-line bg-white">
+      <div class="flex h-16 items-center gap-3 px-5">
+        <div class="flex h-9 w-9 items-center justify-center rounded-full bg-violet text-white">
+          <span class="material-symbols-outlined text-xl">spa</span>
+        </div>
+        <div>
+          <p class="text-sm font-extrabold">Catalina</p>
+          <p class="text-[10px] font-bold uppercase tracking-widest text-muted">Admin</p>
+        </div>
       </div>
-      <div class="flex flex-wrap items-center gap-3">
-        <a class="rounded-lg border border-line bg-white px-4 py-3 text-sm font-bold hover:border-sage" href="./catalina.html">Ver tienda</a>
-        <div class="rounded-lg border border-line bg-white px-4 py-3 text-sm text-muted" id="sync-status">Modo local</div>
-      </div>
-    </div>
-  </header>
+      <nav class="space-y-1 px-3 py-5 text-sm font-semibold text-muted">
+        <button class="side-link active flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left" data-view="overview"><span class="material-symbols-outlined text-lg">dashboard</span>Dashboard</button>
+        <button class="side-link flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left" data-view="orders"><span class="material-symbols-outlined text-lg">local_shipping</span>Pedidos <span id="side-orders" class="ml-auto rounded-full bg-violet px-2 py-0.5 text-[10px] text-white">0</span></button>
+        <button class="side-link flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left" data-view="products"><span class="material-symbols-outlined text-lg">inventory_2</span>Productos <span id="side-products" class="ml-auto rounded-full bg-violet px-2 py-0.5 text-[10px] text-white">0</span></button>
+        <button class="side-link flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left" data-view="customers"><span class="material-symbols-outlined text-lg">groups</span>Clientes <span id="side-customers" class="ml-auto rounded-full bg-violet px-2 py-0.5 text-[10px] text-white">0</span></button>
+        <a class="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left hover:bg-slate-50" href="./catalina.html"><span class="material-symbols-outlined text-lg">storefront</span>Tienda</a>
+        <div class="my-5 border-t border-line"></div>
+        <button class="side-link flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left" data-view="settings"><span class="material-symbols-outlined text-lg">settings</span>Supabase</button>
+      </nav>
+    </aside>
 
-  <main class="mx-auto max-w-7xl px-5 py-8 md:px-8">
-    <section class="grid grid-cols-1 gap-4 rounded-xl bg-white p-5 shadow-sm lg:grid-cols-12 lg:items-end">
-      <div class="lg:col-span-4">
-        <h2 class="font-extrabold">Conexion Supabase</h2>
-        <p class="mt-2 text-sm leading-6 text-muted">Usa una cuenta admin con <code>app_metadata.role = "admin"</code>.</p>
-      </div>
-      <div class="grid gap-3 lg:col-span-5 sm:grid-cols-2">
-        <input id="auth-email" class="rounded-lg border-line" type="email" placeholder="Email" />
-        <input id="auth-password" class="rounded-lg border-line" type="password" placeholder="Password" />
-      </div>
-      <div class="grid grid-cols-3 gap-2 lg:col-span-3">
-        <button id="auth-login" class="rounded-lg bg-ink px-4 py-3 text-sm font-bold text-white">Entrar</button>
-        <button id="auth-signup" class="rounded-lg bg-sage px-4 py-3 text-sm font-bold text-white">Crear</button>
-        <button id="auth-logout" class="rounded-lg border border-line px-4 py-3 text-sm font-bold">Salir</button>
-      </div>
-      <div class="flex flex-wrap items-center gap-3 lg:col-span-12">
-        <button id="sync-pull" class="rounded-lg border border-line px-4 py-3 text-sm font-bold">Sincronizar desde Supabase</button>
-        <p id="auth-state" class="text-sm text-muted">Sin sesion activa.</p>
-      </div>
+    <section>
+      <header class="flex min-h-16 flex-col gap-3 border-b border-line bg-white px-5 py-4 md:flex-row md:items-center md:justify-between lg:px-8">
+        <div class="flex items-center gap-6">
+          <p class="text-sm font-semibold text-muted" id="current-section">Dashboard</p>
+          <div class="hidden w-[360px] items-center rounded-full border border-line bg-white px-4 py-2 md:flex">
+            <input id="global-search" class="w-full border-0 bg-transparent p-0 text-sm focus:ring-0" placeholder="Search..." />
+            <span class="material-symbols-outlined text-base text-muted">search</span>
+          </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+          <button id="sync-pull" class="rounded-full border border-line bg-white px-4 py-2 text-sm font-bold text-muted hover:text-ink">Sync</button>
+          <div class="rounded-full border border-line bg-white px-4 py-2 text-sm text-muted" id="sync-status">Modo local</div>
+          <div class="flex h-9 w-9 items-center justify-center rounded-full bg-violet/10 text-violet">
+            <span class="material-symbols-outlined text-lg">notifications</span>
+          </div>
+          <div class="h-9 w-9 overflow-hidden rounded-full bg-cover bg-center" style="background-image:url('https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&q=80')"></div>
+        </div>
+      </header>
+
+      <main class="px-5 py-7 lg:px-8">
+        <section id="view-overview" class="view active">
+          <div class="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+            <div>
+              <h1 class="text-2xl font-extrabold tracking-tight">Overview</h1>
+              <p id="auth-state" class="mt-1 text-sm text-muted">Sin sesion activa.</p>
+            </div>
+            <div class="flex flex-wrap gap-3 text-xs font-semibold text-muted">
+              <span class="rounded-full bg-white px-4 py-2 shadow-sm">Central Clinic, Online</span>
+              <span class="rounded-full bg-white px-4 py-2 shadow-sm">Today</span>
+            </div>
+          </div>
+
+          <div class="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+            <article class="overflow-hidden rounded-sm bg-white shadow-soft">
+              <div class="bg-blue px-5 py-4 text-lg font-bold text-white">Pedidos</div>
+              <div class="flex items-center gap-5 p-5">
+                <div class="flex h-16 items-end gap-1">
+                  <span class="h-8 w-1.5 rounded-full bg-blue/30"></span><span class="h-12 w-1.5 rounded-full bg-blue"></span><span class="h-6 w-1.5 rounded-full bg-blue/20"></span><span class="h-14 w-1.5 rounded-full bg-blue/10"></span>
+                </div>
+                <div><p id="metric-orders" class="text-2xl font-semibold">0</p><p class="text-sm text-muted">Hoy</p></div>
+              </div>
+            </article>
+            <article class="overflow-hidden rounded-sm bg-white shadow-soft">
+              <div class="bg-violet px-5 py-4 text-lg font-bold text-white">Productos</div>
+              <div class="flex items-center gap-5 p-5">
+                <div class="flex h-16 w-16 items-center justify-center rounded-full border-[6px] border-violet/20 text-violet"><span id="metric-products">0</span></div>
+                <div><p class="text-2xl font-semibold" id="metric-stock">0</p><p class="text-sm text-muted">Stock</p></div>
+              </div>
+            </article>
+            <article class="overflow-hidden rounded-sm bg-white shadow-soft">
+              <div class="bg-coral px-5 py-4 text-lg font-bold text-white">Pendientes</div>
+              <div class="flex items-center gap-5 p-5">
+                <div class="flex h-16 items-end gap-1">
+                  <span class="h-8 w-1.5 rounded-full bg-coral/10"></span><span class="h-14 w-1.5 rounded-full bg-coral/10"></span><span class="h-5 w-1.5 rounded-full bg-coral"></span><span class="h-12 w-1.5 rounded-full bg-coral/10"></span>
+                </div>
+                <div><p id="metric-pending" class="text-2xl font-semibold">0</p><p class="text-sm text-muted">Pedidos</p></div>
+              </div>
+            </article>
+            <article class="overflow-hidden rounded-sm bg-white shadow-soft">
+              <div class="bg-green px-5 py-4 text-lg font-bold text-white">Clientes</div>
+              <div class="flex items-center gap-5 p-5">
+                <div class="flex h-16 w-16 items-center justify-center rounded-full border-[6px] border-green/20 text-green"><span class="material-symbols-outlined">groups</span></div>
+                <div><p id="metric-customers" class="text-2xl font-semibold">0</p><p class="text-sm text-muted">Activos</p></div>
+              </div>
+            </article>
+          </div>
+
+          <section class="mt-7 rounded-sm bg-white p-5 shadow-soft">
+            <div class="flex items-center justify-between">
+              <div><h2 class="text-xl font-extrabold">Today</h2><p class="text-sm text-muted"><span id="today-count">0</span> pedidos recientes</p></div>
+              <div class="flex gap-2 text-violet"><span class="material-symbols-outlined">view_list</span><span class="material-symbols-outlined text-muted">grid_view</span></div>
+            </div>
+            <div class="mt-5 overflow-auto scroll-thin">
+              <table class="w-full min-w-[760px] text-left text-sm">
+                <thead class="text-xs font-bold text-muted">
+                  <tr><th class="py-3">Cliente</th><th>Estado</th><th>Fecha</th><th>Total</th><th>Envio</th><th>Acciones</th></tr>
+                </thead>
+                <tbody id="overview-orders" class="divide-y divide-line"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <section id="view-orders" class="view">
+          <div class="mb-5 flex items-center justify-between">
+            <div><h1 class="text-2xl font-extrabold">Pedidos y envios</h1><p class="text-sm text-muted">Actualiza estados, transportista y tracking.</p></div>
+          </div>
+          <div id="admin-orders" class="grid gap-4"></div>
+        </section>
+
+        <section id="view-products" class="view">
+          <div class="grid grid-cols-1 gap-6 xl:grid-cols-[420px_1fr]">
+            <form id="product-form" class="grid gap-3 rounded-sm bg-white p-5 shadow-soft">
+              <h2 class="text-xl font-extrabold">Producto</h2>
+              <input type="hidden" id="product-id" />
+              <input id="product-name" class="rounded-lg border-line" placeholder="Nombre" required />
+              <select id="product-category" class="rounded-lg border-line" required><option>Piel</option><option>Cabello</option><option>Kit</option></select>
+              <input id="product-price" class="rounded-lg border-line" type="number" min="0" step="0.01" placeholder="Precio" required />
+              <input id="product-stock" class="rounded-lg border-line" type="number" min="0" step="1" placeholder="Inventario" required />
+              <input id="product-image" class="rounded-lg border-line" placeholder="URL de imagen" />
+              <textarea id="product-description" class="rounded-lg border-line" rows="4" placeholder="Descripcion"></textarea>
+              <button class="rounded-lg bg-violet px-5 py-3 font-bold text-white">Guardar producto</button>
+              <button type="button" id="product-reset" class="rounded-lg border border-line px-5 py-3 font-bold text-muted">Limpiar</button>
+            </form>
+            <div class="rounded-sm bg-white p-5 shadow-soft">
+              <h2 class="text-xl font-extrabold">Inventario</h2>
+              <div id="admin-products" class="mt-5 grid gap-3"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-customers" class="view">
+          <div class="grid grid-cols-1 gap-6 xl:grid-cols-[420px_1fr]">
+            <form id="customer-form" class="grid gap-3 rounded-sm bg-white p-5 shadow-soft">
+              <h2 id="customer-title" class="text-xl font-extrabold">Cliente</h2>
+              <input type="hidden" id="customer-id" />
+              <input id="customer-auth-id" class="rounded-lg border-line" placeholder="ID usuario Supabase" />
+              <input id="customer-name" class="rounded-lg border-line" placeholder="Nombre completo" required />
+              <input id="customer-email" class="rounded-lg border-line" type="email" placeholder="Email" required />
+              <input id="customer-phone" class="rounded-lg border-line" placeholder="Telefono" />
+              <textarea id="customer-address" class="rounded-lg border-line" rows="4" placeholder="Direccion de envio"></textarea>
+              <button class="rounded-lg bg-violet px-5 py-3 font-bold text-white">Guardar cliente</button>
+              <button type="button" id="customer-use-session" class="rounded-lg border border-line px-5 py-3 font-bold text-muted">Usar mi sesion</button>
+              <button type="button" id="customer-reset" class="rounded-lg border border-line px-5 py-3 font-bold text-muted">Limpiar</button>
+            </form>
+            <div class="rounded-sm bg-white p-5 shadow-soft">
+              <h2 class="text-xl font-extrabold">Directorio</h2>
+              <div id="admin-customers" class="mt-5 grid gap-3"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-settings" class="view">
+          <div class="grid gap-6 xl:grid-cols-[1fr_1fr]">
+            <div class="rounded-sm bg-white p-5 shadow-soft">
+              <h2 class="text-xl font-extrabold">Supabase Auth</h2>
+              <p class="mt-2 text-sm leading-6 text-muted">Usa una cuenta admin con <code>app_metadata.role = "admin"</code>.</p>
+              <div class="mt-5 grid gap-3">
+                <input id="auth-email" class="rounded-lg border-line" type="email" placeholder="Email" />
+                <input id="auth-password" class="rounded-lg border-line" type="password" placeholder="Password" />
+                <div class="grid grid-cols-3 gap-2">
+                  <button id="auth-login" class="rounded-lg bg-navy px-4 py-3 text-sm font-bold text-white">Entrar</button>
+                  <button id="auth-signup" class="rounded-lg bg-violet px-4 py-3 text-sm font-bold text-white">Crear</button>
+                  <button id="auth-logout" class="rounded-lg border border-line px-4 py-3 text-sm font-bold">Salir</button>
+                </div>
+              </div>
+            </div>
+            <div class="rounded-sm bg-white p-5 shadow-soft">
+              <h2 class="text-xl font-extrabold">Archivos</h2>
+              <div class="mt-5 grid gap-3 text-sm font-semibold text-muted">
+                <a class="rounded-lg border border-line px-4 py-3 hover:text-violet" href="./supabase-schema.sql">supabase-schema.sql</a>
+                <a class="rounded-lg border border-line px-4 py-3 hover:text-violet" href="./supabase-seed.sql">supabase-seed.sql</a>
+                <a class="rounded-lg border border-line px-4 py-3 hover:text-violet" href="./SUPABASE_SETUP.md">SUPABASE_SETUP.md</a>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
     </section>
-
-    <section class="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-12">
-      <div class="rounded-xl bg-white p-5 shadow-sm xl:col-span-4">
-        <h2 class="font-extrabold">Productos</h2>
-        <form id="product-form" class="mt-5 grid gap-3">
-          <input type="hidden" id="product-id" />
-          <input id="product-name" class="rounded-lg border-line" placeholder="Nombre" required />
-          <select id="product-category" class="rounded-lg border-line" required>
-            <option>Piel</option>
-            <option>Cabello</option>
-            <option>Kit</option>
-          </select>
-          <input id="product-price" class="rounded-lg border-line" type="number" min="0" step="0.01" placeholder="Precio" required />
-          <input id="product-stock" class="rounded-lg border-line" type="number" min="0" step="1" placeholder="Inventario" required />
-          <input id="product-image" class="rounded-lg border-line" placeholder="URL de imagen" />
-          <textarea id="product-description" class="rounded-lg border-line" rows="3" placeholder="Descripcion"></textarea>
-          <button class="rounded-lg bg-sage px-5 py-3 font-bold text-white">Guardar producto</button>
-          <button type="button" id="product-reset" class="rounded-lg border border-line px-5 py-3 font-bold">Limpiar</button>
-        </form>
-        <div id="admin-products" class="mt-5 max-h-[430px] space-y-3 overflow-auto pr-1 scroll-thin"></div>
-      </div>
-
-      <div class="rounded-xl bg-white p-5 shadow-sm xl:col-span-4">
-        <h2 id="customer-title" class="font-extrabold">Clientes</h2>
-        <form id="customer-form" class="mt-5 grid gap-3">
-          <input type="hidden" id="customer-id" />
-          <input id="customer-auth-id" class="rounded-lg border-line" placeholder="ID usuario Supabase" />
-          <input id="customer-name" class="rounded-lg border-line" placeholder="Nombre completo" required />
-          <input id="customer-email" class="rounded-lg border-line" type="email" placeholder="Email" required />
-          <input id="customer-phone" class="rounded-lg border-line" placeholder="Telefono" />
-          <textarea id="customer-address" class="rounded-lg border-line" rows="3" placeholder="Direccion de envio"></textarea>
-          <button class="rounded-lg bg-sage px-5 py-3 font-bold text-white">Guardar cliente</button>
-          <button type="button" id="customer-use-session" class="rounded-lg border border-line px-5 py-3 font-bold">Usar mi sesion</button>
-          <button type="button" id="customer-reset" class="rounded-lg border border-line px-5 py-3 font-bold">Limpiar</button>
-        </form>
-        <div id="admin-customers" class="mt-5 max-h-[430px] space-y-3 overflow-auto pr-1 scroll-thin"></div>
-      </div>
-
-      <div class="rounded-xl bg-white p-5 shadow-sm xl:col-span-4">
-        <h2 class="font-extrabold">Pedidos y envios</h2>
-        <div id="admin-orders" class="mt-5 max-h-[760px] space-y-4 overflow-auto pr-1 scroll-thin"></div>
-      </div>
-    </section>
-  </main>
+  </div>
 
   <div id="toast" class="pointer-events-none fixed bottom-6 right-6 z-50 translate-y-3 rounded-lg bg-ink px-5 py-4 text-sm font-bold text-white opacity-0 shadow-2xl transition-all"></div>
 
   <script>
-    const STORAGE_KEY = "catalina-admin-v1";
+    const STORAGE_KEY = "catalina-admin-v2";
     const orderStatuses = ["Recibido", "Preparando", "Enviado", "En ruta", "Entregado"];
     const images = {
       skin: "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=900&q=80",
-      hair: "https://images.unsplash.com/photo-1522338242992-e1a54906a8da?auto=format&fit=crop&w=900&q=80",
-      kit: "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=900&q=80"
+      hair: "https://images.unsplash.com/photo-1522338242992-e1a54906a8da?auto=format&fit=crop&w=900&q=80"
     };
     const seedState = {
       products: [
         { id: crypto.randomUUID(), name: "Serum Barrera Ceramide 5%", category: "Piel", price: 42, stock: 24, image: images.skin, description: "Repara la barrera cutanea con ceramidas, niacinamida y pantenol." },
-        { id: crypto.randomUUID(), name: "Aceite Capilar Biomimetic", category: "Cabello", price: 36, stock: 18, image: images.hair, description: "Tratamiento para brillo, puntas secas y control de frizz." }
+        { id: crypto.randomUUID(), name: "Aceite Capilar Biomimetic", category: "Cabello", price: 36, stock: 18, image: images.hair, description: "Tratamiento para brillo y puntas secas." }
       ],
       customers: [
         { id: crypto.randomUUID(), name: "Camila Torres", email: "camila@example.com", phone: "+1 305 555 0144", address: "1200 Brickell Ave, Miami, FL" }
       ],
       orders: []
     };
+    seedState.orders = [{
+      id: "CAT-204881",
+      customerId: seedState.customers[0].id,
+      status: "Preparando",
+      carrier: "Catalina Express",
+      createdAt: new Date().toISOString(),
+      items: [{ productId: seedState.products[0].id, name: seedState.products[0].name, price: 42, qty: 1 }]
+    }];
 
     let state = loadState();
     let supabaseClient = null;
@@ -183,65 +301,90 @@
     }
 
     function renderAll() {
+      renderMetrics();
+      renderOverviewOrders();
       renderProducts();
       renderCustomers();
       renderOrders();
       renderAuthState();
     }
 
+    function renderMetrics() {
+      const pending = state.orders.filter(order => order.status !== "Entregado").length;
+      const stock = state.products.reduce((sum, product) => sum + Number(product.stock || 0), 0);
+      document.getElementById("metric-orders").textContent = state.orders.length;
+      document.getElementById("metric-products").textContent = state.products.length;
+      document.getElementById("metric-stock").textContent = stock;
+      document.getElementById("metric-pending").textContent = pending;
+      document.getElementById("metric-customers").textContent = state.customers.length;
+      document.getElementById("today-count").textContent = state.orders.length;
+      document.getElementById("side-orders").textContent = state.orders.length;
+      document.getElementById("side-products").textContent = state.products.length;
+      document.getElementById("side-customers").textContent = state.customers.length;
+    }
+
+    function renderOverviewOrders() {
+      const rows = state.orders.map(order => `
+        <tr class="text-muted">
+          <td class="py-4"><div class="flex items-center gap-3"><div class="flex h-8 w-8 items-center justify-center rounded-full bg-violet/10 text-xs font-bold text-violet">${customerName(order.customerId).slice(0, 2).toUpperCase()}</div><span class="font-semibold text-ink">${customerName(order.customerId)}</span></div></td>
+          <td>${order.status}</td>
+          <td>${new Date(order.createdAt || Date.now()).toLocaleDateString()}</td>
+          <td class="font-semibold text-ink">${money(orderTotal(order))}</td>
+          <td><span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-green/10 text-green"><span class="material-symbols-outlined text-sm">local_shipping</span></span></td>
+          <td><button class="goto-orders rounded-full bg-navy px-5 py-2 text-xs font-bold text-white">VIEW DETAILS</button></td>
+        </tr>
+      `).join("");
+      document.getElementById("overview-orders").innerHTML = rows || `<tr><td colspan="6" class="py-8 text-center text-muted">Sin pedidos todavia.</td></tr>`;
+    }
+
     function renderProducts() {
       const isCustomerSession = currentUser && !isCurrentAdmin();
       document.querySelectorAll("#product-form input, #product-form select, #product-form textarea, #product-form button").forEach(field => field.disabled = isCustomerSession);
       document.getElementById("admin-products").innerHTML = state.products.map(product => `
-        <div class="rounded-lg border border-line p-3">
+        <div class="rounded-lg border border-line p-4">
           <div class="flex justify-between gap-3">
-            <div>
-              <p class="font-bold">${product.name}</p>
-              <p class="text-xs text-muted">${product.category} - ${money(product.price)} - Stock ${product.stock}</p>
-            </div>
-            ${isCustomerSession ? "" : `<button class="edit-product text-sm font-bold text-sage" data-id="${product.id}">Editar</button>`}
+            <div><p class="font-bold">${product.name}</p><p class="text-xs text-muted">${product.category} - ${money(product.price)} - Stock ${product.stock}</p></div>
+            ${isCustomerSession ? "" : `<button class="edit-product text-sm font-bold text-violet" data-id="${product.id}">Editar</button>`}
           </div>
         </div>
       `).join("");
     }
 
     function renderCustomers() {
-      const visibleCustomers = currentUser && !isCurrentAdmin()
-        ? state.customers.filter(customer => customer.id === currentUser.id)
-        : state.customers;
-      document.getElementById("customer-title").textContent = currentUser && !isCurrentAdmin() ? "Mi perfil" : "Clientes";
+      const visibleCustomers = currentUser && !isCurrentAdmin() ? state.customers.filter(customer => customer.id === currentUser.id) : state.customers;
+      document.getElementById("customer-title").textContent = currentUser && !isCurrentAdmin() ? "Mi perfil" : "Cliente";
       document.getElementById("admin-customers").innerHTML = visibleCustomers.map(customer => `
-        <div class="rounded-lg border border-line p-3">
+        <div class="rounded-lg border border-line p-4">
           <div class="flex justify-between gap-3">
-            <div>
-              <p class="font-bold">${customer.name}</p>
-              <p class="text-xs text-muted">${customer.email}</p>
-            </div>
-            <button class="edit-customer text-sm font-bold text-sage" data-id="${customer.id}">Editar</button>
+            <div><p class="font-bold">${customer.name}</p><p class="text-xs text-muted">${customer.email}</p></div>
+            <button class="edit-customer text-sm font-bold text-violet" data-id="${customer.id}">Editar</button>
           </div>
         </div>
       `).join("") || `<div class="rounded-lg border border-dashed border-line p-5 text-sm text-muted">Sin clientes todavia.</div>`;
     }
 
     function renderOrders() {
-      const visibleOrders = currentUser && !isCurrentAdmin()
-        ? state.orders.filter(order => order.customerId === currentUser.id)
-        : state.orders;
+      const visibleOrders = currentUser && !isCurrentAdmin() ? state.orders.filter(order => order.customerId === currentUser.id) : state.orders;
       document.getElementById("admin-orders").innerHTML = visibleOrders.map(order => `
-        <div class="rounded-lg border border-line p-4">
-          <div class="flex items-start justify-between gap-4">
-            <div>
-              <p class="font-extrabold">${order.id}</p>
-              <p class="text-sm text-muted">${customerName(order.customerId)} - ${money(orderTotal(order))}</p>
-            </div>
-            <span class="rounded-full bg-mist px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest">${order.status}</span>
+        <div class="rounded-sm bg-white p-5 shadow-soft">
+          <div class="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+            <div><p class="text-xs font-bold uppercase tracking-widest text-muted">${new Date(order.createdAt || Date.now()).toLocaleDateString()}</p><h3 class="mt-1 text-xl font-extrabold">${order.id}</h3><p class="text-sm text-muted">${customerName(order.customerId)} - ${money(orderTotal(order))}</p></div>
+            <span class="rounded-full bg-violet/10 px-4 py-2 text-xs font-extrabold uppercase tracking-widest text-violet">${order.status}</span>
           </div>
-          <label class="mt-4 block text-xs font-bold uppercase tracking-widest text-muted">Estado</label>
-          <select class="order-status mt-2 w-full rounded-lg border-line bg-porcelain text-sm" data-id="${order.id}" ${currentUser && !isCurrentAdmin() ? "disabled" : ""}>${orderStatuses.map(status => `<option ${status === order.status ? "selected" : ""}>${status}</option>`).join("")}</select>
-          <label class="mt-3 block text-xs font-bold uppercase tracking-widest text-muted">Transportista</label>
-          <input class="order-carrier mt-2 w-full rounded-lg border-line text-sm" data-id="${order.id}" value="${order.carrier || ""}" ${currentUser && !isCurrentAdmin() ? "disabled" : ""}>
+          <div class="mt-4 grid gap-3 md:grid-cols-2">
+            <label class="text-xs font-bold uppercase tracking-widest text-muted">Estado<select class="order-status mt-2 w-full rounded-lg border-line bg-white text-sm normal-case tracking-normal" data-id="${order.id}" ${currentUser && !isCurrentAdmin() ? "disabled" : ""}>${orderStatuses.map(status => `<option ${status === order.status ? "selected" : ""}>${status}</option>`).join("")}</select></label>
+            <label class="text-xs font-bold uppercase tracking-widest text-muted">Transportista<input class="order-carrier mt-2 w-full rounded-lg border-line text-sm normal-case tracking-normal" data-id="${order.id}" value="${order.carrier || ""}" ${currentUser && !isCurrentAdmin() ? "disabled" : ""}></label>
+          </div>
         </div>
-      `).join("") || `<div class="rounded-lg border border-dashed border-line p-5 text-sm text-muted">Sin pedidos todavia.</div>`;
+      `).join("") || `<div class="rounded-sm bg-white p-8 text-center text-muted shadow-soft">Sin pedidos todavia.</div>`;
+    }
+
+    function switchView(id) {
+      document.querySelectorAll(".view").forEach(view => view.classList.remove("active"));
+      document.getElementById("view-" + id).classList.add("active");
+      document.querySelectorAll(".side-link").forEach(link => link.classList.toggle("active", link.dataset.view === id));
+      const names = { overview: "Dashboard", orders: "Pedidos", products: "Productos", customers: "Clientes", settings: "Supabase" };
+      document.getElementById("current-section").textContent = names[id] || "Dashboard";
     }
 
     async function saveProduct(event) {
@@ -292,6 +435,7 @@
     function fillProduct(id) {
       const product = state.products.find(item => item.id === id);
       if (!product) return;
+      switchView("products");
       document.getElementById("product-id").value = product.id;
       document.getElementById("product-name").value = product.name;
       document.getElementById("product-category").value = product.category;
@@ -304,6 +448,7 @@
     function fillCustomer(id) {
       const customer = state.customers.find(item => item.id === id);
       if (!customer) return;
+      switchView("customers");
       document.getElementById("customer-id").value = customer.id;
       document.getElementById("customer-auth-id").value = customer.id;
       document.getElementById("customer-name").value = customer.name;
@@ -315,6 +460,7 @@
     function prepareOwnProfileForm() {
       if (!currentUser) return showToast("Inicia sesion primero");
       const existing = state.customers.find(customer => customer.id === currentUser.id);
+      switchView("customers");
       document.getElementById("customer-id").value = currentUser.id;
       document.getElementById("customer-auth-id").value = currentUser.id;
       document.getElementById("customer-name").value = existing?.name || currentUser.email?.split("@")[0] || "";
@@ -375,84 +521,26 @@
     async function pullFromSupabase(showMessage = true) {
       if (!supabaseClient) return;
       const { data: products } = await supabaseClient.from("products").select("id,name,category,description,price,stock,image_url,is_active").eq("is_active", true).order("created_at", { ascending: false });
-      if (products?.length) {
-        state.products = products.map(product => ({
-          id: product.id,
-          name: product.name,
-          category: product.category,
-          description: product.description || "",
-          price: Number(product.price),
-          stock: Number(product.stock),
-          image: product.image_url || images.skin
-        }));
-      }
-
+      if (products?.length) state.products = products.map(product => ({ id: product.id, name: product.name, category: product.category, description: product.description || "", price: Number(product.price), stock: Number(product.stock), image: product.image_url || images.skin }));
       if (currentUser) {
         const { data: customers } = await supabaseClient.from("customer_profiles").select("id,full_name,email,phone,shipping_address").order("created_at", { ascending: false });
-        if (customers?.length) {
-          state.customers = customers.map(customer => ({
-            id: customer.id,
-            name: customer.full_name,
-            email: customer.email,
-            phone: customer.phone || "",
-            address: customer.shipping_address || ""
-          }));
-        }
-
+        if (customers?.length) state.customers = customers.map(customer => ({ id: customer.id, name: customer.full_name, email: customer.email, phone: customer.phone || "", address: customer.shipping_address || "" }));
         const { data: orders } = await supabaseClient.from("orders").select("id,order_number,customer_id,status,carrier,tracking_code,estimated_delivery,created_at,order_items(product_id,product_name,unit_price,quantity),shipment_events(status,note,event_at)").order("created_at", { ascending: false });
-        if (orders?.length) {
-          state.orders = orders.map(order => ({
-            id: order.order_number,
-            remoteId: order.id,
-            customerId: order.customer_id,
-            status: order.status,
-            carrier: order.carrier || "Catalina Express",
-            trackingCode: order.tracking_code || "",
-            createdAt: order.created_at,
-            eta: order.estimated_delivery || "",
-            items: (order.order_items || []).map(item => ({
-              productId: item.product_id,
-              name: item.product_name,
-              price: Number(item.unit_price),
-              qty: Number(item.quantity)
-            })),
-            history: (order.shipment_events || []).map(event => ({
-              status: event.status,
-              note: event.note || statusNote(event.status),
-              at: event.event_at
-            }))
-          }));
-        }
+        if (orders?.length) state.orders = orders.map(order => ({ id: order.order_number, remoteId: order.id, customerId: order.customer_id, status: order.status, carrier: order.carrier || "Catalina Express", trackingCode: order.tracking_code || "", createdAt: order.created_at, eta: order.estimated_delivery || "", items: (order.order_items || []).map(item => ({ productId: item.product_id, name: item.product_name, price: Number(item.unit_price), qty: Number(item.quantity) })), history: (order.shipment_events || []).map(event => ({ status: event.status, note: event.note || statusNote(event.status), at: event.event_at })) }));
       }
-
       persist();
       if (showMessage) showToast("Datos sincronizados");
     }
 
     async function saveProductToSupabase(product) {
       if (!supabaseClient || !currentUser) return;
-      const { error } = await supabaseClient.from("products").upsert({
-        id: product.id,
-        name: product.name,
-        category: product.category,
-        description: product.description,
-        price: product.price,
-        stock: product.stock,
-        image_url: product.image,
-        is_active: true
-      });
+      const { error } = await supabaseClient.from("products").upsert({ id: product.id, name: product.name, category: product.category, description: product.description, price: product.price, stock: product.stock, image_url: product.image, is_active: true });
       if (error) showToast(error.message);
     }
 
     async function saveCustomerToSupabase(customer) {
       if (!supabaseClient || !currentUser) return;
-      const { error } = await supabaseClient.from("customer_profiles").upsert({
-        id: customer.id,
-        full_name: customer.name,
-        email: customer.email,
-        phone: customer.phone,
-        shipping_address: customer.address
-      });
+      const { error } = await supabaseClient.from("customer_profiles").upsert({ id: customer.id, full_name: customer.name, email: customer.email, phone: customer.phone, shipping_address: customer.address });
       if (error) showToast(error.message);
     }
 
@@ -460,28 +548,26 @@
       const order = state.orders.find(item => item.id === id);
       if (!order) return;
       order[key] = value;
-      if (key === "status") {
-        order.history = [...(order.history || []), { status: value, note: statusNote(value), at: new Date().toISOString() }];
-      }
+      if (key === "status") order.history = [...(order.history || []), { status: value, note: statusNote(value), at: new Date().toISOString() }];
       if (supabaseClient && currentUser && order.remoteId) {
         const payload = key === "carrier" ? { carrier: order.carrier } : { status: order.status, carrier: order.carrier };
         const { error } = await supabaseClient.from("orders").update(payload).eq("id", order.remoteId);
         if (error) showToast(error.message);
-        if (!error && key === "status") {
-          await supabaseClient.from("shipment_events").insert({ order_id: order.remoteId, status: order.status, note: statusNote(order.status) });
-        }
+        if (!error && key === "status") await supabaseClient.from("shipment_events").insert({ order_id: order.remoteId, status: order.status, note: statusNote(order.status) });
       }
       persist();
       showToast("Pedido actualizado");
     }
 
     document.addEventListener("click", event => {
+      const link = event.target.closest(".side-link");
+      if (link?.dataset.view) switchView(link.dataset.view);
+      if (event.target.closest(".goto-orders")) switchView("orders");
       const editProduct = event.target.closest(".edit-product");
       if (editProduct) fillProduct(editProduct.dataset.id);
       const editCustomer = event.target.closest(".edit-customer");
       if (editCustomer) fillCustomer(editCustomer.dataset.id);
     });
-
     document.addEventListener("change", event => {
       if (event.target.classList.contains("order-status")) updateOrder(event.target.dataset.id, "status", event.target.value);
       if (event.target.classList.contains("order-carrier")) updateOrder(event.target.dataset.id, "carrier", event.target.value);
