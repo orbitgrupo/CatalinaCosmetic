@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Catalina Admin</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Material+Symbols+Outlined:wght@300;400;500&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: "#1f2a2e",
+            muted: "#617078",
+            line: "#d9e2e7",
+            porcelain: "#f7fafb",
+            mist: "#e9f0f3",
+            sage: "#496b62",
+            clay: "#a96f5d",
+            cream: "#fffdf8"
+          },
+          borderRadius: { DEFAULT: "0.125rem", lg: "0.25rem", xl: "0.5rem" },
+          fontFamily: { sans: ["Manrope", "sans-serif"] }
+        }
+      }
+    };
+  </script>
+  <style>
+    body { font-family: Manrope, sans-serif; }
+    .material-symbols-outlined { font-variation-settings: "FILL" 0, "wght" 350, "GRAD" 0, "opsz" 24; }
+    .scroll-thin::-webkit-scrollbar { height: 8px; width: 8px; }
+    .scroll-thin::-webkit-scrollbar-thumb { background: #b9c7cd; border-radius: 999px; }
+  </style>
+</head>
+<body class="bg-porcelain text-ink">
+  <header class="border-b border-line bg-cream/95">
+    <div class="mx-auto flex min-h-20 max-w-7xl flex-col gap-4 px-5 py-5 md:flex-row md:items-center md:justify-between md:px-8">
+      <div>
+        <p class="text-xs font-extrabold uppercase tracking-[0.22em] text-clay">Catalina Cosmetic</p>
+        <h1 class="text-3xl font-extrabold tracking-tight">Panel administrativo</h1>
+      </div>
+      <div class="flex flex-wrap items-center gap-3">
+        <a class="rounded-lg border border-line bg-white px-4 py-3 text-sm font-bold hover:border-sage" href="./catalina.html">Ver tienda</a>
+        <div class="rounded-lg border border-line bg-white px-4 py-3 text-sm text-muted" id="sync-status">Modo local</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-7xl px-5 py-8 md:px-8">
+    <section class="grid grid-cols-1 gap-4 rounded-xl bg-white p-5 shadow-sm lg:grid-cols-12 lg:items-end">
+      <div class="lg:col-span-4">
+        <h2 class="font-extrabold">Conexion Supabase</h2>
+        <p class="mt-2 text-sm leading-6 text-muted">Usa una cuenta admin con <code>app_metadata.role = "admin"</code>.</p>
+      </div>
+      <div class="grid gap-3 lg:col-span-5 sm:grid-cols-2">
+        <input id="auth-email" class="rounded-lg border-line" type="email" placeholder="Email" />
+        <input id="auth-password" class="rounded-lg border-line" type="password" placeholder="Password" />
+      </div>
+      <div class="grid grid-cols-3 gap-2 lg:col-span-3">
+        <button id="auth-login" class="rounded-lg bg-ink px-4 py-3 text-sm font-bold text-white">Entrar</button>
+        <button id="auth-signup" class="rounded-lg bg-sage px-4 py-3 text-sm font-bold text-white">Crear</button>
+        <button id="auth-logout" class="rounded-lg border border-line px-4 py-3 text-sm font-bold">Salir</button>
+      </div>
+      <div class="flex flex-wrap items-center gap-3 lg:col-span-12">
+        <button id="sync-pull" class="rounded-lg border border-line px-4 py-3 text-sm font-bold">Sincronizar desde Supabase</button>
+        <p id="auth-state" class="text-sm text-muted">Sin sesion activa.</p>
+      </div>
+    </section>
+
+    <section class="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-12">
+      <div class="rounded-xl bg-white p-5 shadow-sm xl:col-span-4">
+        <h2 class="font-extrabold">Productos</h2>
+        <form id="product-form" class="mt-5 grid gap-3">
+          <input type="hidden" id="product-id" />
+          <input id="product-name" class="rounded-lg border-line" placeholder="Nombre" required />
+          <select id="product-category" class="rounded-lg border-line" required>
+            <option>Piel</option>
+            <option>Cabello</option>
+            <option>Kit</option>
+          </select>
+          <input id="product-price" class="rounded-lg border-line" type="number" min="0" step="0.01" placeholder="Precio" required />
+          <input id="product-stock" class="rounded-lg border-line" type="number" min="0" step="1" placeholder="Inventario" required />
+          <input id="product-image" class="rounded-lg border-line" placeholder="URL de imagen" />
+          <textarea id="product-description" class="rounded-lg border-line" rows="3" placeholder="Descripcion"></textarea>
+          <button class="rounded-lg bg-sage px-5 py-3 font-bold text-white">Guardar producto</button>
+          <button type="button" id="product-reset" class="rounded-lg border border-line px-5 py-3 font-bold">Limpiar</button>
+        </form>
+        <div id="admin-products" class="mt-5 max-h-[430px] space-y-3 overflow-auto pr-1 scroll-thin"></div>
+      </div>
+
+      <div class="rounded-xl bg-white p-5 shadow-sm xl:col-span-4">
+        <h2 id="customer-title" class="font-extrabold">Clientes</h2>
+        <form id="customer-form" class="mt-5 grid gap-3">
+          <input type="hidden" id="customer-id" />
+          <input id="customer-auth-id" class="rounded-lg border-line" placeholder="ID usuario Supabase" />
+          <input id="customer-name" class="rounded-lg border-line" placeholder="Nombre completo" required />
+          <input id="customer-email" class="rounded-lg border-line" type="email" placeholder="Email" required />
+          <input id="customer-phone" class="rounded-lg border-line" placeholder="Telefono" />
+          <textarea id="customer-address" class="rounded-lg border-line" rows="3" placeholder="Direccion de envio"></textarea>
+          <button class="rounded-lg bg-sage px-5 py-3 font-bold text-white">Guardar cliente</button>
+          <button type="button" id="customer-use-session" class="rounded-lg border border-line px-5 py-3 font-bold">Usar mi sesion</button>
+          <button type="button" id="customer-reset" class="rounded-lg border border-line px-5 py-3 font-bold">Limpiar</button>
+        </form>
+        <div id="admin-customers" class="mt-5 max-h-[430px] space-y-3 overflow-auto pr-1 scroll-thin"></div>
+      </div>
+
+      <div class="rounded-xl bg-white p-5 shadow-sm xl:col-span-4">
+        <h2 class="font-extrabold">Pedidos y envios</h2>
+        <div id="admin-orders" class="mt-5 max-h-[760px] space-y-4 overflow-auto pr-1 scroll-thin"></div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="pointer-events-none fixed bottom-6 right-6 z-50 translate-y-3 rounded-lg bg-ink px-5 py-4 text-sm font-bold text-white opacity-0 shadow-2xl transition-all"></div>
+
+  <script>
+    const STORAGE_KEY = "catalina-admin-v1";
+    const orderStatuses = ["Recibido", "Preparando", "Enviado", "En ruta", "Entregado"];
+    const images = {
+      skin: "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=900&q=80",
+      hair: "https://images.unsplash.com/photo-1522338242992-e1a54906a8da?auto=format&fit=crop&w=900&q=80",
+      kit: "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=900&q=80"
+    };
+    const seedState = {
+      products: [
+        { id: crypto.randomUUID(), name: "Serum Barrera Ceramide 5%", category: "Piel", price: 42, stock: 24, image: images.skin, description: "Repara la barrera cutanea con ceramidas, niacinamida y pantenol." },
+        { id: crypto.randomUUID(), name: "Aceite Capilar Biomimetic", category: "Cabello", price: 36, stock: 18, image: images.hair, description: "Tratamiento para brillo, puntas secas y control de frizz." }
+      ],
+      customers: [
+        { id: crypto.randomUUID(), name: "Camila Torres", email: "camila@example.com", phone: "+1 305 555 0144", address: "1200 Brickell Ave, Miami, FL" }
+      ],
+      orders: []
+    };
+
+    let state = loadState();
+    let supabaseClient = null;
+    let currentUser = null;
+
+    function loadState() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) return seedState;
+      try { return JSON.parse(saved); } catch { return seedState; }
+    }
+
+    function persist() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      renderAll();
+    }
+
+    function money(value) {
+      return new Intl.NumberFormat("es-US", { style: "currency", currency: "USD" }).format(value || 0);
+    }
+
+    function isCurrentAdmin() {
+      return currentUser?.app_metadata?.role === "admin";
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.remove("opacity-0", "translate-y-3");
+      setTimeout(() => toast.classList.add("opacity-0", "translate-y-3"), 2300);
+    }
+
+    function orderTotal(order) {
+      return (order.items || []).reduce((sum, item) => sum + item.price * item.qty, 0);
+    }
+
+    function customerName(id) {
+      return state.customers.find(customer => customer.id === id)?.name || "Cliente";
+    }
+
+    function statusNote(status) {
+      return {
+        Recibido: "Pedido recibido y pago validado.",
+        Preparando: "Productos separados y control de calidad iniciado.",
+        Enviado: "Paquete entregado al transportista.",
+        "En ruta": "Pedido en camino al destino.",
+        Entregado: "Entrega completada."
+      }[status] || "Actualizacion registrada.";
+    }
+
+    function renderAll() {
+      renderProducts();
+      renderCustomers();
+      renderOrders();
+      renderAuthState();
+    }
+
+    function renderProducts() {
+      const isCustomerSession = currentUser && !isCurrentAdmin();
+      document.querySelectorAll("#product-form input, #product-form select, #product-form textarea, #product-form button").forEach(field => field.disabled = isCustomerSession);
+      document.getElementById("admin-products").innerHTML = state.products.map(product => `
+        <div class="rounded-lg border border-line p-3">
+          <div class="flex justify-between gap-3">
+            <div>
+              <p class="font-bold">${product.name}</p>
+              <p class="text-xs text-muted">${product.category} - ${money(product.price)} - Stock ${product.stock}</p>
+            </div>
+            ${isCustomerSession ? "" : `<button class="edit-product text-sm font-bold text-sage" data-id="${product.id}">Editar</button>`}
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function renderCustomers() {
+      const visibleCustomers = currentUser && !isCurrentAdmin()
+        ? state.customers.filter(customer => customer.id === currentUser.id)
+        : state.customers;
+      document.getElementById("customer-title").textContent = currentUser && !isCurrentAdmin() ? "Mi perfil" : "Clientes";
+      document.getElementById("admin-customers").innerHTML = visibleCustomers.map(customer => `
+        <div class="rounded-lg border border-line p-3">
+          <div class="flex justify-between gap-3">
+            <div>
+              <p class="font-bold">${customer.name}</p>
+              <p class="text-xs text-muted">${customer.email}</p>
+            </div>
+            <button class="edit-customer text-sm font-bold text-sage" data-id="${customer.id}">Editar</button>
+          </div>
+        </div>
+      `).join("") || `<div class="rounded-lg border border-dashed border-line p-5 text-sm text-muted">Sin clientes todavia.</div>`;
+    }
+
+    function renderOrders() {
+      const visibleOrders = currentUser && !isCurrentAdmin()
+        ? state.orders.filter(order => order.customerId === currentUser.id)
+        : state.orders;
+      document.getElementById("admin-orders").innerHTML = visibleOrders.map(order => `
+        <div class="rounded-lg border border-line p-4">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <p class="font-extrabold">${order.id}</p>
+              <p class="text-sm text-muted">${customerName(order.customerId)} - ${money(orderTotal(order))}</p>
+            </div>
+            <span class="rounded-full bg-mist px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest">${order.status}</span>
+          </div>
+          <label class="mt-4 block text-xs font-bold uppercase tracking-widest text-muted">Estado</label>
+          <select class="order-status mt-2 w-full rounded-lg border-line bg-porcelain text-sm" data-id="${order.id}" ${currentUser && !isCurrentAdmin() ? "disabled" : ""}>${orderStatuses.map(status => `<option ${status === order.status ? "selected" : ""}>${status}</option>`).join("")}</select>
+          <label class="mt-3 block text-xs font-bold uppercase tracking-widest text-muted">Transportista</label>
+          <input class="order-carrier mt-2 w-full rounded-lg border-line text-sm" data-id="${order.id}" value="${order.carrier || ""}" ${currentUser && !isCurrentAdmin() ? "disabled" : ""}>
+        </div>
+      `).join("") || `<div class="rounded-lg border border-dashed border-line p-5 text-sm text-muted">Sin pedidos todavia.</div>`;
+    }
+
+    async function saveProduct(event) {
+      event.preventDefault();
+      const id = document.getElementById("product-id").value || crypto.randomUUID();
+      const product = {
+        id,
+        name: document.getElementById("product-name").value.trim(),
+        category: document.getElementById("product-category").value,
+        price: Number(document.getElementById("product-price").value),
+        stock: Number(document.getElementById("product-stock").value),
+        image: document.getElementById("product-image").value.trim() || images.skin,
+        description: document.getElementById("product-description").value.trim()
+      };
+      const index = state.products.findIndex(item => item.id === id);
+      if (index >= 0) state.products[index] = product;
+      else state.products.unshift(product);
+      await saveProductToSupabase(product);
+      event.target.reset();
+      document.getElementById("product-id").value = "";
+      persist();
+      showToast("Producto guardado");
+    }
+
+    async function saveCustomer(event) {
+      event.preventDefault();
+      const existingId = document.getElementById("customer-id").value;
+      const authId = document.getElementById("customer-auth-id").value.trim();
+      const id = existingId || authId || (supabaseClient && currentUser && !isCurrentAdmin() ? currentUser.id : crypto.randomUUID());
+      const customer = {
+        id,
+        name: document.getElementById("customer-name").value.trim(),
+        email: document.getElementById("customer-email").value.trim(),
+        phone: document.getElementById("customer-phone").value.trim(),
+        address: document.getElementById("customer-address").value.trim()
+      };
+      const index = state.customers.findIndex(item => item.id === id);
+      if (index >= 0) state.customers[index] = customer;
+      else state.customers.unshift(customer);
+      await saveCustomerToSupabase(customer);
+      event.target.reset();
+      document.getElementById("customer-id").value = "";
+      document.getElementById("customer-auth-id").value = "";
+      persist();
+      showToast("Cliente guardado");
+    }
+
+    function fillProduct(id) {
+      const product = state.products.find(item => item.id === id);
+      if (!product) return;
+      document.getElementById("product-id").value = product.id;
+      document.getElementById("product-name").value = product.name;
+      document.getElementById("product-category").value = product.category;
+      document.getElementById("product-price").value = product.price;
+      document.getElementById("product-stock").value = product.stock;
+      document.getElementById("product-image").value = product.image;
+      document.getElementById("product-description").value = product.description;
+    }
+
+    function fillCustomer(id) {
+      const customer = state.customers.find(item => item.id === id);
+      if (!customer) return;
+      document.getElementById("customer-id").value = customer.id;
+      document.getElementById("customer-auth-id").value = customer.id;
+      document.getElementById("customer-name").value = customer.name;
+      document.getElementById("customer-email").value = customer.email;
+      document.getElementById("customer-phone").value = customer.phone;
+      document.getElementById("customer-address").value = customer.address;
+    }
+
+    function prepareOwnProfileForm() {
+      if (!currentUser) return showToast("Inicia sesion primero");
+      const existing = state.customers.find(customer => customer.id === currentUser.id);
+      document.getElementById("customer-id").value = currentUser.id;
+      document.getElementById("customer-auth-id").value = currentUser.id;
+      document.getElementById("customer-name").value = existing?.name || currentUser.email?.split("@")[0] || "";
+      document.getElementById("customer-email").value = existing?.email || currentUser.email || "";
+      document.getElementById("customer-phone").value = existing?.phone || "";
+      document.getElementById("customer-address").value = existing?.address || "";
+    }
+
+    async function initSupabase() {
+      const config = window.__CATALINA_CONFIG__ || {};
+      const url = window.CATALINA_SUPABASE_URL || config.supabaseUrl || "";
+      const key = window.CATALINA_SUPABASE_PUBLISHABLE_KEY || config.supabasePublishableKey || "";
+      if (url && key && window.supabase) {
+        supabaseClient = window.supabase.createClient(url, key);
+        const { data } = await supabaseClient.auth.getSession();
+        currentUser = data.session?.user || null;
+        await pullFromSupabase(false);
+      }
+      renderAll();
+    }
+
+    function renderAuthState() {
+      document.getElementById("auth-state").textContent = currentUser ? `Sesion activa: ${currentUser.email}` : "Sin sesion activa.";
+      document.getElementById("sync-status").textContent = supabaseClient ? "Supabase configurado" : "Modo local";
+    }
+
+    async function loginSupabase() {
+      if (!supabaseClient) return showToast("Configura Supabase en Sites");
+      const email = document.getElementById("auth-email").value.trim();
+      const password = document.getElementById("auth-password").value;
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (error) return showToast(error.message);
+      currentUser = data.user;
+      await pullFromSupabase(false);
+      showToast("Sesion iniciada");
+    }
+
+    async function signupSupabase() {
+      if (!supabaseClient) return showToast("Configura Supabase en Sites");
+      const email = document.getElementById("auth-email").value.trim();
+      const password = document.getElementById("auth-password").value;
+      const { data, error } = await supabaseClient.auth.signUp({ email, password });
+      if (error) return showToast(error.message);
+      currentUser = data.user || null;
+      renderAll();
+      prepareOwnProfileForm();
+      showToast(currentUser ? "Cuenta creada" : "Revisa tu email");
+    }
+
+    async function logoutSupabase() {
+      if (!supabaseClient) return;
+      await supabaseClient.auth.signOut();
+      currentUser = null;
+      renderAll();
+      showToast("Sesion cerrada");
+    }
+
+    async function pullFromSupabase(showMessage = true) {
+      if (!supabaseClient) return;
+      const { data: products } = await supabaseClient.from("products").select("id,name,category,description,price,stock,image_url,is_active").eq("is_active", true).order("created_at", { ascending: false });
+      if (products?.length) {
+        state.products = products.map(product => ({
+          id: product.id,
+          name: product.name,
+          category: product.category,
+          description: product.description || "",
+          price: Number(product.price),
+          stock: Number(product.stock),
+          image: product.image_url || images.skin
+        }));
+      }
+
+      if (currentUser) {
+        const { data: customers } = await supabaseClient.from("customer_profiles").select("id,full_name,email,phone,shipping_address").order("created_at", { ascending: false });
+        if (customers?.length) {
+          state.customers = customers.map(customer => ({
+            id: customer.id,
+            name: customer.full_name,
+            email: customer.email,
+            phone: customer.phone || "",
+            address: customer.shipping_address || ""
+          }));
+        }
+
+        const { data: orders } = await supabaseClient.from("orders").select("id,order_number,customer_id,status,carrier,tracking_code,estimated_delivery,created_at,order_items(product_id,product_name,unit_price,quantity),shipment_events(status,note,event_at)").order("created_at", { ascending: false });
+        if (orders?.length) {
+          state.orders = orders.map(order => ({
+            id: order.order_number,
+            remoteId: order.id,
+            customerId: order.customer_id,
+            status: order.status,
+            carrier: order.carrier || "Catalina Express",
+            trackingCode: order.tracking_code || "",
+            createdAt: order.created_at,
+            eta: order.estimated_delivery || "",
+            items: (order.order_items || []).map(item => ({
+              productId: item.product_id,
+              name: item.product_name,
+              price: Number(item.unit_price),
+              qty: Number(item.quantity)
+            })),
+            history: (order.shipment_events || []).map(event => ({
+              status: event.status,
+              note: event.note || statusNote(event.status),
+              at: event.event_at
+            }))
+          }));
+        }
+      }
+
+      persist();
+      if (showMessage) showToast("Datos sincronizados");
+    }
+
+    async function saveProductToSupabase(product) {
+      if (!supabaseClient || !currentUser) return;
+      const { error } = await supabaseClient.from("products").upsert({
+        id: product.id,
+        name: product.name,
+        category: product.category,
+        description: product.description,
+        price: product.price,
+        stock: product.stock,
+        image_url: product.image,
+        is_active: true
+      });
+      if (error) showToast(error.message);
+    }
+
+    async function saveCustomerToSupabase(customer) {
+      if (!supabaseClient || !currentUser) return;
+      const { error } = await supabaseClient.from("customer_profiles").upsert({
+        id: customer.id,
+        full_name: customer.name,
+        email: customer.email,
+        phone: customer.phone,
+        shipping_address: customer.address
+      });
+      if (error) showToast(error.message);
+    }
+
+    async function updateOrder(id, key, value) {
+      const order = state.orders.find(item => item.id === id);
+      if (!order) return;
+      order[key] = value;
+      if (key === "status") {
+        order.history = [...(order.history || []), { status: value, note: statusNote(value), at: new Date().toISOString() }];
+      }
+      if (supabaseClient && currentUser && order.remoteId) {
+        const payload = key === "carrier" ? { carrier: order.carrier } : { status: order.status, carrier: order.carrier };
+        const { error } = await supabaseClient.from("orders").update(payload).eq("id", order.remoteId);
+        if (error) showToast(error.message);
+        if (!error && key === "status") {
+          await supabaseClient.from("shipment_events").insert({ order_id: order.remoteId, status: order.status, note: statusNote(order.status) });
+        }
+      }
+      persist();
+      showToast("Pedido actualizado");
+    }
+
+    document.addEventListener("click", event => {
+      const editProduct = event.target.closest(".edit-product");
+      if (editProduct) fillProduct(editProduct.dataset.id);
+      const editCustomer = event.target.closest(".edit-customer");
+      if (editCustomer) fillCustomer(editCustomer.dataset.id);
+    });
+
+    document.addEventListener("change", event => {
+      if (event.target.classList.contains("order-status")) updateOrder(event.target.dataset.id, "status", event.target.value);
+      if (event.target.classList.contains("order-carrier")) updateOrder(event.target.dataset.id, "carrier", event.target.value);
+    });
+
+    document.getElementById("product-form").addEventListener("submit", saveProduct);
+    document.getElementById("customer-form").addEventListener("submit", saveCustomer);
+    document.getElementById("auth-login").addEventListener("click", loginSupabase);
+    document.getElementById("auth-signup").addEventListener("click", signupSupabase);
+    document.getElementById("auth-logout").addEventListener("click", logoutSupabase);
+    document.getElementById("sync-pull").addEventListener("click", () => pullFromSupabase(true));
+    document.getElementById("product-reset").addEventListener("click", () => { document.getElementById("product-form").reset(); document.getElementById("product-id").value = ""; });
+    document.getElementById("customer-use-session").addEventListener("click", prepareOwnProfileForm);
+    document.getElementById("customer-reset").addEventListener("click", () => { document.getElementById("customer-form").reset(); document.getElementById("customer-id").value = ""; document.getElementById("customer-auth-id").value = ""; });
+
+    renderAll();
+    initSupabase();
+  </script>
+</body>
+</html>

@@ -1,8 +1,7 @@
 import fs from "node:fs";
-import path from "node:path";
-
 const root = new URL("..", import.meta.url);
 const html = fs.readFileSync(new URL("catalina.html", root), "utf8");
+const admin = fs.readFileSync(new URL("admin.html", root), "utf8");
 const schema = fs.readFileSync(new URL("supabase-schema.sql", root), "utf8");
 const seed = fs.readFileSync(new URL("supabase-seed.sql", root), "utf8");
 const setup = fs.readFileSync(new URL("SUPABASE_SETUP.md", root), "utf8");
@@ -14,6 +13,7 @@ fs.mkdirSync(distOpenAI, { recursive: true });
 fs.copyFileSync(new URL(".openai/hosting.json", root), new URL("hosting.json", distOpenAI));
 
 const worker = `const html = ${JSON.stringify(html)};
+const admin = ${JSON.stringify(admin)};
 const schema = ${JSON.stringify(schema)};
 const seed = ${JSON.stringify(seed)};
 const setup = ${JSON.stringify(setup)};
@@ -58,7 +58,16 @@ export default {
       });
     }
 
-    return new Response(withRuntimeConfig(html, env || {}), {
+    if (url.pathname === "/admin" || url.pathname === "/admin.html") {
+      return new Response(withRuntimeConfig(admin, env || {}), {
+        headers: {
+          "content-type": "text/html; charset=utf-8",
+          "cache-control": "public, max-age=300"
+        }
+      });
+    }
+
+    return new Response(html, {
       headers: {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "public, max-age=300"
@@ -72,4 +81,4 @@ fs.writeFileSync(new URL("index.js", distServer), worker);
 fs.mkdirSync(new URL("worker/", root), { recursive: true });
 fs.writeFileSync(new URL("worker/index.js", root), worker);
 
-console.log(`built worker with ${html.length} html bytes and ${schema.length} sql bytes`);
+console.log(`built worker with ${html.length} shop bytes, ${admin.length} admin bytes and ${schema.length} sql bytes`);
