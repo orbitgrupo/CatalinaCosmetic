@@ -873,6 +873,29 @@
       </section>
       <!-- Profile and Address -->
       <section class="md:col-span-4 bg-surface-container-high p-8 rounded-lg">
+        <div class="mb-8 space-y-4">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-primary">account_circle</span>
+            <h2 class="text-xl font-bold tracking-tight">Cuenta cliente</h2>
+          </div>
+          <p id="profile-auth-status" class="rounded-lg bg-surface-container-lowest p-4 text-xs leading-5 text-on-surface-variant">Sin sesion iniciada.</p>
+          <form id="signup-form" class="grid gap-3 rounded-lg bg-surface-container-lowest p-4">
+            <p class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-primary">Crear cuenta</p>
+            <input id="signup-name" class="w-full rounded-lg border-none bg-surface-container-low px-4 py-3 text-sm focus:ring-1 focus:ring-primary" placeholder="Nombre completo" required/>
+            <input id="signup-email" class="w-full rounded-lg border-none bg-surface-container-low px-4 py-3 text-sm focus:ring-1 focus:ring-primary" type="email" placeholder="Email" required/>
+            <input id="signup-password" class="w-full rounded-lg border-none bg-surface-container-low px-4 py-3 text-sm focus:ring-1 focus:ring-primary" type="password" minlength="6" placeholder="Password" required/>
+            <button class="rounded-lg bg-primary py-3 text-xs font-bold uppercase tracking-[0.1em] text-on-primary" type="submit">Crear cuenta</button>
+          </form>
+          <form id="login-form" class="grid gap-3 rounded-lg bg-surface-container-lowest p-4">
+            <p class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-primary">Iniciar sesion</p>
+            <input id="login-email" class="w-full rounded-lg border-none bg-surface-container-low px-4 py-3 text-sm focus:ring-1 focus:ring-primary" type="email" placeholder="Email" required/>
+            <input id="login-password" class="w-full rounded-lg border-none bg-surface-container-low px-4 py-3 text-sm focus:ring-1 focus:ring-primary" type="password" placeholder="Password" required/>
+            <div class="grid grid-cols-2 gap-3">
+              <button class="rounded-lg bg-on-surface py-3 text-xs font-bold uppercase tracking-[0.1em] text-white" type="submit">Entrar</button>
+              <button id="profile-logout" class="rounded-lg border border-outline-variant/40 py-3 text-xs font-bold uppercase tracking-[0.1em] text-on-surface" type="button">Salir</button>
+            </div>
+          </form>
+        </div>
         <div class="flex items-center gap-3 mb-8">
           <span class="material-symbols-outlined text-primary">location_on</span>
           <h2 class="text-xl font-bold tracking-tight">Perfil y envio</h2>
@@ -1531,7 +1554,70 @@
     try { return JSON.parse(localStorage.getItem(CUSTOMER_PROFILE_KEY) || "{}"); } catch { return {}; }
   }
 
-  function saveCustomerProfile(event) {
+  function mapProfileFromDatabase(profile) {
+    if (!profile) return {};
+    return {
+      name: profile.full_name || "",
+      email: profile.email || "",
+      phone: profile.phone || "",
+      houseNumber: profile.house_number || "",
+      street: profile.street || "",
+      sector: profile.sector || "",
+      province: profile.province || "",
+      city: profile.city || "",
+      reference: profile.address_reference || "",
+      address: profile.shipping_address || ""
+    };
+  }
+
+  function getProfilePayload(profile, user = currentCustomerUser) {
+    return {
+      id: user?.id,
+      full_name: profile.name,
+      email: profile.email || user?.email || "",
+      phone: profile.phone,
+      house_number: profile.houseNumber,
+      street: profile.street,
+      sector: profile.sector,
+      province: profile.province,
+      city: profile.city,
+      address_reference: profile.reference,
+      shipping_address: profile.address
+    };
+  }
+
+  async function saveCustomerProfileToSupabase(profile) {
+    const client = getStorefrontSupabaseClient();
+    if (!client || !currentCustomerUser) return false;
+    const { error } = await client.from("customer_profiles").upsert(getProfilePayload(profile));
+    if (error) {
+      showToast(error.message);
+      return false;
+    }
+    return true;
+  }
+
+  async function loadCustomerProfileFromSupabase() {
+    const client = getStorefrontSupabaseClient();
+    if (!client || !currentCustomerUser) return;
+    const { data, error } = await client
+      .from("customer_profiles")
+      .select("full_name,email,phone,house_number,street,sector,province,city,address_reference,shipping_address")
+      .eq("id", currentCustomerUser.id)
+      .maybeSingle();
+    if (error) {
+      showToast(error.message);
+      return;
+    }
+    if (data) {
+      const profile = mapProfileFromDatabase(data);
+      localStorage.setItem(CUSTOMER_PROFILE_KEY, JSON.stringify(profile));
+      renderCustomerProfile();
+      applyProfileToCheckout(profile);
+    }
+  }
+
+  async function saveCustomerProfile(event) {
     event.preventDefault();
     const profile = {
       name: document.getElementById('profile-name').value.trim(),
@@ -1540,9 +1626,10 @@
       ...getAddressFrom('profile')
     };
     localStorage.setItem(CUSTOMER_PROFILE_KEY, JSON.stringify(profile));
+    const synced = await saveCustomerProfileToSupabase(profile);
     renderCustomerProfile();
     applyProfileToCheckout(profile);
-    showToast('Perfil guardado');
+    showToast(synced ? 'Perfil guardado en Supabase' : 'Perfil guardado localmente. Inicia sesion para sincronizar.');
   }
 
   function renderCustomerProfile() {
@@ -1688,6 +1775,91 @@
     { name: "Kit", slug: "kit", description: "Rutinas completas y combinaciones listas para usar." }
   ];
   let storefrontSupabaseClient = null;
+  let currentCustomerUser = null;
+
+  function getStorefrontSupabaseClient() {
+    if (storefrontSupabaseClient) return storefrontSupabaseClient;
+    const config = window.__CATALINA_CONFIG__ || {};
+    const url = window.CATALINA_SUPABASE_URL || config.supabaseUrl || "";
+    const key = window.CATALINA_SUPABASE_PUBLISHABLE_KEY || config.supabasePublishableKey || "";
+    if (!url || !key || !window.supabase) return null;
+    storefrontSupabaseClient = window.supabase.createClient(url, key);
+    return storefrontSupabaseClient;
+  }
+
+  function renderCustomerAuthState() {
+    const status = document.getElementById('profile-auth-status');
+    if (!status) return;
+    if (!getStorefrontSupabaseClient()) {
+      status.textContent = 'Supabase no esta configurado en esta version. Puedes guardar localmente.';
+      return;
+    }
+    status.textContent = currentCustomerUser
+      ? `Sesion iniciada: ${currentCustomerUser.email}. Tu perfil se guarda en la base de datos.`
+      : 'Sin sesion iniciada. Crea una cuenta o entra para guardar tu perfil en Supabase.';
+  }
+
+  async function initCustomerAuth() {
+    const client = getStorefrontSupabaseClient();
+    if (!client) {
+      renderCustomerAuthState();
+      return;
+    }
+    const { data } = await client.auth.getSession();
+    currentCustomerUser = data.session?.user || null;
+    renderCustomerAuthState();
+    if (currentCustomerUser) await loadCustomerProfileFromSupabase();
+    client.auth.onAuthStateChange(async (_event, session) => {
+      currentCustomerUser = session?.user || null;
+      renderCustomerAuthState();
+      if (currentCustomerUser) await loadCustomerProfileFromSupabase();
+    });
+  }
+
+  async function signupCustomer(event) {
+    event.preventDefault();
+    const client = getStorefrontSupabaseClient();
+    if (!client) return showToast('Configura Supabase para crear cuentas.');
+    const name = document.getElementById('signup-name').value.trim();
+    const email = document.getElementById('signup-email').value.trim();
+    const password = document.getElementById('signup-password').value;
+    const { data, error } = await client.auth.signUp({ email, password, options: { data: { full_name: name } } });
+    if (error) return showToast(error.message);
+    currentCustomerUser = data.user || currentCustomerUser;
+    document.getElementById('profile-name').value = name;
+    document.getElementById('profile-email').value = email;
+    if (currentCustomerUser) await saveCustomerProfileToSupabase({
+      name,
+      email,
+      phone: document.getElementById('profile-phone').value.trim(),
+      ...getAddressFrom('profile')
+    });
+    renderCustomerAuthState();
+    showToast(currentCustomerUser ? 'Cuenta creada' : 'Cuenta creada. Revisa tu email para confirmar.');
+  }
+
+  async function loginCustomer(event) {
+    event.preventDefault();
+    const client = getStorefrontSupabaseClient();
+    if (!client) return showToast('Configura Supabase para iniciar sesion.');
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const { data, error } = await client.auth.signInWithPassword({ email, password });
+    if (error) return showToast(error.message);
+    currentCustomerUser = data.user;
+    renderCustomerAuthState();
+    await loadCustomerProfileFromSupabase();
+    showToast('Sesion iniciada');
+  }
+
+  async function logoutCustomer() {
+    const client = getStorefrontSupabaseClient();
+    if (!client) return;
+    await client.auth.signOut();
+    currentCustomerUser = null;
+    renderCustomerAuthState();
+    showToast('Sesion cerrada');
+  }
 
   function escapeHtml(value) {
     return String(value ?? "").replace(/[&<>"']/g, char => ({
@@ -1837,13 +2009,10 @@
   }
 
   async function loadProductsFromSupabase() {
-    const config = window.__CATALINA_CONFIG__ || {};
-    const url = window.CATALINA_SUPABASE_URL || config.supabaseUrl || "";
-    const key = window.CATALINA_SUPABASE_PUBLISHABLE_KEY || config.supabasePublishableKey || "";
-    if (!url || !key || !window.supabase) return;
+    const client = getStorefrontSupabaseClient();
+    if (!client) return;
     try {
-      storefrontSupabaseClient = window.supabase.createClient(url, key);
-      const { data, error } = await storefrontSupabaseClient
+      const { data, error } = await client
         .from("products")
         .select("id,name,category,description,price,stock,image_url,is_active")
         .eq("is_active", true)
@@ -1854,7 +2023,7 @@
         renderCategoryNavigation();
         renderCatalogProducts();
       }
-      const { data: categories, error: categoriesError } = await storefrontSupabaseClient
+      const { data: categories, error: categoriesError } = await client
         .from("categories")
         .select("name,slug,description,image_url,is_active")
         .eq("is_active", true)
@@ -1963,6 +2132,9 @@
     const qty = addToCart(selectedDetailProduct.name, selectedDetailProduct.price, selectedDetailProduct.images[0]);
     animateDetailAddButton(qty);
   });
+  document.getElementById('signup-form').addEventListener('submit', signupCustomer);
+  document.getElementById('login-form').addEventListener('submit', loginCustomer);
+  document.getElementById('profile-logout').addEventListener('click', logoutCustomer);
   document.getElementById('profile-form').addEventListener('submit', saveCustomerProfile);
   document.getElementById('profile-province').addEventListener('change', () => populateCitySelect('profile-province', 'profile-city'));
   document.getElementById('checkout-province').addEventListener('change', () => populateCitySelect('checkout-province', 'checkout-city'));
@@ -2253,6 +2425,7 @@
   // Initialize
   renderCustomerProfile();
   applyProfileToCheckout();
+  initCustomerAuth();
   initProductSearch();
   renderCart();
   const checkoutResult = new URLSearchParams(window.location.search).get('checkout');
