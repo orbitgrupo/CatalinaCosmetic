@@ -90,6 +90,15 @@
     .page { display: none; }
     .page.active { display: block; }
     .nav-link { cursor: pointer; }
+    .product-card { cursor: pointer; }
+    .product-card:focus-visible {
+      outline: 3px solid rgba(66, 99, 114, .35);
+      outline-offset: 4px;
+    }
+    .product-gallery-thumb.active {
+      border-color: #426372;
+      box-shadow: 0 0 0 3px rgba(66, 99, 114, .12);
+    }
     * { box-sizing: border-box; }
     @media (max-width: 767px) {
       nav > div { height: 64px !important; padding-left: 16px !important; padding-right: 16px !important; }
@@ -242,7 +251,7 @@
         </div>
         <div class="mobile-scroll-hint">
         <div id="mobile-featured-products" class="mobile-product-row">
-          <article class="mobile-product-card overflow-hidden rounded-2xl bg-white shadow-sm">
+          <article class="product-card mobile-product-card overflow-hidden rounded-2xl bg-white shadow-sm" data-product-id="ascorbic-acid" role="button" tabindex="0">
             <img class="h-40 w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAinDoVQz3KBulg_sRllUlJKVY0YlraOCZE04DQ1Qs_fDaKViKHh5X0mPoZGMTC8SHwT_QpKUOTfvHkNFXPs-xlOCcvTEl6m0THk5zJEKtjwXZCAvN_OFtz93WvYjkKtQgUBHkqXCkl548KO2ZghWa9v2vw1oLc-PVB1tIYIw02A9RdP6W_MD4DLoZOEdYhs1k6Akxrmr2hflXF2jLTvI1uPBbDXGH-S-KuTveqpZOT0fXMxFKlFHW5UoQ4OigwZyIJN8d0KFTQbiY" alt="Ascorbic Acid Suspension"/>
             <div class="p-4">
               <p class="text-[10px] font-bold uppercase tracking-widest text-primary">Vitamin C</p>
@@ -253,7 +262,7 @@
               </div>
             </div>
           </article>
-          <article class="mobile-product-card overflow-hidden rounded-2xl bg-white shadow-sm">
+          <article class="product-card mobile-product-card overflow-hidden rounded-2xl bg-white shadow-sm" data-product-id="vitamin-formula" role="button" tabindex="0">
             <img class="h-40 w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC13aK7yB7xZ1QVURbJed1BDnmSDn1kbeqIKnRrrsDUpudZGnvkdvfVy88PNjZ6bsTND3IWTZEq-gVfo_cW-whG6pSnNwcJxlUdMPb7RXSYs_3lBNJ512oR4wLQtKcbgIjV6Yn6pDgXnmP_TaUD4REM1rx1hEHPRZcWLDb2tBFYfq5bNDxCk_9XLStXBkUQXcA-OZLZ1p9_welC5tpj7vZcq91aHLyXxDBRNkK2CPDdg1ax7fa4BPgmQ2YpJzGIzZfRuH5Eh-wCkXc" alt="High-Strength Vitamin Formula"/>
             <div class="p-4">
               <p class="text-[10px] font-bold uppercase tracking-widest text-primary">Daily Care</p>
@@ -264,7 +273,7 @@
               </div>
             </div>
           </article>
-          <article class="mobile-product-card overflow-hidden rounded-2xl bg-white shadow-sm">
+          <article class="product-card mobile-product-card overflow-hidden rounded-2xl bg-white shadow-sm" data-product-id="organic-formulation" role="button" tabindex="0">
             <img class="h-40 w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDntx5mTX4YxfgklZgXpziatIp3KpliM-VxpLSWwp4y2z353qjznP_1FJWwg1KENiwub6_Wg4UjgT6VJ4w_CfDGeGMJx539RJvqcRATaolV_l0OInP1XcB2tMTZTZjM4mdtkq9PVxbE8g-nvnEK350TkU2FiB3UxveXeOQumBKt3Kc8jx1fkZ6PUwpAJ4DtA098ACHxAITIb9roSRdikXuSsob9fu4g6ZubsfyeKcKJGPtBJ4tbJ0x2NmFBJJSluXb2e7HA17_ZMa0" alt="Pure Organic Formulation"/>
             <div class="p-4">
               <p class="text-[10px] font-bold uppercase tracking-widest text-primary">Organic</p>
@@ -305,17 +314,17 @@
         </div>
         <div class="mobile-scroll-hint">
         <div id="mobile-best-products" class="mobile-product-row">
-          <article class="mobile-product-card rounded-2xl bg-white p-3 shadow-sm">
+          <article class="product-card mobile-product-card rounded-2xl bg-white p-3 shadow-sm" data-product-id="hydration-formula" role="button" tabindex="0">
             <img class="h-36 w-full rounded-xl object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtwkDR_5RDlhoV9YQuP_pU4A3xjojaB16UltXehyoJKV1_yVz6O9gVI254dSqudYutnD8rp8Wv6yeAOc04RI1hgaOR0vVeMDxPnnjcAkqVWpLPM0pab6H26GEePdM-FXelfN32HkFJQWcT8Vs6K9kxiQST8btXzqZp_KzBTE3xGUFR-zx5bMhNr32CGFbPu9X-yZUSnt_uQLsQHc1vhEY83I98bl-AqkD5MdWv0J8Cyt0vR3v0j_oDPoUVT3vJYRMejzph-hepQhs" alt="Surface Hydration Formula"/>
             <h3 class="mt-3 min-h-[42px] text-sm font-extrabold leading-tight">Surface Hydration Formula</h3>
             <div class="mt-3 flex items-center justify-between"><span class="font-extrabold">$9.20</span><button class="add-to-cart rounded-full bg-primary p-2 text-white" data-name="Surface Hydration Formula" data-price="9.20" data-img="https://lh3.googleusercontent.com/aida-public/AB6AXuBtwkDR_5RDlhoV9YQuP_pU4A3xjojaB16UltXehyoJKV1_yVz6O9gVI254dSqudYutnD8rp8Wv6yeAOc04RI1hgaOR0vVeMDxPnnjcAkqVWpLPM0pab6H26GEePdM-FXelfN32HkFJQWcT8Vs6K9kxiQST8btXzqZp_KzBTE3xGUFR-zx5bMhNr32CGFbPu9X-yZUSnt_uQLsQHc1vhEY83I98bl-AqkD5MdWv0J8Cyt0vR3v0j_oDPoUVT3vJYRMejzph-hepQhs"><span class="material-symbols-outlined text-base">add</span></button></div>
           </article>
-          <article class="mobile-product-card rounded-2xl bg-white p-3 shadow-sm">
+          <article class="product-card mobile-product-card rounded-2xl bg-white p-3 shadow-sm" data-product-id="peptide-serum" role="button" tabindex="0">
             <img class="h-36 w-full rounded-xl object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCh0otZd3sb2Mved6Cp22a3LeUeDHG6PlTQW4x1eXzjqddMyaiI56XnY6rYH3W764K-lBr1DxYTIpad7IyHazfEs_LmteVtSCUblOCCA94aADlT3KDXmOGYzoq9H5K7ZiD420wRUMLZm5Kgp_dU6JzMKSZ7UyY-JtUYmq1s_38_ZFT6AoLaTDg9ytutXBMFp64ffUv_OXSkkyOltpawQndxdRSUmoR3I0HjBbpmjwBdEdGfyGDgylSoKJChJVqB68JXwhvmq0-dKUk" alt="Advanced Multi-Peptide Serum"/>
             <h3 class="mt-3 min-h-[42px] text-sm font-extrabold leading-tight">Advanced Multi-Peptide Serum</h3>
             <div class="mt-3 flex items-center justify-between"><span class="font-extrabold">$34.10</span><button class="add-to-cart rounded-full bg-primary p-2 text-white" data-name="Advanced Multi-Peptide Serum" data-price="34.10" data-img="https://lh3.googleusercontent.com/aida-public/AB6AXuCh0otZd3sb2Mved6Cp22a3LeUeDHG6PlTQW4x1eXzjqddMyaiI56XnY6rYH3W764K-lBr1DxYTIpad7IyHazfEs_LmteVtSCUblOCCA94aADlT3KDXmOGYzoq9H5K7ZiD420wRUMLZm5Kgp_dU6JzMKSZ7UyY-JtUYmq1s_38_ZFT6AoLaTDg9ytutXBMFp64ffUv_OXSkkyOltpawQndxdRSUmoR3I0HjBbpmjwBdEdGfyGDgylSoKJChJVqB68JXwhvmq0-dKUk"><span class="material-symbols-outlined text-base">add</span></button></div>
           </article>
-          <article class="mobile-product-card rounded-2xl bg-white p-3 shadow-sm">
+          <article class="product-card mobile-product-card rounded-2xl bg-white p-3 shadow-sm" data-product-id="toning-solution" role="button" tabindex="0">
             <img class="h-36 w-full rounded-xl object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzbHyIwdvNpcRkw0owsod51ivuhaGV2npaH3VMNOngtReqFMva5meTa8fdco_L1wmoCCbem1QP_rTuZ7vBw-hH6fvJGxUo8it-lt7VSKwrfmVmzJZGpfrsSlAj3u9lYMesKTFu2tjLJcDfwaRxJ3zV4wy4yD7NczO846BVKtQN_fmfmR2Gkdc22CJU1CZmoDTTx-BEMRoeKfTmR7EBhVuUf4_2hJMtWyzYC9pnlEWqWVHxCh8htIJxjnI-6irRsONQJknZnQ6-md8" alt="Exfoliating Toning Solution"/>
             <h3 class="mt-3 min-h-[42px] text-sm font-extrabold leading-tight">Exfoliating Toning Solution</h3>
             <div class="mt-3 flex items-center justify-between"><span class="font-extrabold">$10.50</span><button class="add-to-cart rounded-full bg-primary p-2 text-white" data-name="Exfoliating Toning Solution" data-price="10.50" data-img="https://lh3.googleusercontent.com/aida-public/AB6AXuCzbHyIwdvNpcRkw0owsod51ivuhaGV2npaH3VMNOngtReqFMva5meTa8fdco_L1wmoCCbem1QP_rTuZ7vBw-hH6fvJGxUo8it-lt7VSKwrfmVmzJZGpfrsSlAj3u9lYMesKTFu2tjLJcDfwaRxJ3zV4wy4yD7NczO846BVKtQN_fmfmR2Gkdc22CJU1CZmoDTTx-BEMRoeKfTmR7EBhVuUf4_2hJMtWyzYC9pnlEWqWVHxCh8htIJxjnI-6irRsONQJknZnQ6-md8"><span class="material-symbols-outlined text-base">add</span></button></div>
@@ -548,7 +557,7 @@
     </section>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
       <!-- Product 1 -->
-      <div class="flex flex-col group">
+      <div class="product-card flex flex-col group" data-product-id="ascorbic-acid" role="button" tabindex="0">
         <div class="aspect-[4/5] bg-surface-container-low overflow-hidden mb-6 relative">
           <img class="w-full h-full object-cover mix-blend-multiply opacity-90 transition-transform duration-700 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAinDoVQz3KBulg_sRllUlJKVY0YlraOCZE04DQ1Qs_fDaKViKHh5X0mPoZGMTC8SHwT_QpKUOTfvHkNFXPs-xlOCcvTEl6m0THk5zJEKtjwXZCAvN_OFtz93WvYjkKtQgUBHkqXCkl548KO2ZghWa9v2vw1oLc-PVB1tIYIw02A9RdP6W_MD4DLoZOEdYhs1k6Akxrmr2hflXF2jLTvI1uPBbDXGH-S-KuTveqpZOT0fXMxFKlFHW5UoQ4OigwZyIJN8d0KFTQbiY" alt="Product"/>
           <div class="absolute top-4 left-4"><span class="px-3 py-1 bg-white/80 backdrop-blur-md text-[10px] font-bold tracking-[0.2em] text-on-surface uppercase rounded-lg">Scientific Grade</span></div>
@@ -564,7 +573,7 @@
         </div>
       </div>
       <!-- Product 2 -->
-      <div class="flex flex-col group lg:mt-12">
+      <div class="product-card flex flex-col group lg:mt-12" data-product-id="vitamin-formula" role="button" tabindex="0">
         <div class="aspect-[4/5] bg-surface-container-low overflow-hidden mb-6 relative">
           <img class="w-full h-full object-cover mix-blend-multiply opacity-90 transition-transform duration-700 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC13aK7yB7xZ1QVURbJed1BDnmSDn1kbeqIKnRrrsDUpudZGnvkdvfVy88PNjZ6bsTND3IWTZEq-gVfo_cW-whG6pSnNwcJxlUdMPb7RXSYs_3lBNJ512oR4wLQtKcbgIjV6Yn6pDgXnmP_TaUD4REM1rx1hEHPRZcWLDb2tBFYfq5bNDxCk_9XLStXBkUQXcA-OZLZ1p9_welC5tpj7vZcq91aHLyXxDBRNkK2CPDdg1ax7fa4BPgmQ2YpJzGIzZfRuH5Eh-wCkXc" alt="Product"/>
           <div class="absolute top-4 left-4"><span class="px-3 py-1 bg-white/80 backdrop-blur-md text-[10px] font-bold tracking-[0.2em] text-on-surface uppercase rounded-lg">High Efficacy</span></div>
@@ -580,7 +589,7 @@
         </div>
       </div>
       <!-- Product 3 -->
-      <div class="flex flex-col group">
+      <div class="product-card flex flex-col group" data-product-id="organic-formulation" role="button" tabindex="0">
         <div class="aspect-[4/5] bg-surface-container-low overflow-hidden mb-6 relative">
           <img class="w-full h-full object-cover mix-blend-multiply opacity-90 transition-transform duration-700 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDntx5mTX4YxfgklZgXpziatIp3KpliM-VxpLSWwp4y2z353qjznP_1FJWwg1KENiwub6_Wg4UjgT6VJ4w_CfDGeGMJx539RJvqcRATaolV_l0OInP1XcB2tMTZTZjM4mdtkq9PVxbE8g-nvnEK350TkU2FiB3UxveXeOQumBKt3Kc8jx1fkZ6PUwpAJ4DtA098ACHxAITIb9roSRdikXuSsob9fu4g6ZubsfyeKcKJGPtBJ4tbJ0x2NmFBJJSluXb2e7HA17_ZMa0" alt="Product"/>
           <div class="absolute top-4 left-4"><span class="px-3 py-1 bg-white/80 backdrop-blur-md text-[10px] font-bold tracking-[0.2em] text-on-surface uppercase rounded-lg">Organic Cold-Pressed</span></div>
@@ -596,7 +605,7 @@
         </div>
       </div>
       <!-- Product 4 -->
-      <div class="flex flex-col group">
+      <div class="product-card flex flex-col group" data-product-id="hydration-formula" role="button" tabindex="0">
         <div class="aspect-[4/5] bg-surface-container-low overflow-hidden mb-6 relative">
           <img class="w-full h-full object-cover mix-blend-multiply opacity-90 transition-transform duration-700 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtwkDR_5RDlhoV9YQuP_pU4A3xjojaB16UltXehyoJKV1_yVz6O9gVI254dSqudYutnD8rp8Wv6yeAOc04RI1hgaOR0vVeMDxPnnjcAkqVWpLPM0pab6H26GEePdM-FXelfN32HkFJQWcT8Vs6K9kxiQST8btXzqZp_KzBTE3xGUFR-zx5bMhNr32CGFbPu9X-yZUSnt_uQLsQHc1vhEY83I98bl-AqkD5MdWv0J8Cyt0vR3v0j_oDPoUVT3vJYRMejzph-hepQhs" alt="Product"/>
           <div class="absolute top-4 left-4"><span class="px-3 py-1 bg-white/80 backdrop-blur-md text-[10px] font-bold tracking-[0.2em] text-on-surface uppercase rounded-lg">Surface Hydrator</span></div>
@@ -612,7 +621,7 @@
         </div>
       </div>
       <!-- Product 5 -->
-      <div class="flex flex-col group lg:mt-12">
+      <div class="product-card flex flex-col group lg:mt-12" data-product-id="peptide-serum" role="button" tabindex="0">
         <div class="aspect-[4/5] bg-surface-container-low overflow-hidden mb-6 relative">
           <img class="w-full h-full object-cover mix-blend-multiply opacity-90 transition-transform duration-700 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCh0otZd3sb2Mved6Cp22a3LeUeDHG6PlTQW4x1eXzjqddMyaiI56XnY6rYH3W764K-lBr1DxYTIpad7IyHazfEs_LmteVtSCUblOCCA94aADlT3KDXmOGYzoq9H5K7ZiD420wRUMLZm5Kgp_dU6JzMKSZ7UyY-JtUYmq1s_38_ZFT6AoLaTDg9ytutXBMFp64ffUv_OXSkkyOltpawQndxdRSUmoR3I0HjBbpmjwBdEdGfyGDgylSoKJChJVqB68JXwhvmq0-dKUk" alt="Product"/>
           <div class="absolute top-4 left-4"><span class="px-3 py-1 bg-white/80 backdrop-blur-md text-[10px] font-bold tracking-[0.2em] text-on-surface uppercase rounded-lg">Multi-Technology</span></div>
@@ -628,7 +637,7 @@
         </div>
       </div>
       <!-- Product 6 -->
-      <div class="flex flex-col group">
+      <div class="product-card flex flex-col group" data-product-id="toning-solution" role="button" tabindex="0">
         <div class="aspect-[4/5] bg-surface-container-low overflow-hidden mb-6 relative">
           <img class="w-full h-full object-cover mix-blend-multiply opacity-90 transition-transform duration-700 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzbHyIwdvNpcRkw0owsod51ivuhaGV2npaH3VMNOngtReqFMva5meTa8fdco_L1wmoCCbem1QP_rTuZ7vBw-hH6fvJGxUo8it-lt7VSKwrfmVmzJZGpfrsSlAj3u9lYMesKTFu2tjLJcDfwaRxJ3zV4wy4yD7NczO846BVKtQN_fmfmR2Gkdc22CJU1CZmoDTTx-BEMRoeKfTmR7EBhVuUf4_2hJMtWyzYC9pnlEWqWVHxCh8htIJxjnI-6irRsONQJknZnQ6-md8" alt="Product"/>
           <div class="absolute top-4 left-4"><span class="px-3 py-1 bg-white/80 backdrop-blur-md text-[10px] font-bold tracking-[0.2em] text-on-surface uppercase rounded-lg">Direct Acid</span></div>
@@ -1178,6 +1187,68 @@
   </div>
 </footer>
 
+<!-- Product detail modal -->
+<div id="product-detail-modal" class="fixed inset-0 z-[80] hidden bg-on-surface/55 p-0 backdrop-blur-sm md:p-6" aria-hidden="true">
+  <div class="flex min-h-full items-end justify-center md:items-center">
+    <section class="max-h-[94vh] w-full overflow-y-auto rounded-t-2xl bg-surface shadow-2xl md:max-w-6xl md:rounded-2xl">
+      <div class="sticky top-0 z-10 flex items-center justify-between border-b border-outline-variant/30 bg-surface/95 px-5 py-4 backdrop-blur md:px-8">
+        <div>
+          <p id="detail-category" class="text-[10px] font-extrabold uppercase tracking-[0.2em] text-primary">Producto</p>
+          <h2 id="detail-title-top" class="text-lg font-extrabold tracking-tight md:text-2xl">Detalle del producto</h2>
+        </div>
+        <button id="product-detail-close" class="rounded-full bg-surface-container-high p-3 text-on-surface transition-colors hover:bg-surface-container-highest" type="button" aria-label="Cerrar detalle">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="grid gap-8 p-5 md:grid-cols-[1.05fr_.95fr] md:p-8">
+        <div>
+          <div class="aspect-[4/5] overflow-hidden rounded-2xl bg-surface-container-low md:aspect-square">
+            <img id="detail-main-img" class="h-full w-full object-cover" src="" alt=""/>
+          </div>
+          <div id="detail-gallery" class="mt-4 flex gap-3 overflow-x-auto pb-2"></div>
+        </div>
+        <div class="flex flex-col">
+          <div class="flex flex-wrap items-center gap-3">
+            <span id="detail-badge" class="rounded-full bg-primary-container px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.18em] text-on-primary-container">Clinical Grade</span>
+            <div class="flex items-center gap-2 text-sm font-bold text-on-surface">
+              <span class="material-symbols-outlined text-base text-primary" style="font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 20">star</span>
+              <span id="detail-rating">4.9</span>
+              <span id="detail-reviews" class="text-on-surface-variant">(120 valoraciones)</span>
+            </div>
+          </div>
+          <h3 id="detail-title" class="mt-5 text-3xl font-extrabold leading-tight tracking-tight text-on-surface md:text-5xl">Producto</h3>
+          <p id="detail-formula" class="mt-3 text-sm font-extrabold uppercase tracking-[0.16em] text-primary">Formula</p>
+          <p id="detail-description" class="mt-5 text-base leading-8 text-on-surface-variant md:text-lg"></p>
+          <div class="mt-7 flex items-end justify-between gap-5 border-y border-outline-variant/30 py-6">
+            <div>
+              <p class="text-[10px] font-extrabold uppercase tracking-[0.2em] text-outline">Precio</p>
+              <p id="detail-price" class="mt-1 text-4xl font-extrabold tracking-tight">$0.00</p>
+            </div>
+            <div class="text-right">
+              <p class="text-[10px] font-extrabold uppercase tracking-[0.2em] text-outline">Disponible</p>
+              <p id="detail-stock" class="mt-1 text-sm font-bold text-primary">En stock</p>
+            </div>
+          </div>
+          <div class="mt-6 grid gap-4 md:grid-cols-2">
+            <div>
+              <h4 class="text-xs font-extrabold uppercase tracking-[0.18em] text-on-surface">Beneficios</h4>
+              <ul id="detail-benefits" class="mt-3 space-y-2 text-sm leading-6 text-on-surface-variant"></ul>
+            </div>
+            <div>
+              <h4 class="text-xs font-extrabold uppercase tracking-[0.18em] text-on-surface">Uso recomendado</h4>
+              <p id="detail-usage" class="mt-3 text-sm leading-6 text-on-surface-variant"></p>
+            </div>
+          </div>
+          <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+            <button id="detail-add-cart" class="flex-1 rounded-xl bg-primary px-6 py-4 text-sm font-extrabold uppercase tracking-widest text-on-primary transition-opacity hover:opacity-90" type="button">Agregar al carrito</button>
+            <button class="nav-link rounded-xl bg-surface-container-high px-6 py-4 text-sm font-extrabold uppercase tracking-widest text-on-surface transition-colors hover:bg-surface-container-highest" data-page="cart" type="button">Ver carrito</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
 <!-- Toast notification -->
 <div id="toast" class="fixed bottom-8 right-8 z-50 bg-on-surface text-surface px-6 py-4 rounded-lg shadow-2xl font-bold text-sm uppercase tracking-widest flex items-center gap-3 opacity-0 translate-y-4 transition-all duration-300 pointer-events-none">
   <span class="material-symbols-outlined text-primary-fixed">check_circle</span>
@@ -1326,6 +1397,202 @@
 
 <script>
   // ─── Cart State ───────────────────────────────────────────────
+  const productCatalog = [
+    {
+      id: 'ascorbic-acid',
+      name: 'Ascorbic Acid Suspension',
+      formula: 'Vitamin C 23% + HA Spheres 2%',
+      category: 'Vitamin C',
+      badge: 'Scientific Grade',
+      price: 11.50,
+      rating: 4.8,
+      reviews: 186,
+      stock: 'En stock',
+      description: 'Suspension estable sin agua y sin siliconas con acido L-Ascorbico puro. Ayuda a iluminar el tono, suavizar textura visible y reforzar la rutina antioxidante diaria.',
+      usage: 'Aplicar una pequena cantidad en la noche despues de limpiar la piel. Usar protector solar durante el dia.',
+      benefits: ['Luminosidad visible', 'Soporte antioxidante', 'Textura mas uniforme'],
+      images: [
+        'https://lh3.googleusercontent.com/aida-public/AB6AXuAinDoVQz3KBulg_sRllUlJKVY0YlraOCZE04DQ1Qs_fDaKViKHh5X0mPoZGMTC8SHwT_QpKUOTfvHkNFXPs-xlOCcvTEl6m0THk5zJEKtjwXZCAvN_OFtz93WvYjkKtQgUBHkqXCkl548KO2ZghWa9v2vw1oLc-PVB1tIYIw02A9RdP6W_MD4DLoZOEdYhs1k6Akxrmr2hflXF2jLTvI1uPBbDXGH-S-KuTveqpZOT0fXMxFKlFHW5UoQ4OigwZyIJN8d0KFTQbiY',
+        'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=900&q=80',
+        'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=900&q=80'
+      ]
+    },
+    {
+      id: 'vitamin-formula',
+      name: 'High-Strength Vitamin Formula',
+      formula: 'Niacinamide 10% + Zinc 1%',
+      category: 'Daily Care',
+      badge: 'High Efficacy',
+      price: 8.90,
+      rating: 4.7,
+      reviews: 214,
+      stock: 'En stock',
+      description: 'Formula ligera para balancear brillo visible y apariencia de congestion. Pensada para rutinas diarias de piel mixta o grasa.',
+      usage: 'Usar manana y noche antes de cremas. Evitar combinar en la misma rutina con vitamina C pura.',
+      benefits: ['Control de brillo', 'Piel mas balanceada', 'Acabado ligero'],
+      images: [
+        'https://lh3.googleusercontent.com/aida-public/AB6AXuC13aK7yB7xZ1QVURbJed1BDnmSDn1kbeqIKnRrrsDUpudZGnvkdvfVy88PNjZ6bsTND3IWTZEq-gVfo_cW-whG6pSnNwcJxlUdMPb7RXSYs_3lBNJ512oR4wLQtKcbgIjV6Yn6pDgXnmP_TaUD4REM1rx1hEHPRZcWLDb2tBFYfq5bNDxCk_9XLStXBkUQXcA-OZLZ1p9_welC5tpj7vZcq91aHLyXxDBRNkK2CPDdg1ax7fa4BPgmQ2YpJzGIzZfRuH5Eh-wCkXc',
+        'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=900&q=80',
+        'https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=900&q=80'
+      ]
+    },
+    {
+      id: 'organic-formulation',
+      name: 'Pure Organic Formulation',
+      formula: 'Rose Hip Seed Oil 100%',
+      category: 'Organic',
+      badge: 'Organic Cold-Pressed',
+      price: 12.40,
+      rating: 4.9,
+      reviews: 149,
+      stock: 'En stock',
+      description: 'Aceite organico prensado en frio que aporta nutricion y humedad restauradora. Ideal para piel seca, opaca o con textura irregular.',
+      usage: 'Aplicar 2 o 3 gotas como ultimo paso de la rutina nocturna o mezclar con crema hidratante.',
+      benefits: ['Nutricion intensa', 'Suavidad inmediata', 'Apariencia saludable'],
+      images: [
+        'https://lh3.googleusercontent.com/aida-public/AB6AXuDntx5mTX4YxfgklZgXpziatIp3KpliM-VxpLSWwp4y2z353qjznP_1FJWwg1KENiwub6_Wg4UjgT6VJ4w_CfDGeGMJx539RJvqcRATaolV_l0OInP1XcB2tMTZTZjM4mdtkq9PVxbE8g-nvnEK350TkU2FiB3UxveXeOQumBKt3Kc8jx1fkZ6PUwpAJ4DtA098ACHxAITIb9roSRdikXuSsob9fu4g6ZubsfyeKcKJGPtBJ4tbJ0x2NmFBJJSluXb2e7HA17_ZMa0',
+        'https://images.unsplash.com/photo-1612817288484-6f916006741a?auto=format&fit=crop&w=900&q=80',
+        'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=900&q=80'
+      ]
+    },
+    {
+      id: 'hydration-formula',
+      name: 'Surface Hydration Formula',
+      formula: 'Natural Moisturizing Factors + HA',
+      category: 'Moisturizer',
+      badge: 'Surface Hydrator',
+      price: 9.20,
+      rating: 4.8,
+      reviews: 172,
+      stock: 'En stock',
+      description: 'Crema de hidratacion diaria que ayuda a proteger la capa externa de la piel y mantener una sensacion confortable sin acabado pesado.',
+      usage: 'Aplicar despues de serums por la manana y por la noche. Reaplicar si la piel se siente seca.',
+      benefits: ['Hidratacion diaria', 'Barrera cutanea', 'Textura confortable'],
+      images: [
+        'https://lh3.googleusercontent.com/aida-public/AB6AXuBtwkDR_5RDlhoV9YQuP_pU4A3xjojaB16UltXehyoJKV1_yVz6O9gVI254dSqudYutnD8rp8Wv6yeAOc04RI1hgaOR0vVeMDxPnnjcAkqVWpLPM0pab6H26GEePdM-FXelfN32HkFJQWcT8Vs6K9kxiQST8btXzqZp_KzBTE3xGUFR-zx5bMhNr32CGFbPu9X-yZUSnt_uQLsQHc1vhEY83I98bl-AqkD5MdWv0J8Cyt0vR3v0j_oDPoUVT3vJYRMejzph-hepQhs',
+        'https://images.unsplash.com/photo-1620916297397-a4a5402a3c6c?auto=format&fit=crop&w=900&q=80',
+        'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&w=900&q=80'
+      ]
+    },
+    {
+      id: 'peptide-serum',
+      name: 'Advanced Multi-Peptide Serum',
+      formula: 'Buffet + Copper Peptides 1%',
+      category: 'Peptides',
+      badge: 'Multi-Technology',
+      price: 34.10,
+      rating: 4.9,
+      reviews: 98,
+      stock: 'Ultimas unidades',
+      description: 'Serum avanzado con tecnologias peptidicas para apoyar elasticidad, firmeza visual y signos multiples de envejecimiento.',
+      usage: 'Aplicar unas gotas sobre rostro limpio antes de aceites y cremas. Usar manana o noche.',
+      benefits: ['Firmeza visible', 'Soporte de elasticidad', 'Rutina antiedad'],
+      images: [
+        'https://lh3.googleusercontent.com/aida-public/AB6AXuCh0otZd3sb2Mved6Cp22a3LeUeDHG6PlTQW4x1eXzjqddMyaiI56XnY6rYH3W764K-lBr1DxYTIpad7IyHazfEs_LmteVtSCUblOCCA94aADlT3KDXmOGYzoq9H5K7ZiD420wRUMLZm5Kgp_dU6JzMKSZ7UyY-JtUYmq1s_38_ZFT6AoLaTDg9ytutXBMFp64ffUv_OXSkkyOltpawQndxdRSUmoR3I0HjBbpmjwBdEdGfyGDgylSoKJChJVqB68JXwhvmq0-dKUk',
+        'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?auto=format&fit=crop&w=900&q=80',
+        'https://images.unsplash.com/photo-1629732047849-7c6f2d82f37a?auto=format&fit=crop&w=900&q=80'
+      ]
+    },
+    {
+      id: 'toning-solution',
+      name: 'Exfoliating Toning Solution',
+      formula: 'Glycolic Acid 7% Toning Solution',
+      category: 'Acids',
+      badge: 'Direct Acid',
+      price: 10.50,
+      rating: 4.6,
+      reviews: 231,
+      stock: 'En stock',
+      description: 'Tonico exfoliante suave para mejorar luminosidad visible y apariencia de textura. Recomendado para piel acostumbrada a acidos.',
+      usage: 'Usar de noche con algodon despues de limpiar. Empezar 2 o 3 veces por semana y aumentar segun tolerancia.',
+      benefits: ['Exfoliacion suave', 'Mayor claridad', 'Textura refinada'],
+      images: [
+        'https://lh3.googleusercontent.com/aida-public/AB6AXuCzbHyIwdvNpcRkw0owsod51ivuhaGV2npaH3VMNOngtReqFMva5meTa8fdco_L1wmoCCbem1QP_rTuZ7vBw-hH6fvJGxUo8it-lt7VSKwrfmVmzJZGpfrsSlAj3u9lYMesKTFu2tjLJcDfwaRxJ3zV4wy4yD7NczO846BVKtQN_fmfmR2Gkdc22CJU1CZmoDTTx-BEMRoeKfTmR7EBhVuUf4_2hJMtWyzYC9pnlEWqWVHxCh8htIJxjnI-6irRsONQJknZnQ6-md8',
+        'https://images.unsplash.com/photo-1596755389378-c31d21fd1273?auto=format&fit=crop&w=900&q=80',
+        'https://images.unsplash.com/photo-1607006483224-200bc6d1167b?auto=format&fit=crop&w=900&q=80'
+      ]
+    }
+  ];
+
+  let selectedDetailProduct = null;
+
+  function getProductById(id) {
+    return productCatalog.find(product => product.id === id);
+  }
+
+  function setProductImage(src, alt) {
+    const main = document.getElementById('detail-main-img');
+    main.src = src;
+    main.alt = alt;
+    document.querySelectorAll('.product-gallery-thumb').forEach(button => {
+      button.classList.toggle('active', button.dataset.src === src);
+    });
+  }
+
+  function openProductDetail(productId) {
+    const product = getProductById(productId);
+    if (!product) return;
+    selectedDetailProduct = product;
+
+    document.getElementById('detail-category').textContent = product.category;
+    document.getElementById('detail-title-top').textContent = product.name;
+    document.getElementById('detail-title').textContent = product.name;
+    document.getElementById('detail-formula').textContent = product.formula;
+    document.getElementById('detail-badge').textContent = product.badge;
+    document.getElementById('detail-rating').textContent = product.rating.toFixed(1);
+    document.getElementById('detail-reviews').textContent = `(${product.reviews} valoraciones)`;
+    document.getElementById('detail-description').textContent = product.description;
+    document.getElementById('detail-price').textContent = `$${product.price.toFixed(2)}`;
+    document.getElementById('detail-stock').textContent = product.stock;
+    document.getElementById('detail-usage').textContent = product.usage;
+    document.getElementById('detail-benefits').innerHTML = product.benefits.map(benefit => `
+      <li class="flex gap-2">
+        <span class="material-symbols-outlined mt-0.5 text-base text-primary">check_circle</span>
+        <span>${benefit}</span>
+      </li>
+    `).join('');
+
+    const gallery = document.getElementById('detail-gallery');
+    gallery.innerHTML = product.images.map((src, index) => `
+      <button class="product-gallery-thumb ${index === 0 ? 'active' : ''} h-20 w-20 shrink-0 overflow-hidden rounded-xl border-2 border-transparent bg-surface-container-low" type="button" data-src="${src}" aria-label="Ver foto ${index + 1}">
+        <img class="h-full w-full object-cover" src="${src}" alt="${product.name} ${index + 1}"/>
+      </button>
+    `).join('');
+    gallery.querySelectorAll('.product-gallery-thumb').forEach(button => {
+      button.addEventListener('click', () => setProductImage(button.dataset.src, product.name));
+    });
+    setProductImage(product.images[0], product.name);
+
+    const modal = document.getElementById('product-detail-modal');
+    modal.classList.remove('hidden');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('overflow-hidden');
+  }
+
+  function closeProductDetail() {
+    const modal = document.getElementById('product-detail-modal');
+    modal.classList.add('hidden');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('overflow-hidden');
+  }
+
+  document.getElementById('product-detail-close').addEventListener('click', closeProductDetail);
+  document.getElementById('product-detail-modal').addEventListener('click', (event) => {
+    if (event.target.id === 'product-detail-modal') closeProductDetail();
+  });
+  document.getElementById('detail-add-cart').addEventListener('click', () => {
+    if (!selectedDetailProduct) return;
+    addToCart(selectedDetailProduct.name, selectedDetailProduct.price, selectedDetailProduct.images[0]);
+  });
+  document.addEventListener('keydown', (event) => {
+    const card = event.target.closest('.product-card');
+    if (event.key === 'Escape') closeProductDetail();
+    if ((event.key === 'Enter' || event.key === ' ') && card) {
+      event.preventDefault();
+      openProductDetail(card.dataset.productId);
+    }
+  });
+
   let cart = [];
 
   function showToast(msg) {
@@ -1428,11 +1695,19 @@
     const link = e.target.closest('.nav-link');
     if (link) {
       const page = link.dataset.page;
-      if (page) showPage(page);
+      if (page) {
+        closeProductDetail();
+        showPage(page);
+      }
     }
     const atc = e.target.closest('.add-to-cart');
     if (atc) {
       addToCart(atc.dataset.name, atc.dataset.price, atc.dataset.img);
+      return;
+    }
+    const productCard = e.target.closest('.product-card');
+    if (productCard && !e.target.closest('button')) {
+      openProductDetail(productCard.dataset.productId);
     }
   });
 
