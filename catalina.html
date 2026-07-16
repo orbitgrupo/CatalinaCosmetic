@@ -91,6 +91,26 @@
     .page.active { display: block; }
     .nav-link { cursor: pointer; }
     * { box-sizing: border-box; }
+    @media (max-width: 767px) {
+      nav > div { height: 64px !important; padding-left: 16px !important; padding-right: 16px !important; }
+      nav .text-2xl { font-size: 1.25rem; }
+      nav .space-x-6 { gap: 1rem; }
+      .mobile-product-row {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(156px, 44vw);
+        gap: 14px;
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        scroll-snap-type: x mandatory;
+        padding-bottom: 6px;
+      }
+      .mobile-product-card { scroll-snap-align: start; }
+      .mobile-product-row::-webkit-scrollbar,
+      .mobile-category-row::-webkit-scrollbar { display: none; }
+      .mobile-product-row,
+      .mobile-category-row { -ms-overflow-style: none; scrollbar-width: none; }
+    }
   </style>
 </head>
 <body class="bg-surface text-on-surface">
@@ -125,8 +145,122 @@
 <!-- ======================== HOME ======================== -->
 <div id="page-home" class="page active">
   <main class="pt-20">
+    <!-- Mobile Ecommerce Home -->
+    <section class="md:hidden bg-surface pb-12">
+      <div class="px-4 pt-4">
+        <div class="relative min-h-[430px] overflow-hidden rounded-2xl bg-on-surface text-white">
+          <img class="absolute inset-0 h-full w-full object-cover opacity-70" src="https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=900&q=80" alt="Catalina mobile banner"/>
+          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+          <div class="relative z-10 flex min-h-[430px] flex-col justify-end p-6">
+            <span class="mb-3 inline-flex w-fit rounded-full bg-white/20 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.18em] backdrop-blur">Clinical Precision</span>
+            <h1 class="text-4xl font-extrabold leading-[0.95] tracking-tighter">Skin care & hair care.</h1>
+            <p class="mt-3 max-w-[270px] text-sm leading-6 text-white/80">Rutinas de laboratorio para piel luminosa, cabello sano y pedidos faciles desde tu telefono.</p>
+            <button class="nav-link mt-5 w-fit rounded-xl bg-white px-5 py-3 text-sm font-extrabold text-on-surface shadow-xl" data-page="catalog">Comprar ahora</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 px-4">
+        <div class="mb-3 flex items-center justify-between">
+          <h2 class="text-lg font-extrabold tracking-tight">Categorias</h2>
+          <button class="nav-link text-xs font-extrabold uppercase tracking-widest text-primary" data-page="catalog">Ver todo</button>
+        </div>
+        <div class="mobile-category-row flex gap-3 overflow-x-auto pb-1">
+          <button class="nav-link shrink-0 rounded-full bg-primary px-5 py-3 text-sm font-bold text-white" data-page="catalog">Serums</button>
+          <button class="nav-link shrink-0 rounded-full bg-white px-5 py-3 text-sm font-bold text-on-surface shadow-sm" data-page="catalog">Cleansers</button>
+          <button class="nav-link shrink-0 rounded-full bg-white px-5 py-3 text-sm font-bold text-on-surface shadow-sm" data-page="catalog">Moisturizers</button>
+          <button class="nav-link shrink-0 rounded-full bg-white px-5 py-3 text-sm font-bold text-on-surface shadow-sm" data-page="catalog">Cabello</button>
+          <button class="nav-link shrink-0 rounded-full bg-white px-5 py-3 text-sm font-bold text-on-surface shadow-sm" data-page="catalog">Kits</button>
+        </div>
+      </div>
+
+      <div class="mt-7 px-4">
+        <div class="mb-3 flex items-end justify-between">
+          <div>
+            <span class="text-[10px] font-extrabold uppercase tracking-[0.2em] text-primary">New Arrivals</span>
+            <h2 class="text-xl font-extrabold tracking-tight">Productos destacados</h2>
+          </div>
+          <span class="text-xs font-bold text-on-surface-variant">Swipe</span>
+        </div>
+        <div class="mobile-product-row">
+          <article class="mobile-product-card overflow-hidden rounded-2xl bg-white shadow-sm">
+            <img class="h-40 w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAinDoVQz3KBulg_sRllUlJKVY0YlraOCZE04DQ1Qs_fDaKViKHh5X0mPoZGMTC8SHwT_QpKUOTfvHkNFXPs-xlOCcvTEl6m0THk5zJEKtjwXZCAvN_OFtz93WvYjkKtQgUBHkqXCkl548KO2ZghWa9v2vw1oLc-PVB1tIYIw02A9RdP6W_MD4DLoZOEdYhs1k6Akxrmr2hflXF2jLTvI1uPBbDXGH-S-KuTveqpZOT0fXMxFKlFHW5UoQ4OigwZyIJN8d0KFTQbiY" alt="Ascorbic Acid Suspension"/>
+            <div class="p-4">
+              <p class="text-[10px] font-bold uppercase tracking-widest text-primary">Vitamin C</p>
+              <h3 class="mt-1 min-h-[42px] text-sm font-extrabold leading-tight">Ascorbic Acid Suspension</h3>
+              <div class="mt-4 flex items-center justify-between">
+                <span class="font-extrabold">$11.50</span>
+                <button class="add-to-cart rounded-full bg-on-surface p-2 text-white" data-name="Ascorbic Acid Suspension" data-price="11.50" data-img="https://lh3.googleusercontent.com/aida-public/AB6AXuAinDoVQz3KBulg_sRllUlJKVY0YlraOCZE04DQ1Qs_fDaKViKHh5X0mPoZGMTC8SHwT_QpKUOTfvHkNFXPs-xlOCcvTEl6m0THk5zJEKtjwXZCAvN_OFtz93WvYjkKtQgUBHkqXCkl548KO2ZghWa9v2vw1oLc-PVB1tIYIw02A9RdP6W_MD4DLoZOEdYhs1k6Akxrmr2hflXF2jLTvI1uPBbDXGH-S-KuTveqpZOT0fXMxFKlFHW5UoQ4OigwZyIJN8d0KFTQbiY"><span class="material-symbols-outlined text-base">add</span></button>
+              </div>
+            </div>
+          </article>
+          <article class="mobile-product-card overflow-hidden rounded-2xl bg-white shadow-sm">
+            <img class="h-40 w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC13aK7yB7xZ1QVURbJed1BDnmSDn1kbeqIKnRrrsDUpudZGnvkdvfVy88PNjZ6bsTND3IWTZEq-gVfo_cW-whG6pSnNwcJxlUdMPb7RXSYs_3lBNJ512oR4wLQtKcbgIjV6Yn6pDgXnmP_TaUD4REM1rx1hEHPRZcWLDb2tBFYfq5bNDxCk_9XLStXBkUQXcA-OZLZ1p9_welC5tpj7vZcq91aHLyXxDBRNkK2CPDdg1ax7fa4BPgmQ2YpJzGIzZfRuH5Eh-wCkXc" alt="High-Strength Vitamin Formula"/>
+            <div class="p-4">
+              <p class="text-[10px] font-bold uppercase tracking-widest text-primary">Daily Care</p>
+              <h3 class="mt-1 min-h-[42px] text-sm font-extrabold leading-tight">High-Strength Vitamin Formula</h3>
+              <div class="mt-4 flex items-center justify-between">
+                <span class="font-extrabold">$8.90</span>
+                <button class="add-to-cart rounded-full bg-on-surface p-2 text-white" data-name="High-Strength Vitamin Formula" data-price="8.90" data-img="https://lh3.googleusercontent.com/aida-public/AB6AXuC13aK7yB7xZ1QVURbJed1BDnmSDn1kbeqIKnRrrsDUpudZGnvkdvfVy88PNjZ6bsTND3IWTZEq-gVfo_cW-whG6pSnNwcJxlUdMPb7RXSYs_3lBNJ512oR4wLQtKcbgIjV6Yn6pDgXnmP_TaUD4REM1rx1hEHPRZcWLDb2tBFYfq5bNDxCk_9XLStXBkUQXcA-OZLZ1p9_welC5tpj7vZcq91aHLyXxDBRNkK2CPDdg1ax7fa4BPgmQ2YpJzGIzZfRuH5Eh-wCkXc"><span class="material-symbols-outlined text-base">add</span></button>
+              </div>
+            </div>
+          </article>
+          <article class="mobile-product-card overflow-hidden rounded-2xl bg-white shadow-sm">
+            <img class="h-40 w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDntx5mTX4YxfgklZgXpziatIp3KpliM-VxpLSWwp4y2z353qjznP_1FJWwg1KENiwub6_Wg4UjgT6VJ4w_CfDGeGMJx539RJvqcRATaolV_l0OInP1XcB2tMTZTZjM4mdtkq9PVxbE8g-nvnEK350TkU2FiB3UxveXeOQumBKt3Kc8jx1fkZ6PUwpAJ4DtA098ACHxAITIb9roSRdikXuSsob9fu4g6ZubsfyeKcKJGPtBJ4tbJ0x2NmFBJJSluXb2e7HA17_ZMa0" alt="Pure Organic Formulation"/>
+            <div class="p-4">
+              <p class="text-[10px] font-bold uppercase tracking-widest text-primary">Organic</p>
+              <h3 class="mt-1 min-h-[42px] text-sm font-extrabold leading-tight">Pure Organic Formulation</h3>
+              <div class="mt-4 flex items-center justify-between">
+                <span class="font-extrabold">$12.40</span>
+                <button class="add-to-cart rounded-full bg-on-surface p-2 text-white" data-name="Pure Organic Formulation" data-price="12.40" data-img="https://lh3.googleusercontent.com/aida-public/AB6AXuDntx5mTX4YxfgklZgXpziatIp3KpliM-VxpLSWwp4y2z353qjznP_1FJWwg1KENiwub6_Wg4UjgT6VJ4w_CfDGeGMJx539RJvqcRATaolV_l0OInP1XcB2tMTZTZjM4mdtkq9PVxbE8g-nvnEK350TkU2FiB3UxveXeOQumBKt3Kc8jx1fkZ6PUwpAJ4DtA098ACHxAITIb9roSRdikXuSsob9fu4g6ZubsfyeKcKJGPtBJ4tbJ0x2NmFBJJSluXb2e7HA17_ZMa0"><span class="material-symbols-outlined text-base">add</span></button>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+
+      <div class="mt-8 px-4">
+        <div class="relative overflow-hidden rounded-2xl bg-primary text-white">
+          <img class="absolute inset-0 h-full w-full object-cover opacity-30" src="https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=900&q=80" alt="Regimen banner"/>
+          <div class="relative z-10 p-6">
+            <span class="text-[10px] font-extrabold uppercase tracking-[0.2em] text-white/70">The Regimens</span>
+            <h2 class="mt-2 max-w-[260px] text-3xl font-extrabold leading-tight tracking-tight">Kits para rutinas completas.</h2>
+            <p class="mt-3 max-w-[250px] text-sm leading-6 text-white/75">Selecciona sistemas de hidratacion, claridad o reparacion capilar.</p>
+            <button class="nav-link mt-5 rounded-xl bg-white px-5 py-3 text-sm font-extrabold text-primary" data-page="catalog">Explorar kits</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-7 px-4">
+        <div class="mb-3 flex items-end justify-between">
+          <div>
+            <span class="text-[10px] font-extrabold uppercase tracking-[0.2em] text-primary">Routine Sets</span>
+            <h2 class="text-xl font-extrabold tracking-tight">Mas vendidos</h2>
+          </div>
+          <button class="nav-link text-xs font-extrabold uppercase tracking-widest text-primary" data-page="catalog">Catalogo</button>
+        </div>
+        <div class="mobile-product-row">
+          <article class="mobile-product-card rounded-2xl bg-white p-3 shadow-sm">
+            <img class="h-36 w-full rounded-xl object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtwkDR_5RDlhoV9YQuP_pU4A3xjojaB16UltXehyoJKV1_yVz6O9gVI254dSqudYutnD8rp8Wv6yeAOc04RI1hgaOR0vVeMDxPnnjcAkqVWpLPM0pab6H26GEePdM-FXelfN32HkFJQWcT8Vs6K9kxiQST8btXzqZp_KzBTE3xGUFR-zx5bMhNr32CGFbPu9X-yZUSnt_uQLsQHc1vhEY83I98bl-AqkD5MdWv0J8Cyt0vR3v0j_oDPoUVT3vJYRMejzph-hepQhs" alt="Surface Hydration Formula"/>
+            <h3 class="mt-3 min-h-[42px] text-sm font-extrabold leading-tight">Surface Hydration Formula</h3>
+            <div class="mt-3 flex items-center justify-between"><span class="font-extrabold">$9.20</span><button class="add-to-cart rounded-full bg-primary p-2 text-white" data-name="Surface Hydration Formula" data-price="9.20" data-img="https://lh3.googleusercontent.com/aida-public/AB6AXuBtwkDR_5RDlhoV9YQuP_pU4A3xjojaB16UltXehyoJKV1_yVz6O9gVI254dSqudYutnD8rp8Wv6yeAOc04RI1hgaOR0vVeMDxPnnjcAkqVWpLPM0pab6H26GEePdM-FXelfN32HkFJQWcT8Vs6K9kxiQST8btXzqZp_KzBTE3xGUFR-zx5bMhNr32CGFbPu9X-yZUSnt_uQLsQHc1vhEY83I98bl-AqkD5MdWv0J8Cyt0vR3v0j_oDPoUVT3vJYRMejzph-hepQhs"><span class="material-symbols-outlined text-base">add</span></button></div>
+          </article>
+          <article class="mobile-product-card rounded-2xl bg-white p-3 shadow-sm">
+            <img class="h-36 w-full rounded-xl object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCh0otZd3sb2Mved6Cp22a3LeUeDHG6PlTQW4x1eXzjqddMyaiI56XnY6rYH3W764K-lBr1DxYTIpad7IyHazfEs_LmteVtSCUblOCCA94aADlT3KDXmOGYzoq9H5K7ZiD420wRUMLZm5Kgp_dU6JzMKSZ7UyY-JtUYmq1s_38_ZFT6AoLaTDg9ytutXBMFp64ffUv_OXSkkyOltpawQndxdRSUmoR3I0HjBbpmjwBdEdGfyGDgylSoKJChJVqB68JXwhvmq0-dKUk" alt="Advanced Multi-Peptide Serum"/>
+            <h3 class="mt-3 min-h-[42px] text-sm font-extrabold leading-tight">Advanced Multi-Peptide Serum</h3>
+            <div class="mt-3 flex items-center justify-between"><span class="font-extrabold">$34.10</span><button class="add-to-cart rounded-full bg-primary p-2 text-white" data-name="Advanced Multi-Peptide Serum" data-price="34.10" data-img="https://lh3.googleusercontent.com/aida-public/AB6AXuCh0otZd3sb2Mved6Cp22a3LeUeDHG6PlTQW4x1eXzjqddMyaiI56XnY6rYH3W764K-lBr1DxYTIpad7IyHazfEs_LmteVtSCUblOCCA94aADlT3KDXmOGYzoq9H5K7ZiD420wRUMLZm5Kgp_dU6JzMKSZ7UyY-JtUYmq1s_38_ZFT6AoLaTDg9ytutXBMFp64ffUv_OXSkkyOltpawQndxdRSUmoR3I0HjBbpmjwBdEdGfyGDgylSoKJChJVqB68JXwhvmq0-dKUk"><span class="material-symbols-outlined text-base">add</span></button></div>
+          </article>
+          <article class="mobile-product-card rounded-2xl bg-white p-3 shadow-sm">
+            <img class="h-36 w-full rounded-xl object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzbHyIwdvNpcRkw0owsod51ivuhaGV2npaH3VMNOngtReqFMva5meTa8fdco_L1wmoCCbem1QP_rTuZ7vBw-hH6fvJGxUo8it-lt7VSKwrfmVmzJZGpfrsSlAj3u9lYMesKTFu2tjLJcDfwaRxJ3zV4wy4yD7NczO846BVKtQN_fmfmR2Gkdc22CJU1CZmoDTTx-BEMRoeKfTmR7EBhVuUf4_2hJMtWyzYC9pnlEWqWVHxCh8htIJxjnI-6irRsONQJknZnQ6-md8" alt="Exfoliating Toning Solution"/>
+            <h3 class="mt-3 min-h-[42px] text-sm font-extrabold leading-tight">Exfoliating Toning Solution</h3>
+            <div class="mt-3 flex items-center justify-between"><span class="font-extrabold">$10.50</span><button class="add-to-cart rounded-full bg-primary p-2 text-white" data-name="Exfoliating Toning Solution" data-price="10.50" data-img="https://lh3.googleusercontent.com/aida-public/AB6AXuCzbHyIwdvNpcRkw0owsod51ivuhaGV2npaH3VMNOngtReqFMva5meTa8fdco_L1wmoCCbem1QP_rTuZ7vBw-hH6fvJGxUo8it-lt7VSKwrfmVmzJZGpfrsSlAj3u9lYMesKTFu2tjLJcDfwaRxJ3zV4wy4yD7NczO846BVKtQN_fmfmR2Gkdc22CJU1CZmoDTTx-BEMRoeKfTmR7EBhVuUf4_2hJMtWyzYC9pnlEWqWVHxCh8htIJxjnI-6irRsONQJknZnQ6-md8"><span class="material-symbols-outlined text-base">add</span></button></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
     <!-- Hero -->
-    <section class="relative min-h-[90vh] flex items-center overflow-hidden bg-surface-container-low">
+    <section class="hidden md:flex relative min-h-[90vh] items-center overflow-hidden bg-surface-container-low">
       <div class="max-w-7xl mx-auto px-8 w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center py-24">
         <div class="lg:col-span-6 z-10">
           <span class="label-md uppercase tracking-[0.2em] text-primary font-bold mb-6 block">Clinical Precision</span>
@@ -153,7 +287,7 @@
     </section>
 
     <!-- New Formulations -->
-    <section class="py-24 bg-surface">
+    <section class="hidden md:block py-24 bg-surface">
       <div class="max-w-7xl mx-auto px-8">
         <div class="flex justify-between items-end mb-16">
           <div>
@@ -210,7 +344,7 @@
     </section>
 
     <!-- Bundles -->
-    <section class="py-24 bg-surface-container-low">
+    <section class="hidden md:block py-24 bg-surface-container-low">
       <div class="max-w-7xl mx-auto px-8">
         <div class="max-w-3xl mb-16">
           <span class="label-md uppercase tracking-[0.2em] text-primary font-bold mb-4 block">The Regimens</span>
@@ -277,7 +411,7 @@
     </section>
 
     <!-- Transparency -->
-    <section class="py-24 bg-surface">
+    <section class="hidden md:block py-24 bg-surface">
       <div class="max-w-7xl mx-auto px-8">
         <div class="bg-on-surface text-surface rounded-xl p-12 md:p-20 overflow-hidden relative">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-12 relative z-10">
@@ -1014,17 +1148,31 @@
       if (node && value) node.src = value;
     };
 
+    const allHomeSections = [...home.querySelectorAll(':scope > main > section')];
+    const mobileHome = allHomeSections.find(section => section.classList.contains('md:hidden'));
+    const desktopSections = allHomeSections.filter(section => !section.classList.contains('md:hidden'));
+    const heroSection = desktopSections[0];
+
     if (content.siteTitle) document.title = content.siteTitle;
     setText('nav [data-page="home"]', content.brandName);
-    setText('section:first-of-type span.label-md', content.heroEyebrow, home);
-    setHTMLLines('section:first-of-type h1', content.heroTitle, home);
-    setText('section:first-of-type p.text-xl', content.heroBody, home);
-    setText('section:first-of-type button[data-page="catalog"]', content.heroCta, home);
-    setImage('section:first-of-type img', content.heroImage, home);
-    setText('section:first-of-type .absolute.-bottom-4 span', content.batchLabel, home);
-    setText('section:first-of-type .absolute.-bottom-4 p', content.batchCopy, home);
+    if (mobileHome) {
+      setHTMLLines('h1', content.heroTitle, mobileHome);
+      setText('p.text-sm.leading-6', content.heroBody, mobileHome);
+      setText('button[data-page="catalog"]', content.heroCta, mobileHome);
+      setImage('img[alt="Catalina mobile banner"]', content.heroImage, mobileHome);
+      setText('h2.text-xl', content.newTitle, mobileHome);
+    }
+    if (heroSection) {
+      setText('span.label-md', content.heroEyebrow, heroSection);
+      setHTMLLines('h1', content.heroTitle, heroSection);
+      setText('p.text-xl', content.heroBody, heroSection);
+      setText('button[data-page="catalog"]', content.heroCta, heroSection);
+      setImage('img', content.heroImage, heroSection);
+      setText('.absolute.-bottom-4 span', content.batchLabel, heroSection);
+      setText('.absolute.-bottom-4 p', content.batchCopy, heroSection);
+    }
 
-    const newSection = home.querySelectorAll('section')[1];
+    const newSection = desktopSections[1];
     if (newSection) {
       setText('span.label-md', content.newEyebrow, newSection);
       setText('h2', content.newTitle, newSection);
@@ -1037,7 +1185,7 @@
       setText('.md\\:col-span-2.group span.text-primary.text-sm', content.secondaryPrice, newSection);
     }
 
-    const bundlesSection = home.querySelectorAll('section')[2];
+    const bundlesSection = desktopSections[2];
     if (bundlesSection) {
       setText('span.label-md', content.bundlesEyebrow, bundlesSection);
       setText('h2', content.bundlesTitle, bundlesSection);
