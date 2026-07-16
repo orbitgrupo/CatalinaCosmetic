@@ -1,3 +1,14 @@
+insert into public.categories (name, slug, description, image_url, is_active)
+values
+  ('Piel', 'piel', 'Productos para limpieza, hidratacion y tratamiento de la piel.', 'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=900&q=80', true),
+  ('Cabello', 'cabello', 'Tratamientos para brillo, fuerza, cuero cabelludo y puntas.', 'https://images.unsplash.com/photo-1522338242992-e1a54906a8da?auto=format&fit=crop&w=900&q=80', true),
+  ('Kit', 'kit', 'Rutinas completas y combinaciones listas para usar.', 'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=900&q=80', true)
+on conflict (slug) do update set
+  name = excluded.name,
+  description = excluded.description,
+  image_url = excluded.image_url,
+  is_active = excluded.is_active;
+
 insert into public.products (name, category, description, price, stock, image_url, is_active)
 values
   (

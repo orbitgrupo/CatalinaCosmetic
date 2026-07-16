@@ -189,9 +189,9 @@
   <div class="flex justify-between items-center max-w-7xl mx-auto px-8 h-20">
     <div class="text-2xl font-bold tracking-tighter text-slate-900 uppercase cursor-pointer nav-link" data-page="home">CATALINA</div>
     <div class="hidden md:flex items-center space-x-8">
-      <span class="text-slate-600 hover:text-slate-900 transition-all font-medium tracking-tight cursor-pointer nav-link" data-page="catalog">Serums</span>
-      <span class="text-slate-600 hover:text-slate-900 transition-all font-medium tracking-tight cursor-pointer nav-link" data-page="catalog">Cleansers</span>
-      <span class="text-slate-600 hover:text-slate-900 transition-all font-medium tracking-tight cursor-pointer nav-link" data-page="catalog">Moisturizers</span>
+      <span class="text-slate-600 hover:text-slate-900 transition-all font-medium tracking-tight cursor-pointer category-link" data-category="Piel">Piel</span>
+      <span class="text-slate-600 hover:text-slate-900 transition-all font-medium tracking-tight cursor-pointer category-link" data-category="Cabello">Cabello</span>
+      <span class="text-slate-600 hover:text-slate-900 transition-all font-medium tracking-tight cursor-pointer category-link" data-category="Kit">Kits</span>
       <span class="text-slate-600 hover:text-slate-900 transition-all font-medium tracking-tight cursor-pointer nav-link" data-page="home">About</span>
     </div>
     <div class="hidden lg:flex flex-1 max-w-xs mx-8">
@@ -240,13 +240,9 @@
         </div>
         <div class="mobile-scroll-hint">
         <div id="mobile-categories" class="mobile-category-row flex gap-3 pb-1">
-          <button class="nav-link shrink-0 rounded-full bg-primary px-5 py-3 text-sm font-bold text-white" data-page="catalog">Serums</button>
-          <button class="nav-link shrink-0 rounded-full bg-white px-5 py-3 text-sm font-bold text-on-surface shadow-sm" data-page="catalog">Cleansers</button>
-          <button class="nav-link shrink-0 rounded-full bg-white px-5 py-3 text-sm font-bold text-on-surface shadow-sm" data-page="catalog">Moisturizers</button>
-          <button class="nav-link shrink-0 rounded-full bg-white px-5 py-3 text-sm font-bold text-on-surface shadow-sm" data-page="catalog">Cabello</button>
-          <button class="nav-link shrink-0 rounded-full bg-white px-5 py-3 text-sm font-bold text-on-surface shadow-sm" data-page="catalog">Kits</button>
-          <button class="nav-link shrink-0 rounded-full bg-white px-5 py-3 text-sm font-bold text-on-surface shadow-sm" data-page="catalog">Retinoids</button>
-          <button class="nav-link shrink-0 rounded-full bg-white px-5 py-3 text-sm font-bold text-on-surface shadow-sm" data-page="catalog">Acids</button>
+          <button class="category-link shrink-0 rounded-full bg-primary px-5 py-3 text-sm font-bold text-white" data-category="Piel">Piel</button>
+          <button class="category-link shrink-0 rounded-full bg-white px-5 py-3 text-sm font-bold text-on-surface shadow-sm" data-category="Cabello">Cabello</button>
+          <button class="category-link shrink-0 rounded-full bg-white px-5 py-3 text-sm font-bold text-on-surface shadow-sm" data-category="Kit">Kits</button>
         </div>
         </div>
       </div>
@@ -546,18 +542,12 @@
   <main class="pt-32 pb-24 px-8 max-w-7xl mx-auto">
     <header class="mb-16">
       <div class="label-md tracking-[0.1em] text-outline mb-4 font-semibold uppercase">The Lab Archives</div>
-      <h1 class="text-5xl md:text-6xl font-headline font-extrabold tracking-tighter text-on-surface mb-8">Clinical Formulations</h1>
+      <h1 id="catalog-title" class="text-5xl md:text-6xl font-headline font-extrabold tracking-tighter text-on-surface mb-8">Clinical Formulations</h1>
       <div class="relative mb-8 max-w-xl">
         <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
         <input class="product-search-input block w-full rounded-full border border-outline-variant/30 bg-white py-4 pl-12 pr-5 text-sm font-semibold outline-none transition-all placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/10" placeholder="Buscar productos" aria-label="Buscar productos" type="search"/>
       </div>
-      <div class="flex flex-wrap gap-4 no-scrollbar overflow-x-auto pb-4">
-        <button class="px-6 py-2 bg-primary text-on-primary rounded-full text-sm font-medium transition-all hover:opacity-90">All Formulations</button>
-        <button class="px-6 py-2 bg-surface-container-high text-on-surface rounded-full text-sm font-medium transition-all hover:bg-surface-container-highest">Acids</button>
-        <button class="px-6 py-2 bg-surface-container-high text-on-surface rounded-full text-sm font-medium transition-all hover:bg-surface-container-highest">Oils</button>
-        <button class="px-6 py-2 bg-surface-container-high text-on-surface rounded-full text-sm font-medium transition-all hover:bg-surface-container-highest">Vitamins</button>
-        <button class="px-6 py-2 bg-surface-container-high text-on-surface rounded-full text-sm font-medium transition-all hover:bg-surface-container-highest">Retinoids</button>
-      </div>
+      <div id="catalog-category-tabs" class="flex flex-wrap gap-4 no-scrollbar overflow-x-auto pb-4"></div>
     </header>
     <section class="mb-12 flex flex-col md:flex-row md:items-center justify-between gap-6">
       <div class="flex flex-wrap items-center gap-6">
@@ -1691,6 +1681,12 @@
 
   let selectedDetailProduct = null;
   let catalogSearchTerm = "";
+  let activeCategory = "";
+  let categoryCatalog = [
+    { name: "Piel", slug: "piel", description: "Productos para limpieza, hidratacion y tratamiento de la piel." },
+    { name: "Cabello", slug: "cabello", description: "Tratamientos para brillo, fuerza, cuero cabelludo y puntas." },
+    { name: "Kit", slug: "kit", description: "Rutinas completas y combinaciones listas para usar." }
+  ];
   let storefrontSupabaseClient = null;
 
   function escapeHtml(value) {
@@ -1733,10 +1729,65 @@
     };
   }
 
+  function slugifyCategory(value) {
+    return String(value || "")
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+  }
+
+  function getCategoryNames() {
+    const names = new Set([
+      ...categoryCatalog.map(category => category.name).filter(Boolean),
+      ...productCatalog.map(product => product.category).filter(Boolean)
+    ]);
+    return [...names].sort((a, b) => a.localeCompare(b));
+  }
+
   function productMatchesSearch(product, term) {
     if (!term) return true;
     const haystack = [product.name, product.formula, product.category, product.description, product.badge].join(" ").toLowerCase();
     return haystack.includes(term.toLowerCase());
+  }
+
+  function productMatchesCategory(product) {
+    return !activeCategory || product.category === activeCategory;
+  }
+
+  function setCatalogCategory(category = "") {
+    activeCategory = category;
+    catalogSearchTerm = "";
+    document.querySelectorAll('.product-search-input').forEach(input => input.value = "");
+    renderCategoryNavigation();
+    renderCatalogProducts();
+    showPage('catalog');
+  }
+
+  function renderCategoryNavigation() {
+    const names = getCategoryNames();
+    const desktopTabs = document.getElementById('catalog-category-tabs');
+    if (desktopTabs) {
+      const allClass = !activeCategory ? "bg-primary text-on-primary" : "bg-surface-container-high text-on-surface";
+      desktopTabs.innerHTML = `
+        <button class="category-link px-6 py-2 ${allClass} rounded-full text-sm font-medium transition-all hover:opacity-90" data-category="">Todos</button>
+        ${names.map(name => {
+          const activeClass = activeCategory === name ? "bg-primary text-on-primary" : "bg-surface-container-high text-on-surface hover:bg-surface-container-highest";
+          return `<button class="category-link px-6 py-2 ${activeClass} rounded-full text-sm font-medium transition-all" data-category="${escapeHtml(name)}">${escapeHtml(name)}</button>`;
+        }).join('')}
+      `;
+    }
+    const mobileCategories = document.getElementById('mobile-categories');
+    if (mobileCategories) {
+      mobileCategories.innerHTML = names.map((name, index) => {
+        const activeClass = index === 0 ? "bg-primary text-white" : "bg-white text-on-surface shadow-sm";
+        return `<button class="category-link shrink-0 rounded-full ${activeClass} px-5 py-3 text-sm font-bold" data-category="${escapeHtml(name)}">${escapeHtml(name)}</button>`;
+      }).join('');
+    }
+    const title = document.getElementById('catalog-title');
+    if (title) title.textContent = activeCategory ? activeCategory : "Clinical Formulations";
   }
 
   function productCardTemplate(product, index) {
@@ -1764,13 +1815,15 @@
   function renderCatalogProducts() {
     const grid = document.getElementById('catalog-grid');
     if (!grid) return;
-    const filteredProducts = productCatalog.filter(product => productMatchesSearch(product, catalogSearchTerm));
+    const filteredProducts = productCatalog.filter(product => productMatchesCategory(product) && productMatchesSearch(product, catalogSearchTerm));
     grid.innerHTML = filteredProducts.map(productCardTemplate).join('');
     const label = document.getElementById('search-results-label');
     if (label) {
       label.textContent = catalogSearchTerm
         ? `${filteredProducts.length} producto${filteredProducts.length === 1 ? '' : 's'} encontrado${filteredProducts.length === 1 ? '' : 's'} para "${catalogSearchTerm}"`
-        : `${productCatalog.length} productos disponibles`;
+        : activeCategory
+          ? `${filteredProducts.length} producto${filteredProducts.length === 1 ? '' : 's'} en ${activeCategory}`
+          : `${productCatalog.length} productos disponibles`;
     }
     if (!filteredProducts.length) {
       grid.innerHTML = `
@@ -1798,6 +1851,17 @@
       if (error) throw error;
       if (data?.length) {
         productCatalog = data.map(normalizeProductFromDatabase);
+        renderCategoryNavigation();
+        renderCatalogProducts();
+      }
+      const { data: categories, error: categoriesError } = await storefrontSupabaseClient
+        .from("categories")
+        .select("name,slug,description,image_url,is_active")
+        .eq("is_active", true)
+        .order("name", { ascending: true });
+      if (!categoriesError && categories?.length) {
+        categoryCatalog = categories.map(category => ({ name: category.name, slug: category.slug || slugifyCategory(category.name), description: category.description || "", image: category.image_url || "" }));
+        renderCategoryNavigation();
         renderCatalogProducts();
       }
     } catch (error) {
@@ -1825,6 +1889,7 @@
       });
     });
     renderCatalogProducts();
+    renderCategoryNavigation();
     loadProductsFromSupabase();
   }
 
@@ -2161,6 +2226,11 @@
   }
 
   document.addEventListener('click', (e) => {
+    const categoryLink = e.target.closest('.category-link');
+    if (categoryLink) {
+      setCatalogCategory(categoryLink.dataset.category || "");
+      return;
+    }
     const link = e.target.closest('.nav-link');
     if (link) {
       const page = link.dataset.page;

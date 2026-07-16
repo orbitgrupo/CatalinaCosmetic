@@ -230,7 +230,15 @@
               <h2 class="text-xl font-extrabold">Producto</h2>
               <input type="hidden" id="product-id" />
               <input id="product-name" class="rounded-lg border-line" placeholder="Nombre" required />
-              <select id="product-category" class="rounded-lg border-line" required><option>Piel</option><option>Cabello</option><option>Kit</option></select>
+              <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Categoria
+                <select id="product-category" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" required></select>
+              </label>
+              <div class="grid gap-2 rounded-lg border border-dashed border-line p-3">
+                <p class="text-xs font-bold uppercase tracking-widest text-muted">Crear categoria nueva</p>
+                <input id="category-name" class="rounded-lg border-line text-sm" placeholder="Ej: Maquillaje" />
+                <input id="category-description" class="rounded-lg border-line text-sm" placeholder="Descripcion para la pagina de categoria" />
+                <button type="button" id="category-create" class="rounded-lg border border-line px-4 py-2 text-sm font-bold text-violet">Crear categoria</button>
+              </div>
               <input id="product-price" class="rounded-lg border-line" type="number" min="0" step="0.01" placeholder="Precio" required />
               <input id="product-stock" class="rounded-lg border-line" type="number" min="0" step="1" placeholder="Inventario" required />
               <input id="product-image" class="rounded-lg border-line" placeholder="URL de imagen" />
@@ -240,6 +248,7 @@
             </form>
             <div class="rounded-sm bg-white p-5 shadow-soft">
               <h2 class="text-xl font-extrabold">Inventario</h2>
+              <div id="admin-categories" class="mt-5 flex flex-wrap gap-2"></div>
               <div id="admin-products" class="mt-5 grid gap-3"></div>
             </div>
           </div>
@@ -383,6 +392,11 @@
       hair: "https://images.unsplash.com/photo-1522338242992-e1a54906a8da?auto=format&fit=crop&w=900&q=80"
     };
     const seedState = {
+      categories: [
+        { id: crypto.randomUUID(), name: "Piel", slug: "piel", description: "Productos para limpieza, hidratacion y tratamiento de la piel.", image: images.skin, isActive: true },
+        { id: crypto.randomUUID(), name: "Cabello", slug: "cabello", description: "Tratamientos para brillo, fuerza, cuero cabelludo y puntas.", image: images.hair, isActive: true },
+        { id: crypto.randomUUID(), name: "Kit", slug: "kit", description: "Rutinas completas y combinaciones listas para usar.", image: images.skin, isActive: true }
+      ],
       products: [
         { id: crypto.randomUUID(), name: "Serum Barrera Ceramide 5%", category: "Piel", price: 42, stock: 24, image: images.skin, description: "Repara la barrera cutanea con ceramidas, niacinamida y pantenol." },
         { id: crypto.randomUUID(), name: "Aceite Capilar Biomimetic", category: "Cabello", price: 36, stock: 18, image: images.hair, description: "Tratamiento para brillo y puntas secas." }
@@ -421,7 +435,10 @@
     function loadState() {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (!saved) return seedState;
-      try { return JSON.parse(saved); } catch { return seedState; }
+      try {
+        const parsed = JSON.parse(saved);
+        return { ...seedState, ...parsed, categories: parsed.categories?.length ? parsed.categories : seedState.categories };
+      } catch { return seedState; }
     }
 
     function persist() {
@@ -499,6 +516,46 @@
       return state.customers.find(customer => customer.id === id)?.name || "Cliente";
     }
 
+    function slugify(value) {
+      return String(value || "")
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+    }
+
+    function categoryNames() {
+      const names = new Set([
+        ...(state.categories || []).filter(category => category.isActive !== false).map(category => category.name),
+        ...state.products.map(product => product.category).filter(Boolean)
+      ]);
+      return [...names].sort((a, b) => a.localeCompare(b));
+    }
+
+    function ensureCategory(name, description = "") {
+      const cleanName = String(name || "").trim();
+      if (!cleanName) return null;
+      state.categories = state.categories || [];
+      const existing = state.categories.find(category => category.name.toLowerCase() === cleanName.toLowerCase());
+      if (existing) {
+        existing.isActive = true;
+        if (description && !existing.description) existing.description = description;
+        return existing;
+      }
+      const category = {
+        id: crypto.randomUUID(),
+        name: cleanName,
+        slug: slugify(cleanName) || crypto.randomUUID(),
+        description,
+        image: images.skin,
+        isActive: true
+      };
+      state.categories.unshift(category);
+      return category;
+    }
+
     function statusNote(status) {
       return {
         Recibido: "Pedido recibido y pago validado.",
@@ -513,6 +570,7 @@
       renderMetrics();
       renderHomeEditor();
       renderOverviewOrders();
+      renderCategoryControls();
       renderProducts();
       renderCustomers();
       renderOrders();
@@ -651,6 +709,22 @@
       `).join("");
     }
 
+    function renderCategoryControls() {
+      const select = document.getElementById("product-category");
+      if (!select) return;
+      const selected = select.value;
+      const names = categoryNames();
+      select.innerHTML = names.map(name => `<option value="${name}">${name}</option>`).join("");
+      if (names.includes(selected)) select.value = selected;
+      const list = document.getElementById("admin-categories");
+      if (list) {
+        list.innerHTML = names.map(name => {
+          const count = state.products.filter(product => product.category === name).length;
+          return `<button class="rounded-full bg-violet/10 px-3 py-1 text-xs font-extrabold uppercase tracking-widest text-violet" type="button">${name} (${count})</button>`;
+        }).join("") || `<p class="text-sm text-muted">Sin categorias.</p>`;
+      }
+    }
+
     function renderCustomers() {
       const visibleCustomers = currentUser && !isCurrentAdmin() ? state.customers.filter(customer => customer.id === currentUser.id) : state.customers;
       document.getElementById("customer-title").textContent = currentUser && !isCurrentAdmin() ? "Mi perfil" : "Cliente";
@@ -696,10 +770,14 @@
     async function saveProduct(event) {
       event.preventDefault();
       const id = document.getElementById("product-id").value || crypto.randomUUID();
+      const newCategoryName = document.getElementById("category-name").value.trim();
+      const newCategoryDescription = document.getElementById("category-description").value.trim();
+      const createdCategory = newCategoryName ? ensureCategory(newCategoryName, newCategoryDescription) : null;
+      if (createdCategory) await saveCategoryToSupabase(createdCategory);
       const product = {
         id,
         name: document.getElementById("product-name").value.trim(),
-        category: document.getElementById("product-category").value,
+        category: createdCategory?.name || document.getElementById("product-category").value,
         price: Number(document.getElementById("product-price").value),
         stock: Number(document.getElementById("product-stock").value),
         image: document.getElementById("product-image").value.trim() || images.skin,
@@ -711,8 +789,20 @@
       await saveProductToSupabase(product);
       event.target.reset();
       document.getElementById("product-id").value = "";
+      document.getElementById("category-description").value = "";
       persist();
-      showToast("Producto guardado");
+      showToast(createdCategory ? "Categoria y producto guardados" : "Producto guardado");
+    }
+
+    async function createCategoryFromForm() {
+      const category = ensureCategory(document.getElementById("category-name").value, document.getElementById("category-description").value);
+      if (!category) return showToast("Escribe el nombre de la categoria");
+      await saveCategoryToSupabase(category);
+      document.getElementById("category-name").value = "";
+      document.getElementById("category-description").value = "";
+      persist();
+      document.getElementById("product-category").value = category.name;
+      showToast("Categoria creada");
     }
 
     async function saveCustomer(event) {
@@ -828,6 +918,8 @@
       if (!supabaseClient) return;
       const { data: products } = await supabaseClient.from("products").select("id,name,category,description,price,stock,image_url,is_active").eq("is_active", true).order("created_at", { ascending: false });
       if (products?.length) state.products = products.map(product => ({ id: product.id, name: product.name, category: product.category, description: product.description || "", price: Number(product.price), stock: Number(product.stock), image: product.image_url || images.skin }));
+      const { data: categories } = await supabaseClient.from("categories").select("id,name,slug,description,image_url,is_active").eq("is_active", true).order("name", { ascending: true });
+      if (categories?.length) state.categories = categories.map(category => ({ id: category.id, name: category.name, slug: category.slug, description: category.description || "", image: category.image_url || images.skin, isActive: category.is_active !== false }));
       if (currentUser) {
         const { data: customers } = await supabaseClient.from("customer_profiles").select("id,full_name,email,phone,house_number,street,sector,province,city,address_reference,shipping_address").order("created_at", { ascending: false });
         if (customers?.length) state.customers = customers.map(customer => ({ id: customer.id, name: customer.full_name, email: customer.email, phone: customer.phone || "", houseNumber: customer.house_number || "", street: customer.street || "", sector: customer.sector || "", province: customer.province || "", city: customer.city || "", reference: customer.address_reference || "", address: customer.shipping_address || "" }));
@@ -841,6 +933,12 @@
     async function saveProductToSupabase(product) {
       if (!supabaseClient || !currentUser) return;
       const { error } = await supabaseClient.from("products").upsert({ id: product.id, name: product.name, category: product.category, description: product.description, price: product.price, stock: product.stock, image_url: product.image, is_active: true });
+      if (error) showToast(error.message);
+    }
+
+    async function saveCategoryToSupabase(category) {
+      if (!supabaseClient || !currentUser) return;
+      const { error } = await supabaseClient.from("categories").upsert({ id: category.id, name: category.name, slug: category.slug || slugify(category.name), description: category.description || "", image_url: category.image || images.skin, is_active: true });
       if (error) showToast(error.message);
     }
 
@@ -881,6 +979,7 @@
     });
 
     document.getElementById("product-form").addEventListener("submit", saveProduct);
+    document.getElementById("category-create").addEventListener("click", createCategoryFromForm);
     document.getElementById("customer-form").addEventListener("submit", saveCustomer);
     document.getElementById("home-save").addEventListener("click", collectHomeContent);
     document.getElementById("home-reset").addEventListener("click", resetHomeContent);
