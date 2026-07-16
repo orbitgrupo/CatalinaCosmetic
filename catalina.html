@@ -99,6 +99,18 @@
       border-color: #426372;
       box-shadow: 0 0 0 3px rgba(66, 99, 114, .12);
     }
+    @keyframes cartPulse {
+      0% { transform: scale(1); }
+      35% { transform: scale(1.06); }
+      100% { transform: scale(1); }
+    }
+    @keyframes countPop {
+      0% { transform: scale(.65); opacity: .35; }
+      55% { transform: scale(1.18); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .cart-added-animation { animation: cartPulse .45s ease; }
+    .cart-count-pop { animation: countPop .38s ease; }
     * { box-sizing: border-box; }
     @media (max-width: 767px) {
       nav > div { height: 64px !important; padding-left: 16px !important; padding-right: 16px !important; }
@@ -188,8 +200,9 @@
       </div>
     </div>
     <div class="flex items-center space-x-6">
-      <button class="text-slate-600 hover:text-sky-700 transition-all active:scale-95 nav-link" data-page="cart">
+      <button class="relative text-slate-600 hover:text-sky-700 transition-all active:scale-95 nav-link" data-page="cart">
         <span class="material-symbols-outlined">shopping_bag</span>
+        <span id="cart-nav-count" class="absolute -right-3 -top-2 hidden min-w-5 rounded-full bg-primary px-1.5 py-0.5 text-center text-[10px] font-extrabold leading-none text-on-primary">0</span>
       </button>
       <button class="text-slate-600 hover:text-sky-700 transition-all active:scale-95 nav-link" data-page="profile">
         <span class="material-symbols-outlined">person</span>
@@ -1266,7 +1279,10 @@
             </div>
           </div>
           <div class="mt-8 flex flex-col gap-3 sm:flex-row">
-            <button id="detail-add-cart" class="flex-1 rounded-xl bg-primary px-6 py-4 text-sm font-extrabold uppercase tracking-widest text-on-primary transition-opacity hover:opacity-90" type="button">Agregar al carrito</button>
+            <button id="detail-add-cart" class="flex flex-1 items-center justify-center gap-3 rounded-xl bg-primary px-6 py-4 text-sm font-extrabold uppercase tracking-widest text-on-primary transition-all hover:opacity-90" type="button">
+              <span id="detail-add-cart-label">Agregar al carrito</span>
+              <span id="detail-product-count" class="hidden rounded-full bg-white/20 px-3 py-1 text-[10px] tracking-normal">0 en carrito</span>
+            </button>
             <button class="nav-link rounded-xl bg-surface-container-high px-6 py-4 text-sm font-extrabold uppercase tracking-widest text-on-surface transition-colors hover:bg-surface-container-highest" data-page="cart" type="button">Ver carrito</button>
           </div>
         </div>
@@ -1588,6 +1604,7 @@
       button.addEventListener('click', () => setProductImage(button.dataset.src, product.name));
     });
     setProductImage(product.images[0], product.name);
+    updateDetailCartCount(product.name);
 
     const modal = document.getElementById('product-detail-modal');
     modal.classList.remove('hidden');
@@ -1608,7 +1625,8 @@
   });
   document.getElementById('detail-add-cart').addEventListener('click', () => {
     if (!selectedDetailProduct) return;
-    addToCart(selectedDetailProduct.name, selectedDetailProduct.price, selectedDetailProduct.images[0]);
+    const qty = addToCart(selectedDetailProduct.name, selectedDetailProduct.price, selectedDetailProduct.images[0]);
+    animateDetailAddButton(qty);
   });
   document.getElementById('checkout-step-review').addEventListener('click', () => setCheckoutStep('review'));
   document.getElementById('checkout-step-payment').addEventListener('click', () => {
@@ -1646,6 +1664,53 @@
     }, 2000);
   }
 
+  function getCartQty(name) {
+    return cart.find(i => i.name === name)?.qty || 0;
+  }
+
+  function updateNavCartCount() {
+    const badge = document.getElementById('cart-nav-count');
+    const count = cart.reduce((s, i) => s + i.qty, 0);
+    badge.textContent = count > 99 ? '99+' : String(count);
+    badge.classList.toggle('hidden', count === 0);
+    if (count > 0) {
+      badge.classList.remove('cart-count-pop');
+      void badge.offsetWidth;
+      badge.classList.add('cart-count-pop');
+    }
+  }
+
+  function updateDetailCartCount(productName) {
+    const count = document.getElementById('detail-product-count');
+    const label = document.getElementById('detail-add-cart-label');
+    const qty = getCartQty(productName);
+    count.textContent = `${qty} en carrito`;
+    count.classList.toggle('hidden', qty === 0);
+    label.textContent = qty > 0 ? 'Agregar otro' : 'Agregar al carrito';
+  }
+
+  function animateDetailAddButton(qty) {
+    const button = document.getElementById('detail-add-cart');
+    const label = document.getElementById('detail-add-cart-label');
+    const count = document.getElementById('detail-product-count');
+    label.textContent = 'Agregado';
+    count.textContent = `${qty} en carrito`;
+    count.classList.remove('hidden', 'cart-count-pop');
+    button.classList.remove('cart-added-animation');
+    void button.offsetWidth;
+    button.classList.add('cart-added-animation');
+    count.classList.add('cart-count-pop');
+    setTimeout(() => {
+      if (!selectedDetailProduct) return;
+      updateDetailCartCount(selectedDetailProduct.name);
+    }, 900);
+  }
+
+  function updateCartIndicators() {
+    updateNavCartCount();
+    if (selectedDetailProduct) updateDetailCartCount(selectedDetailProduct.name);
+  }
+
   function addToCart(name, price, img) {
     const existing = cart.find(i => i.name === name);
     if (existing) {
@@ -1654,7 +1719,9 @@
       cart.push({ name, price: parseFloat(price), img, qty: 1 });
     }
     renderCart();
-    showToast('Added to batch');
+    const qty = getCartQty(name);
+    showToast(`Agregado al carrito (${qty})`);
+    return qty;
   }
 
   function removeFromCart(name) {
@@ -1806,6 +1873,7 @@
     document.getElementById('cart-subtotal').textContent = `$${subtotal.toFixed(2)}`;
     document.getElementById('cart-tax').textContent = `$${tax.toFixed(2)}`;
     document.getElementById('cart-total').textContent = `$${total.toFixed(2)}`;
+    updateCartIndicators();
   }
 
   // ─── Page Navigation ─────────────────────────────────────────
