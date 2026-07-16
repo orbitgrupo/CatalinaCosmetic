@@ -762,9 +762,33 @@
               <label class="label-sm uppercase tracking-widest text-on-surface-variant font-bold mb-2 block">Email</label>
               <input id="checkout-email" class="w-full rounded bg-surface px-4 py-3 text-sm border-none focus:ring-1 focus:ring-primary" placeholder="cliente@email.com" type="email"/>
             </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="label-sm uppercase tracking-widest text-on-surface-variant font-bold mb-2 block">Casa/Apto</label>
+                <input id="checkout-house-number" class="w-full rounded bg-surface px-4 py-3 text-sm border-none focus:ring-1 focus:ring-primary" placeholder="12B" type="text"/>
+              </div>
+              <div>
+                <label class="label-sm uppercase tracking-widest text-on-surface-variant font-bold mb-2 block">Calle</label>
+                <input id="checkout-street" class="w-full rounded bg-surface px-4 py-3 text-sm border-none focus:ring-1 focus:ring-primary" placeholder="Calle Principal" type="text"/>
+              </div>
+            </div>
             <div>
-              <label class="label-sm uppercase tracking-widest text-on-surface-variant font-bold mb-2 block">Direccion de envio</label>
-              <textarea id="checkout-address" class="min-h-24 w-full rounded bg-surface px-4 py-3 text-sm border-none focus:ring-1 focus:ring-primary" placeholder="Calle, ciudad, estado, zip"></textarea>
+              <label class="label-sm uppercase tracking-widest text-on-surface-variant font-bold mb-2 block">Sector</label>
+              <input id="checkout-sector" class="w-full rounded bg-surface px-4 py-3 text-sm border-none focus:ring-1 focus:ring-primary" placeholder="Sector o barrio" type="text"/>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="label-sm uppercase tracking-widest text-on-surface-variant font-bold mb-2 block">Provincia</label>
+                <select id="checkout-province" class="w-full rounded bg-surface px-4 py-3 text-sm border-none focus:ring-1 focus:ring-primary"></select>
+              </div>
+              <div>
+                <label class="label-sm uppercase tracking-widest text-on-surface-variant font-bold mb-2 block">Ciudad</label>
+                <select id="checkout-city" class="w-full rounded bg-surface px-4 py-3 text-sm border-none focus:ring-1 focus:ring-primary"></select>
+              </div>
+            </div>
+            <div>
+              <label class="label-sm uppercase tracking-widest text-on-surface-variant font-bold mb-2 block">Referencia</label>
+              <input id="checkout-reference" class="w-full rounded bg-surface px-4 py-3 text-sm border-none focus:ring-1 focus:ring-primary" placeholder="Ej: frente al colmado" type="text"/>
             </div>
             <button id="checkout-continue" class="w-full bg-primary text-on-primary py-5 rounded font-bold uppercase tracking-[0.15em] text-sm flex justify-center items-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all" type="button">
               Continuar al pago
@@ -806,8 +830,8 @@
     <header class="mb-16 flex flex-col md:flex-row md:items-end md:justify-between gap-8">
       <div class="space-y-4">
         <div class="inline-block py-1 px-3 bg-secondary-container text-on-secondary-container rounded-full text-[10px] font-bold tracking-[0.1em] uppercase">Profile Dashboard</div>
-        <h1 class="text-4xl md:text-5xl font-extrabold tracking-tighter text-on-surface">Julian Thorne</h1>
-        <p class="text-on-surface-variant max-w-lg leading-relaxed">Member since March 2024. Your personalized skincare regimen is calibrated to your specific climate and skin-type data.</p>
+        <h1 id="profile-display-name" class="text-4xl md:text-5xl font-extrabold tracking-tighter text-on-surface">Crear perfil</h1>
+        <p id="profile-display-summary" class="text-on-surface-variant max-w-lg leading-relaxed">Guarda tus datos y direccion de Republica Dominicana para acelerar tus pedidos.</p>
       </div>
       <div class="flex gap-4">
         <button class="bg-surface-container-high px-6 py-3 rounded-lg font-medium text-sm transition-all hover:bg-surface-container-highest">Edit Profile</button>
@@ -851,40 +875,29 @@
           </div>
         </div>
       </section>
-      <!-- Preferences -->
+      <!-- Profile and Address -->
       <section class="md:col-span-4 bg-surface-container-high p-8 rounded-lg">
         <div class="flex items-center gap-3 mb-8">
-          <span class="material-symbols-outlined text-primary">settings_input_component</span>
-          <h2 class="text-xl font-bold tracking-tight">Preferences</h2>
+          <span class="material-symbols-outlined text-primary">location_on</span>
+          <h2 class="text-xl font-bold tracking-tight">Perfil y envio</h2>
         </div>
-        <div class="space-y-6">
-          <div class="pb-4 border-b border-outline-variant/20">
-            <div class="flex justify-between items-center mb-1">
-              <span class="text-xs font-bold tracking-wider text-on-surface uppercase">Skin Sensitivity</span>
-              <span class="text-xs font-medium text-primary">Moderate</span>
-            </div>
-            <div class="w-full bg-surface-container-lowest h-1 rounded-full">
-              <div class="bg-primary w-2/3 h-full rounded-full"></div>
-            </div>
+        <form id="profile-form" class="space-y-4">
+          <input id="profile-name" class="w-full rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm focus:ring-1 focus:ring-primary" placeholder="Nombre completo"/>
+          <input id="profile-email" class="w-full rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm focus:ring-1 focus:ring-primary" type="email" placeholder="Email"/>
+          <input id="profile-phone" class="w-full rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm focus:ring-1 focus:ring-primary" placeholder="Telefono"/>
+          <div class="grid grid-cols-2 gap-3">
+            <input id="profile-house-number" class="w-full rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm focus:ring-1 focus:ring-primary" placeholder="Casa/Apto"/>
+            <input id="profile-street" class="w-full rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm focus:ring-1 focus:ring-primary" placeholder="Calle"/>
           </div>
-          <div class="space-y-4">
-            <div class="flex items-center justify-between">
-              <label class="text-sm font-medium">Fragrance-Free Only</label>
-              <div class="w-10 h-5 bg-primary rounded-full relative"><div class="absolute right-1 top-1 w-3 h-3 bg-white rounded-full"></div></div>
-            </div>
-            <div class="flex items-center justify-between">
-              <label class="text-sm font-medium">Cruelty-Free Filter</label>
-              <div class="w-10 h-5 bg-primary rounded-full relative"><div class="absolute right-1 top-1 w-3 h-3 bg-white rounded-full"></div></div>
-            </div>
-            <div class="flex items-center justify-between">
-              <label class="text-sm font-medium">Lab Updates (SMS)</label>
-              <div class="w-10 h-5 bg-surface-container-highest rounded-full relative"><div class="absolute left-1 top-1 w-3 h-3 bg-white rounded-full"></div></div>
-            </div>
+          <input id="profile-sector" class="w-full rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm focus:ring-1 focus:ring-primary" placeholder="Sector / barrio"/>
+          <div class="grid grid-cols-2 gap-3">
+            <select id="profile-province" class="w-full rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm focus:ring-1 focus:ring-primary"></select>
+            <select id="profile-city" class="w-full rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm focus:ring-1 focus:ring-primary"></select>
           </div>
-          <div class="pt-4">
-            <button class="w-full py-3 bg-surface-container-lowest text-xs font-bold tracking-[0.1em] uppercase border-b-2 border-primary">Update Bio-Data</button>
-          </div>
-        </div>
+          <input id="profile-reference" class="w-full rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm focus:ring-1 focus:ring-primary" placeholder="Referencia"/>
+          <button class="w-full rounded-lg bg-primary py-3 text-xs font-bold uppercase tracking-[0.1em] text-on-primary" type="submit">Guardar perfil</button>
+          <p id="profile-address-preview" class="rounded-lg bg-surface-container-lowest p-4 text-xs leading-5 text-on-surface-variant">Sin direccion registrada.</p>
+        </form>
       </section>
       <!-- Order Archives -->
       <section class="md:col-span-12 bg-surface-container-low p-8 rounded-lg overflow-hidden">
@@ -1439,6 +1452,120 @@
 
 <script>
   // ─── Cart State ───────────────────────────────────────────────
+  const CUSTOMER_PROFILE_KEY = 'catalina-customer-profile-v1';
+  const dominicanLocations = {
+    "Distrito Nacional": ["Santo Domingo de Guzman"],
+    "Santo Domingo": ["Santo Domingo Este", "Santo Domingo Norte", "Santo Domingo Oeste", "Boca Chica", "Los Alcarrizos", "Pedro Brand"],
+    "Santiago": ["Santiago de los Caballeros", "Tamboril", "Licey al Medio", "Villa Gonzalez", "San Jose de las Matas"],
+    "La Altagracia": ["Higuey", "Veron", "Punta Cana", "San Rafael del Yuma", "Bavaro"],
+    "La Romana": ["La Romana", "Guaymate", "Villa Hermosa"],
+    "San Pedro de Macoris": ["San Pedro de Macoris", "Consuelo", "Quisqueya", "Ramon Santana"],
+    "San Cristobal": ["San Cristobal", "Bajos de Haina", "Nigua", "Villa Altagracia", "Yaguate"],
+    "La Vega": ["La Vega", "Constanza", "Jarabacoa", "Jima Abajo"],
+    "Puerto Plata": ["Puerto Plata", "Sosua", "Cabarete", "Imbert", "Luperon"],
+    "Duarte": ["San Francisco de Macoris", "Pimentel", "Villa Riva", "Castillo"],
+    "Espaillat": ["Moca", "Gaspar Hernandez", "Cayetano Germosen"],
+    "Samana": ["Samana", "Las Terrenas", "Sanchez"],
+    "Maria Trinidad Sanchez": ["Nagua", "Cabrera", "Rio San Juan"],
+    "Hato Mayor": ["Hato Mayor del Rey", "Sabana de la Mar", "El Valle"],
+    "El Seibo": ["Santa Cruz de El Seibo", "Miches"],
+    "Monte Plata": ["Monte Plata", "Bayaguana", "Yamasa", "Sabana Grande de Boya"],
+    "San Jose de Ocoa": ["San Jose de Ocoa", "Sabana Larga", "Rancho Arriba"],
+    "Peravia": ["Bani", "Nizao", "Paya"],
+    "Azua": ["Azua de Compostela", "Padre Las Casas", "Peralta", "Sabana Yegua"],
+    "Barahona": ["Barahona", "Cabral", "Enriquillo", "Paraiso"],
+    "Bahoruco": ["Neiba", "Tamayo", "Villa Jaragua"],
+    "Independencia": ["Jimani", "Duverge", "La Descubierta"],
+    "Pedernales": ["Pedernales", "Oviedo"],
+    "San Juan": ["San Juan de la Maguana", "Las Matas de Farfan", "Vallejuelo"],
+    "Elias Pina": ["Comendador", "Banica", "El Llano"],
+    "Dajabon": ["Dajabon", "Loma de Cabrera", "Partido"],
+    "Monte Cristi": ["Monte Cristi", "Villa Vasquez", "Guayubin"],
+    "Santiago Rodriguez": ["San Ignacio de Sabaneta", "Moncion", "Villa Los Almacigos"],
+    "Valverde": ["Mao", "Esperanza", "Laguna Salada"],
+    "Monsenor Nouel": ["Bonao", "Maimon", "Piedra Blanca"],
+    "Sanchez Ramirez": ["Cotui", "Cevicos", "Fantino"],
+    "Hermanas Mirabal": ["Salcedo", "Tenares", "Villa Tapia"]
+  };
+
+  function populateProvinceSelect(provinceId, cityId, selectedProvince = "Distrito Nacional", selectedCity = "") {
+    const provinceSelect = document.getElementById(provinceId);
+    if (!provinceSelect) return;
+    provinceSelect.innerHTML = Object.keys(dominicanLocations).map(province => `<option value="${province}">${province}</option>`).join('');
+    provinceSelect.value = dominicanLocations[selectedProvince] ? selectedProvince : "Distrito Nacional";
+    populateCitySelect(provinceId, cityId, selectedCity);
+  }
+
+  function populateCitySelect(provinceId, cityId, selectedCity = "") {
+    const provinceSelect = document.getElementById(provinceId);
+    const citySelect = document.getElementById(cityId);
+    if (!provinceSelect || !citySelect) return;
+    const cities = dominicanLocations[provinceSelect.value] || [];
+    citySelect.innerHTML = cities.map(city => `<option value="${city}">${city}</option>`).join('');
+    citySelect.value = cities.includes(selectedCity) ? selectedCity : (cities[0] || "");
+  }
+
+  function formatDominicanAddress(data) {
+    const parts = [data.houseNumber ? `Casa/Apto ${data.houseNumber}` : "", data.street, data.sector, data.city, data.province].filter(Boolean);
+    return `${parts.join(', ')}${data.reference ? `. Ref: ${data.reference}` : ''}`;
+  }
+
+  function getAddressFrom(prefix) {
+    const data = {
+      houseNumber: document.getElementById(`${prefix}-house-number`)?.value.trim() || "",
+      street: document.getElementById(`${prefix}-street`)?.value.trim() || "",
+      sector: document.getElementById(`${prefix}-sector`)?.value.trim() || "",
+      province: document.getElementById(`${prefix}-province`)?.value || "Distrito Nacional",
+      city: document.getElementById(`${prefix}-city`)?.value || "Santo Domingo de Guzman",
+      reference: document.getElementById(`${prefix}-reference`)?.value.trim() || ""
+    };
+    return { ...data, address: formatDominicanAddress(data) };
+  }
+
+  function setAddressFields(prefix, profile = {}) {
+    populateProvinceSelect(`${prefix}-province`, `${prefix}-city`, profile.province || "Distrito Nacional", profile.city || "");
+    const fieldPairs = [["house-number", "houseNumber"], ["street", "street"], ["sector", "sector"], ["reference", "reference"]];
+    fieldPairs.forEach(([field, key]) => {
+      const node = document.getElementById(`${prefix}-${field}`);
+      if (node) node.value = profile[key] || "";
+    });
+  }
+
+  function loadCustomerProfile() {
+    try { return JSON.parse(localStorage.getItem(CUSTOMER_PROFILE_KEY) || "{}"); } catch { return {}; }
+  }
+
+  function saveCustomerProfile(event) {
+    event.preventDefault();
+    const profile = {
+      name: document.getElementById('profile-name').value.trim(),
+      email: document.getElementById('profile-email').value.trim(),
+      phone: document.getElementById('profile-phone').value.trim(),
+      ...getAddressFrom('profile')
+    };
+    localStorage.setItem(CUSTOMER_PROFILE_KEY, JSON.stringify(profile));
+    renderCustomerProfile();
+    applyProfileToCheckout(profile);
+    showToast('Perfil guardado');
+  }
+
+  function renderCustomerProfile() {
+    const profile = loadCustomerProfile();
+    document.getElementById('profile-name').value = profile.name || "";
+    document.getElementById('profile-email').value = profile.email || "";
+    document.getElementById('profile-phone').value = profile.phone || "";
+    setAddressFields('profile', profile);
+    document.getElementById('profile-address-preview').textContent = profile.address || 'Sin direccion registrada.';
+    document.getElementById('profile-display-name').textContent = profile.name || 'Crear perfil';
+    document.getElementById('profile-display-summary').textContent = profile.email ? `${profile.email} · ${profile.address || 'Direccion pendiente'}` : 'Guarda tus datos y direccion de Republica Dominicana para acelerar tus pedidos.';
+  }
+
+  function applyProfileToCheckout(profile = loadCustomerProfile()) {
+    if (profile.name) document.getElementById('checkout-name').value = profile.name;
+    if (profile.email) document.getElementById('checkout-email').value = profile.email;
+    setAddressFields('checkout', profile);
+  }
+
   const productCatalog = [
     {
       id: 'ascorbic-acid',
@@ -1628,6 +1755,9 @@
     const qty = addToCart(selectedDetailProduct.name, selectedDetailProduct.price, selectedDetailProduct.images[0]);
     animateDetailAddButton(qty);
   });
+  document.getElementById('profile-form').addEventListener('submit', saveCustomerProfile);
+  document.getElementById('profile-province').addEventListener('change', () => populateCitySelect('profile-province', 'profile-city'));
+  document.getElementById('checkout-province').addEventListener('change', () => populateCitySelect('checkout-province', 'checkout-city'));
   document.getElementById('checkout-step-review').addEventListener('click', () => setCheckoutStep('review'));
   document.getElementById('checkout-step-payment').addEventListener('click', () => {
     const error = validateCheckoutReview();
@@ -1771,17 +1901,18 @@
   }
 
   function getCheckoutCustomer() {
+    const addressData = getAddressFrom('checkout');
     return {
       name: document.getElementById('checkout-name').value.trim(),
       email: document.getElementById('checkout-email').value.trim(),
-      address: document.getElementById('checkout-address').value.trim()
+      ...addressData
     };
   }
 
   function validateCheckoutReview() {
     if (!cart.length) return 'Agrega productos antes de continuar.';
     const customer = getCheckoutCustomer();
-    if (!customer.name || !customer.email || !customer.address) return 'Completa nombre, email y direccion de envio.';
+    if (!customer.name || !customer.email || !customer.houseNumber || !customer.street || !customer.sector || !customer.province || !customer.city) return 'Completa nombre, email, casa, calle, sector, provincia y ciudad.';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email)) return 'Escribe un email valido.';
     return '';
   }
@@ -1907,6 +2038,8 @@
   });
 
   // Initialize
+  renderCustomerProfile();
+  applyProfileToCheckout();
   renderCart();
   const checkoutResult = new URLSearchParams(window.location.search).get('checkout');
   if (checkoutResult === 'success') {

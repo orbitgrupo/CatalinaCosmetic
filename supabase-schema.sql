@@ -21,6 +21,12 @@ create table if not exists public.customer_profiles (
   full_name text not null,
   email text not null,
   phone text,
+  house_number text,
+  street text,
+  sector text,
+  province text,
+  city text,
+  address_reference text,
   shipping_address text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()

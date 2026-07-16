@@ -254,7 +254,16 @@
               <input id="customer-name" class="rounded-lg border-line" placeholder="Nombre completo" required />
               <input id="customer-email" class="rounded-lg border-line" type="email" placeholder="Email" required />
               <input id="customer-phone" class="rounded-lg border-line" placeholder="Telefono" />
-              <textarea id="customer-address" class="rounded-lg border-line" rows="4" placeholder="Direccion de envio"></textarea>
+              <div class="grid gap-3 md:grid-cols-2">
+                <input id="customer-house-number" class="rounded-lg border-line" placeholder="Numero de casa/apto" />
+                <input id="customer-street" class="rounded-lg border-line" placeholder="Calle" />
+              </div>
+              <input id="customer-sector" class="rounded-lg border-line" placeholder="Sector / barrio" />
+              <div class="grid gap-3 md:grid-cols-2">
+                <select id="customer-province" class="rounded-lg border-line"></select>
+                <select id="customer-city" class="rounded-lg border-line"></select>
+              </div>
+              <input id="customer-reference" class="rounded-lg border-line" placeholder="Referencia cercana" />
               <button class="rounded-lg bg-violet px-5 py-3 font-bold text-white">Guardar cliente</button>
               <button type="button" id="customer-use-session" class="rounded-lg border border-line px-5 py-3 font-bold text-muted">Usar mi sesion</button>
               <button type="button" id="customer-reset" class="rounded-lg border border-line px-5 py-3 font-bold text-muted">Limpiar</button>
@@ -301,6 +310,40 @@
     const STORAGE_KEY = "catalina-admin-v2";
     const HOME_STORAGE_KEY = "catalina-home-content-v1";
     const orderStatuses = ["Recibido", "Preparando", "Enviado", "En ruta", "Entregado"];
+    const dominicanLocations = {
+      "Distrito Nacional": ["Santo Domingo de Guzman"],
+      "Santo Domingo": ["Santo Domingo Este", "Santo Domingo Norte", "Santo Domingo Oeste", "Boca Chica", "Los Alcarrizos", "Pedro Brand"],
+      "Santiago": ["Santiago de los Caballeros", "Tamboril", "Licey al Medio", "Villa Gonzalez", "San Jose de las Matas"],
+      "La Altagracia": ["Higuey", "Veron", "Punta Cana", "San Rafael del Yuma", "Bavaro"],
+      "La Romana": ["La Romana", "Guaymate", "Villa Hermosa"],
+      "San Pedro de Macoris": ["San Pedro de Macoris", "Consuelo", "Quisqueya", "Ramon Santana"],
+      "San Cristobal": ["San Cristobal", "Bajos de Haina", "Nigua", "Villa Altagracia", "Yaguate"],
+      "La Vega": ["La Vega", "Constanza", "Jarabacoa", "Jima Abajo"],
+      "Puerto Plata": ["Puerto Plata", "Sosua", "Cabarete", "Imbert", "Luperon"],
+      "Duarte": ["San Francisco de Macoris", "Pimentel", "Villa Riva", "Castillo"],
+      "Espaillat": ["Moca", "Gaspar Hernandez", "Cayetano Germosen"],
+      "Samana": ["Samana", "Las Terrenas", "Sanchez"],
+      "Maria Trinidad Sanchez": ["Nagua", "Cabrera", "Rio San Juan"],
+      "Hato Mayor": ["Hato Mayor del Rey", "Sabana de la Mar", "El Valle"],
+      "El Seibo": ["Santa Cruz de El Seibo", "Miches"],
+      "Monte Plata": ["Monte Plata", "Bayaguana", "Yamasa", "Sabana Grande de Boya"],
+      "San Jose de Ocoa": ["San Jose de Ocoa", "Sabana Larga", "Rancho Arriba"],
+      "Peravia": ["Bani", "Nizao", "Paya"],
+      "Azua": ["Azua de Compostela", "Padre Las Casas", "Peralta", "Sabana Yegua"],
+      "Barahona": ["Barahona", "Cabral", "Enriquillo", "Paraiso"],
+      "Bahoruco": ["Neiba", "Tamayo", "Villa Jaragua"],
+      "Independencia": ["Jimani", "Duverge", "La Descubierta"],
+      "Pedernales": ["Pedernales", "Oviedo"],
+      "San Juan": ["San Juan de la Maguana", "Las Matas de Farfan", "Vallejuelo"],
+      "Elias Pina": ["Comendador", "Baníca", "El Llano"],
+      "Dajabon": ["Dajabon", "Loma de Cabrera", "Partido"],
+      "Monte Cristi": ["Monte Cristi", "Villa Vasquez", "Guayubin"],
+      "Santiago Rodriguez": ["San Ignacio de Sabaneta", "Moncion", "Villa Los Almacigos"],
+      "Valverde": ["Mao", "Esperanza", "Laguna Salada"],
+      "Monsenor Nouel": ["Bonao", "Maimon", "Piedra Blanca"],
+      "Sanchez Ramirez": ["Cotui", "Cevicos", "Fantino"],
+      "Hermanas Mirabal": ["Salcedo", "Tenares", "Villa Tapia"]
+    };
     const defaultHomeContent = {
       brandName: "CATALINA",
       siteTitle: "CATALINA LABS",
@@ -345,7 +388,7 @@
         { id: crypto.randomUUID(), name: "Aceite Capilar Biomimetic", category: "Cabello", price: 36, stock: 18, image: images.hair, description: "Tratamiento para brillo y puntas secas." }
       ],
       customers: [
-        { id: crypto.randomUUID(), name: "Camila Torres", email: "camila@example.com", phone: "+1 305 555 0144", address: "1200 Brickell Ave, Miami, FL" }
+        { id: crypto.randomUUID(), name: "Camila Torres", email: "camila@example.com", phone: "+1 809 555 0144", houseNumber: "12", street: "Calle Principal", sector: "Piantini", province: "Distrito Nacional", city: "Santo Domingo de Guzman", reference: "Cerca de la farmacia", address: "Casa/Apto 12, Calle Principal, Piantini, Santo Domingo de Guzman, Distrito Nacional. Ref: Cerca de la farmacia" }
       ],
       orders: []
     };
@@ -384,6 +427,53 @@
     function persist() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       renderAll();
+    }
+
+    function populateProvinceSelect(provinceId, cityId, selectedProvince = "Distrito Nacional", selectedCity = "") {
+      const provinceSelect = document.getElementById(provinceId);
+      const citySelect = document.getElementById(cityId);
+      provinceSelect.innerHTML = Object.keys(dominicanLocations).map(province => `<option value="${province}">${province}</option>`).join("");
+      provinceSelect.value = dominicanLocations[selectedProvince] ? selectedProvince : "Distrito Nacional";
+      populateCitySelect(provinceId, cityId, selectedCity);
+    }
+
+    function populateCitySelect(provinceId, cityId, selectedCity = "") {
+      const province = document.getElementById(provinceId).value;
+      const cities = dominicanLocations[province] || [];
+      const citySelect = document.getElementById(cityId);
+      citySelect.innerHTML = cities.map(city => `<option value="${city}">${city}</option>`).join("");
+      citySelect.value = cities.includes(selectedCity) ? selectedCity : (cities[0] || "");
+    }
+
+    function formatDominicanAddress(data) {
+      const parts = [
+        data.houseNumber ? `Casa/Apto ${data.houseNumber}` : "",
+        data.street,
+        data.sector,
+        data.city,
+        data.province
+      ].filter(Boolean);
+      return `${parts.join(", ")}${data.reference ? `. Ref: ${data.reference}` : ""}`;
+    }
+
+    function getCustomerAddressFromForm() {
+      const data = {
+        houseNumber: document.getElementById("customer-house-number").value.trim(),
+        street: document.getElementById("customer-street").value.trim(),
+        sector: document.getElementById("customer-sector").value.trim(),
+        province: document.getElementById("customer-province").value,
+        city: document.getElementById("customer-city").value,
+        reference: document.getElementById("customer-reference").value.trim()
+      };
+      return { ...data, address: formatDominicanAddress(data) };
+    }
+
+    function setCustomerAddressForm(customer = {}) {
+      populateProvinceSelect("customer-province", "customer-city", customer.province || "Distrito Nacional", customer.city || "");
+      document.getElementById("customer-house-number").value = customer.houseNumber || "";
+      document.getElementById("customer-street").value = customer.street || "";
+      document.getElementById("customer-sector").value = customer.sector || "";
+      document.getElementById("customer-reference").value = customer.reference || "";
     }
 
     function money(value) {
@@ -567,7 +657,12 @@
       document.getElementById("admin-customers").innerHTML = visibleCustomers.map(customer => `
         <div class="rounded-lg border border-line p-4">
           <div class="flex justify-between gap-3">
-            <div><p class="font-bold">${customer.name}</p><p class="text-xs text-muted">${customer.email}</p></div>
+            <div>
+              <p class="font-bold">${customer.name}</p>
+              <p class="text-xs text-muted">${customer.email}</p>
+              <p class="mt-2 text-sm text-muted">${customer.address || "Sin direccion registrada"}</p>
+              <p class="mt-1 text-xs font-bold uppercase tracking-widest text-violet">${customer.city || ""}${customer.city && customer.province ? ", " : ""}${customer.province || ""}</p>
+            </div>
             <button class="edit-customer text-sm font-bold text-violet" data-id="${customer.id}">Editar</button>
           </div>
         </div>
@@ -630,7 +725,7 @@
         name: document.getElementById("customer-name").value.trim(),
         email: document.getElementById("customer-email").value.trim(),
         phone: document.getElementById("customer-phone").value.trim(),
-        address: document.getElementById("customer-address").value.trim()
+        ...getCustomerAddressFromForm()
       };
       const index = state.customers.findIndex(item => item.id === id);
       if (index >= 0) state.customers[index] = customer;
@@ -665,7 +760,7 @@
       document.getElementById("customer-name").value = customer.name;
       document.getElementById("customer-email").value = customer.email;
       document.getElementById("customer-phone").value = customer.phone;
-      document.getElementById("customer-address").value = customer.address;
+      setCustomerAddressForm(customer);
     }
 
     function prepareOwnProfileForm() {
@@ -677,7 +772,7 @@
       document.getElementById("customer-name").value = existing?.name || currentUser.email?.split("@")[0] || "";
       document.getElementById("customer-email").value = existing?.email || currentUser.email || "";
       document.getElementById("customer-phone").value = existing?.phone || "";
-      document.getElementById("customer-address").value = existing?.address || "";
+      setCustomerAddressForm(existing || {});
     }
 
     async function initSupabase() {
@@ -734,8 +829,8 @@
       const { data: products } = await supabaseClient.from("products").select("id,name,category,description,price,stock,image_url,is_active").eq("is_active", true).order("created_at", { ascending: false });
       if (products?.length) state.products = products.map(product => ({ id: product.id, name: product.name, category: product.category, description: product.description || "", price: Number(product.price), stock: Number(product.stock), image: product.image_url || images.skin }));
       if (currentUser) {
-        const { data: customers } = await supabaseClient.from("customer_profiles").select("id,full_name,email,phone,shipping_address").order("created_at", { ascending: false });
-        if (customers?.length) state.customers = customers.map(customer => ({ id: customer.id, name: customer.full_name, email: customer.email, phone: customer.phone || "", address: customer.shipping_address || "" }));
+        const { data: customers } = await supabaseClient.from("customer_profiles").select("id,full_name,email,phone,house_number,street,sector,province,city,address_reference,shipping_address").order("created_at", { ascending: false });
+        if (customers?.length) state.customers = customers.map(customer => ({ id: customer.id, name: customer.full_name, email: customer.email, phone: customer.phone || "", houseNumber: customer.house_number || "", street: customer.street || "", sector: customer.sector || "", province: customer.province || "", city: customer.city || "", reference: customer.address_reference || "", address: customer.shipping_address || "" }));
         const { data: orders } = await supabaseClient.from("orders").select("id,order_number,customer_id,status,carrier,tracking_code,estimated_delivery,created_at,order_items(product_id,product_name,unit_price,quantity),shipment_events(status,note,event_at)").order("created_at", { ascending: false });
         if (orders?.length) state.orders = orders.map(order => ({ id: order.order_number, remoteId: order.id, customerId: order.customer_id, status: order.status, carrier: order.carrier || "Catalina Express", trackingCode: order.tracking_code || "", createdAt: order.created_at, eta: order.estimated_delivery || "", items: (order.order_items || []).map(item => ({ productId: item.product_id, name: item.product_name, price: Number(item.unit_price), qty: Number(item.quantity) })), history: (order.shipment_events || []).map(event => ({ status: event.status, note: event.note || statusNote(event.status), at: event.event_at })) }));
       }
@@ -751,7 +846,7 @@
 
     async function saveCustomerToSupabase(customer) {
       if (!supabaseClient || !currentUser) return;
-      const { error } = await supabaseClient.from("customer_profiles").upsert({ id: customer.id, full_name: customer.name, email: customer.email, phone: customer.phone, shipping_address: customer.address });
+      const { error } = await supabaseClient.from("customer_profiles").upsert({ id: customer.id, full_name: customer.name, email: customer.email, phone: customer.phone, house_number: customer.houseNumber, street: customer.street, sector: customer.sector, province: customer.province, city: customer.city, address_reference: customer.reference, shipping_address: customer.address });
       if (error) showToast(error.message);
     }
 
@@ -782,6 +877,7 @@
     document.addEventListener("change", event => {
       if (event.target.classList.contains("order-status")) updateOrder(event.target.dataset.id, "status", event.target.value);
       if (event.target.classList.contains("order-carrier")) updateOrder(event.target.dataset.id, "carrier", event.target.value);
+      if (event.target.id === "customer-province") populateCitySelect("customer-province", "customer-city");
     });
 
     document.getElementById("product-form").addEventListener("submit", saveProduct);
@@ -794,8 +890,9 @@
     document.getElementById("sync-pull").addEventListener("click", () => pullFromSupabase(true));
     document.getElementById("product-reset").addEventListener("click", () => { document.getElementById("product-form").reset(); document.getElementById("product-id").value = ""; });
     document.getElementById("customer-use-session").addEventListener("click", prepareOwnProfileForm);
-    document.getElementById("customer-reset").addEventListener("click", () => { document.getElementById("customer-form").reset(); document.getElementById("customer-id").value = ""; document.getElementById("customer-auth-id").value = ""; });
+    document.getElementById("customer-reset").addEventListener("click", () => { document.getElementById("customer-form").reset(); document.getElementById("customer-id").value = ""; document.getElementById("customer-auth-id").value = ""; setCustomerAddressForm({}); });
 
+    populateProvinceSelect("customer-province", "customer-city");
     renderAll();
     initSupabase();
   </script>
