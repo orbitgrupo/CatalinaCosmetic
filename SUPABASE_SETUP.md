@@ -15,9 +15,12 @@
 ```text
 CATALINA_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 CATALINA_SUPABASE_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
+STRIPE_SECRET_KEY=sk_test_or_live_...
 ```
 
-7. Redeploy the latest Sites version after setting the variables.
+7. Mark `STRIPE_SECRET_KEY` as secret in Sites. Never place it in `catalina.html`.
+
+8. Redeploy the latest Sites version after setting the variables.
 
 Customers can create accounts from the site with the `Crear` button. After signing in, they should use `Usar mi sesion` in the profile form, complete their shipping details, and save the profile before placing an order.
 

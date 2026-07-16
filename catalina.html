@@ -719,9 +719,13 @@
         </div>
       </div>
       <!-- Summary -->
-      <div class="lg:w-[400px]">
+      <div class="lg:w-[420px]">
         <div class="bg-surface-container-highest p-8 rounded-lg sticky top-32">
-          <h2 class="label-md uppercase tracking-[0.2em] font-extrabold text-on-surface mb-8">Order Summary</h2>
+          <h2 class="label-md uppercase tracking-[0.2em] font-extrabold text-on-surface mb-6">Checkout</h2>
+          <div class="mb-8 grid grid-cols-2 gap-2 rounded-full bg-surface p-1 text-xs font-extrabold uppercase tracking-[0.12em]">
+            <button id="checkout-step-review" class="rounded-full bg-primary px-3 py-2 text-on-primary" type="button">1. Pedido</button>
+            <button id="checkout-step-payment" class="rounded-full px-3 py-2 text-on-surface-variant" type="button">2. Pago</button>
+          </div>
           <div class="space-y-4 mb-8">
             <div class="flex justify-between items-center">
               <span class="text-on-surface-variant" id="cart-count-label">Subtotal (0 units)</span>
@@ -736,19 +740,41 @@
               <span class="text-3xl font-extrabold tracking-tighter text-on-surface" id="cart-total">$0.00</span>
             </div>
           </div>
-          <div class="mb-8">
-            <label class="label-sm uppercase tracking-widest text-on-surface-variant font-bold mb-2 block">Protocol Code</label>
-            <div class="flex gap-2">
-              <input class="bg-surface border-none outline-none focus:ring-1 focus:ring-primary text-sm px-4 py-3 w-full rounded" placeholder="ENTER CODE" type="text"/>
-              <button class="bg-surface-container-high px-4 text-xs font-bold uppercase hover:bg-outline-variant/20 transition-colors rounded">Apply</button>
+          <div id="checkout-review-panel" class="space-y-5">
+            <div>
+              <label class="label-sm uppercase tracking-widest text-on-surface-variant font-bold mb-2 block">Nombre completo</label>
+              <input id="checkout-name" class="w-full rounded bg-surface px-4 py-3 text-sm border-none focus:ring-1 focus:ring-primary" placeholder="Nombre del cliente" type="text"/>
             </div>
+            <div>
+              <label class="label-sm uppercase tracking-widest text-on-surface-variant font-bold mb-2 block">Email</label>
+              <input id="checkout-email" class="w-full rounded bg-surface px-4 py-3 text-sm border-none focus:ring-1 focus:ring-primary" placeholder="cliente@email.com" type="email"/>
+            </div>
+            <div>
+              <label class="label-sm uppercase tracking-widest text-on-surface-variant font-bold mb-2 block">Direccion de envio</label>
+              <textarea id="checkout-address" class="min-h-24 w-full rounded bg-surface px-4 py-3 text-sm border-none focus:ring-1 focus:ring-primary" placeholder="Calle, ciudad, estado, zip"></textarea>
+            </div>
+            <button id="checkout-continue" class="w-full bg-primary text-on-primary py-5 rounded font-bold uppercase tracking-[0.15em] text-sm flex justify-center items-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all" type="button">
+              Continuar al pago
+              <span class="material-symbols-outlined text-sm">arrow_forward</span>
+            </button>
           </div>
-          <button class="w-full bg-primary text-on-primary py-5 rounded font-bold uppercase tracking-[0.15em] text-sm flex justify-center items-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all nav-link" data-page="tracking">
-            Proceed to Secure Checkout
-            <span class="material-symbols-outlined text-sm">arrow_forward</span>
-          </button>
+          <div id="checkout-payment-panel" class="hidden space-y-5">
+            <div class="rounded-lg bg-surface p-5">
+              <div class="mb-3 flex items-center gap-2 text-sm font-extrabold uppercase tracking-[0.12em] text-on-surface">
+                <span class="material-symbols-outlined text-primary">credit_card</span>
+                Stripe Checkout
+              </div>
+              <p class="text-sm leading-6 text-on-surface-variant">El pago se procesa en Stripe. Catalina no guarda tarjetas ni datos bancarios en la pagina.</p>
+            </div>
+            <button id="stripe-checkout-button" class="w-full bg-on-surface text-surface py-5 rounded font-bold uppercase tracking-[0.15em] text-sm flex justify-center items-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all" type="button">
+              Pagar con Stripe
+              <span class="material-symbols-outlined text-sm">lock</span>
+            </button>
+            <button id="checkout-back" class="w-full rounded border border-outline-variant/40 py-4 text-xs font-extrabold uppercase tracking-[0.15em] text-on-surface hover:border-primary" type="button">Volver a datos</button>
+          </div>
+          <p id="checkout-message" class="mt-4 hidden rounded-lg bg-surface px-4 py-3 text-sm font-bold text-on-surface-variant"></p>
           <div class="mt-8 flex flex-col items-center gap-4">
-            <p class="text-[10px] text-on-surface-variant text-center leading-relaxed">SECURE ENCRYPTED TRANSACTION // CATALINA LABS PROTECTS ALL PHARMACEUTICAL-GRADE DATA.</p>
+            <p class="text-[10px] text-on-surface-variant text-center leading-relaxed">TRANSACCION CIFRADA // EL PAGO SE COMPLETA EN STRIPE CHECKOUT.</p>
             <div class="flex gap-4 opacity-40 grayscale">
               <span class="material-symbols-outlined">payments</span>
               <span class="material-symbols-outlined">credit_card</span>
@@ -1584,6 +1610,20 @@
     if (!selectedDetailProduct) return;
     addToCart(selectedDetailProduct.name, selectedDetailProduct.price, selectedDetailProduct.images[0]);
   });
+  document.getElementById('checkout-step-review').addEventListener('click', () => setCheckoutStep('review'));
+  document.getElementById('checkout-step-payment').addEventListener('click', () => {
+    const error = validateCheckoutReview();
+    if (error) return showCheckoutMessage(error);
+    setCheckoutStep('payment');
+  });
+  document.getElementById('checkout-continue').addEventListener('click', () => {
+    const error = validateCheckoutReview();
+    if (error) return showCheckoutMessage(error);
+    document.getElementById('checkout-message').classList.add('hidden');
+    setCheckoutStep('payment');
+  });
+  document.getElementById('checkout-back').addEventListener('click', () => setCheckoutStep('review'));
+  document.getElementById('stripe-checkout-button').addEventListener('click', startStripeCheckout);
   document.addEventListener('keydown', (event) => {
     const card = event.target.closest('.product-card');
     if (event.key === 'Escape') closeProductDetail();
@@ -1631,6 +1671,96 @@
     }
   }
 
+  function calculateCartTotals() {
+    const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+    const tax = subtotal * 0.08;
+    const total = subtotal + tax;
+    const count = cart.reduce((s, i) => s + i.qty, 0);
+    return { subtotal, tax, total, count };
+  }
+
+  function setCheckoutStep(step) {
+    const reviewPanel = document.getElementById('checkout-review-panel');
+    const paymentPanel = document.getElementById('checkout-payment-panel');
+    const reviewTab = document.getElementById('checkout-step-review');
+    const paymentTab = document.getElementById('checkout-step-payment');
+    const isPayment = step === 'payment';
+
+    reviewPanel.classList.toggle('hidden', isPayment);
+    paymentPanel.classList.toggle('hidden', !isPayment);
+    reviewTab.className = isPayment
+      ? 'rounded-full px-3 py-2 text-on-surface-variant'
+      : 'rounded-full bg-primary px-3 py-2 text-on-primary';
+    paymentTab.className = isPayment
+      ? 'rounded-full bg-primary px-3 py-2 text-on-primary'
+      : 'rounded-full px-3 py-2 text-on-surface-variant';
+  }
+
+  function showCheckoutMessage(message, isError = true) {
+    const node = document.getElementById('checkout-message');
+    node.textContent = message;
+    node.classList.remove('hidden', 'text-on-surface-variant', 'text-error');
+    node.classList.add(isError ? 'text-error' : 'text-on-surface-variant');
+  }
+
+  function getCheckoutCustomer() {
+    return {
+      name: document.getElementById('checkout-name').value.trim(),
+      email: document.getElementById('checkout-email').value.trim(),
+      address: document.getElementById('checkout-address').value.trim()
+    };
+  }
+
+  function validateCheckoutReview() {
+    if (!cart.length) return 'Agrega productos antes de continuar.';
+    const customer = getCheckoutCustomer();
+    if (!customer.name || !customer.email || !customer.address) return 'Completa nombre, email y direccion de envio.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email)) return 'Escribe un email valido.';
+    return '';
+  }
+
+  async function startStripeCheckout() {
+    const error = validateCheckoutReview();
+    if (error) {
+      showCheckoutMessage(error);
+      setCheckoutStep('review');
+      return;
+    }
+    if (window.location.protocol === 'file:') {
+      showCheckoutMessage('Stripe funciona desde la version publicada, no desde el archivo local.');
+      return;
+    }
+
+    const button = document.getElementById('stripe-checkout-button');
+    const original = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = 'Creando pago seguro...';
+    showCheckoutMessage('Conectando con Stripe...', false);
+
+    try {
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          customer: getCheckoutCustomer(),
+          items: cart.map(item => ({
+            name: item.name,
+            price: item.price,
+            quantity: item.qty,
+            image: item.img
+          }))
+        })
+      });
+      const payload = await response.json();
+      if (!response.ok || !payload.url) throw new Error(payload.error || 'No se pudo crear el pago.');
+      window.location.href = payload.url;
+    } catch (err) {
+      showCheckoutMessage(err.message || 'Stripe no respondio. Intenta de nuevo.');
+      button.disabled = false;
+      button.innerHTML = original;
+    }
+  }
+
   function renderCart() {
     const container = document.getElementById('cart-items');
     const empty = document.getElementById('cart-empty');
@@ -1671,10 +1801,7 @@
     }
 
     // Update summary
-    const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
-    const tax = subtotal * 0.08;
-    const total = subtotal + tax;
-    const count = cart.reduce((s, i) => s + i.qty, 0);
+    const { subtotal, tax, total, count } = calculateCartTotals();
     document.getElementById('cart-count-label').textContent = `Subtotal (${count} unit${count !== 1 ? 's' : ''})`;
     document.getElementById('cart-subtotal').textContent = `$${subtotal.toFixed(2)}`;
     document.getElementById('cart-tax').textContent = `$${tax.toFixed(2)}`;
@@ -1713,6 +1840,16 @@
 
   // Initialize
   renderCart();
+  const checkoutResult = new URLSearchParams(window.location.search).get('checkout');
+  if (checkoutResult === 'success') {
+    showPage('tracking');
+    showToast('Pago recibido');
+  }
+  if (checkoutResult === 'cancel') {
+    showPage('cart');
+    setCheckoutStep('payment');
+    showCheckoutMessage('El pago fue cancelado. Puedes intentarlo de nuevo.');
+  }
 </script>
 </body>
 </html>
