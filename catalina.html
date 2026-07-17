@@ -1807,7 +1807,12 @@
               ${items.length > 3 ? `<div class="w-8 h-8 rounded-full border-2 border-surface-container-low bg-surface-container-highest flex items-center justify-center text-[10px] font-bold">+${items.length - 3}</div>` : ''}
             </div>
           </td>
-          <td class="py-6"><span class="px-3 py-1 rounded-full bg-primary-container text-on-primary-container text-[10px] font-bold uppercase">${escapeHtml(order.status || 'Recibido')}</span></td>
+          <td class="py-6">
+            <div class="flex flex-col gap-1">
+              <span class="w-fit px-3 py-1 rounded-full bg-primary-container text-on-primary-container text-[10px] font-bold uppercase">${escapeHtml(order.status || 'Recibido')}</span>
+              <span class="w-fit px-3 py-1 rounded-full bg-surface-container-highest text-on-surface-variant text-[10px] font-bold uppercase">${escapeHtml(order.payment_status || 'Pendiente')}</span>
+            </div>
+          </td>
           <td class="py-6 text-right text-sm font-bold">$${total.toFixed(2)}</td>
         </tr>
       `;
@@ -1823,7 +1828,7 @@
     }
     const { data, error } = await client
       .from('orders')
-      .select('id,order_number,status,carrier,tracking_code,subtotal,shipping_amount,total,estimated_delivery,created_at,order_items(product_name,unit_price,quantity),shipment_events(status,note,event_at)')
+      .select('id,order_number,status,payment_status,carrier,tracking_code,subtotal,shipping_amount,total,estimated_delivery,created_at,order_items(product_name,unit_price,quantity),shipment_events(status,note,event_at)')
       .eq('customer_id', currentCustomerUser.id)
       .order('created_at', { ascending: false });
     if (error) {
@@ -2364,12 +2369,13 @@
         order_number: orderNumber,
         customer_id: currentCustomerUser.id,
         status: 'Recibido',
+        payment_status: 'Pendiente',
         carrier: 'Catalina Express',
         subtotal,
         shipping_amount: 0,
         estimated_delivery: estimated.toISOString().slice(0, 10)
       })
-      .select('id,order_number,status,total,created_at')
+      .select('id,order_number,status,payment_status,total,created_at')
       .single();
     if (orderError) throw new Error(orderError.message);
 
@@ -2425,12 +2431,17 @@
 
     try {
       const customer = getCheckoutCustomer();
-      await createSupabaseOrderBeforePayment(customer);
+      const pendingOrder = await createSupabaseOrderBeforePayment(customer);
       const response = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           customer,
+          order: {
+            id: pendingOrder.id,
+            orderNumber: pendingOrder.order_number,
+            customerId: currentCustomerUser?.id || ""
+          },
           items: cart.map(item => ({
             name: item.name,
             price: item.price,

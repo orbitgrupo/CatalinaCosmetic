@@ -48,6 +48,100 @@ function cleanCheckoutItems(items) {
   })).filter(item => item.price > 0);
 }
 
+function bytesToHex(buffer) {
+  return [...new Uint8Array(buffer)].map(byte => byte.toString(16).padStart(2, "0")).join("");
+}
+
+function constantTimeEqual(left, right) {
+  if (!left || !right || left.length !== right.length) return false;
+  let result = 0;
+  for (let index = 0; index < left.length; index++) result |= left.charCodeAt(index) ^ right.charCodeAt(index);
+  return result === 0;
+}
+
+async function verifyStripeSignature(rawBody, signatureHeader, secret) {
+  if (!signatureHeader || !secret) return false;
+  const parts = Object.fromEntries(signatureHeader.split(",").map(part => part.split("=", 2)));
+  const timestamp = parts.t;
+  const signature = parts.v1;
+  if (!timestamp || !signature) return false;
+  const ageSeconds = Math.abs(Date.now() / 1000 - Number(timestamp));
+  if (!Number.isFinite(ageSeconds) || ageSeconds > 300) return false;
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const digest = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(\`\${timestamp}.\${rawBody}\`));
+  return constantTimeEqual(bytesToHex(digest), signature);
+}
+
+async function supabaseRest(env, path, options = {}) {
+  const url = env.CATALINA_SUPABASE_URL || env.SUPABASE_URL || "";
+  const serviceKey = env.CATALINA_SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_ROLE_KEY || "";
+  if (!url || !serviceKey) throw new Error("Supabase service role no esta configurado.");
+  const response = await fetch(\`\${url}/rest/v1/\${path}\`, {
+    ...options,
+    headers: {
+      "apikey": serviceKey,
+      "authorization": \`Bearer \${serviceKey}\`,
+      "content-type": "application/json",
+      ...(options.headers || {})
+    }
+  });
+  const text = await response.text();
+  const data = text ? JSON.parse(text) : null;
+  if (!response.ok) throw new Error(data?.message || "Supabase no acepto la operacion.");
+  return data;
+}
+
+async function markStripeCheckoutPaid(event, env) {
+  const session = event.data?.object || {};
+  const orderNumber = session.metadata?.order_number || "";
+  if (!orderNumber) return;
+  const updatedOrders = await supabaseRest(env, \`orders?order_number=eq.\${encodeURIComponent(orderNumber)}\`, {
+    method: "PATCH",
+    headers: { "prefer": "return=representation" },
+    body: JSON.stringify({
+      payment_status: "Pagado",
+      status: "Preparando",
+      stripe_session_id: session.id
+    })
+  });
+  const order = updatedOrders?.[0];
+  if (!order?.id) return;
+  await supabaseRest(env, "payments?on_conflict=provider_session_id", {
+    method: "POST",
+    headers: { "prefer": "resolution=merge-duplicates,return=minimal" },
+    body: JSON.stringify({
+      order_id: order.id,
+      provider: "stripe",
+      provider_session_id: session.id,
+      status: session.payment_status || "paid",
+      amount: Number(session.amount_total || 0) / 100,
+      currency: session.currency || "usd",
+      raw_event: event
+    })
+  });
+  await supabaseRest(env, "shipment_events", {
+    method: "POST",
+    headers: { "prefer": "return=minimal" },
+    body: JSON.stringify({
+      order_id: order.id,
+      status: "Preparando",
+      note: "Pago confirmado por Stripe. Pedido enviado a preparacion."
+    })
+  });
+}
+
+async function handleStripeWebhook(request, env) {
+  const secret = env.STRIPE_WEBHOOK_SECRET || "";
+  const rawBody = await request.text();
+  const verified = await verifyStripeSignature(rawBody, request.headers.get("stripe-signature"), secret);
+  if (!verified) return jsonResponse({ error: "Firma de Stripe invalida." }, 400);
+  const event = JSON.parse(rawBody);
+  if (event.type === "checkout.session.completed") {
+    await markStripeCheckoutPaid(event, env);
+  }
+  return jsonResponse({ received: true });
+}
+
 async function createStripeCheckoutSession(request, env) {
   const secretKey = env.STRIPE_SECRET_KEY || "";
   if (!secretKey) return jsonResponse({ error: "Stripe no esta configurado. Agrega STRIPE_SECRET_KEY en Sites." }, 503);
@@ -64,16 +158,20 @@ async function createStripeCheckoutSession(request, env) {
 
   const origin = new URL(request.url).origin;
   const customer = payload.customer || {};
+  const order = payload.order || {};
   const subtotalCents = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const taxCents = Math.round(subtotalCents * 0.08);
   const params = new URLSearchParams();
 
   params.set("mode", "payment");
-  params.set("success_url", \`\${origin}/?checkout=success&session_id={CHECKOUT_SESSION_ID}\`);
+  params.set("success_url", \`\${origin}/?checkout=success&session_id={CHECKOUT_SESSION_ID}&order=\${encodeURIComponent(order.orderNumber || "")}\`);
   params.set("cancel_url", \`\${origin}/?checkout=cancel\`);
   params.set("billing_address_collection", "auto");
   params.set("phone_number_collection[enabled]", "true");
   params.set("metadata[source]", "catalina-cosmetic");
+  if (order.orderNumber) params.set("metadata[order_number]", String(order.orderNumber).slice(0, 80));
+  if (order.id) params.set("metadata[order_id]", String(order.id).slice(0, 80));
+  if (order.customerId) params.set("metadata[customer_id]", String(order.customerId).slice(0, 80));
   if (customer.email) params.set("customer_email", String(customer.email).slice(0, 200));
   if (customer.name) params.set("metadata[customer_name]", String(customer.name).slice(0, 200));
   if (customer.address) params.set("metadata[shipping_address]", String(customer.address).slice(0, 450));
@@ -113,6 +211,10 @@ export default {
 
     if (url.pathname === "/api/create-checkout-session" && request.method === "POST") {
       return createStripeCheckoutSession(request, env || {});
+    }
+
+    if (url.pathname === "/api/stripe-webhook" && request.method === "POST") {
+      return handleStripeWebhook(request, env || {});
     }
 
     if (url.pathname === "/supabase-schema.sql") {

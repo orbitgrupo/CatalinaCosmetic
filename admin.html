@@ -139,7 +139,7 @@
             <div class="mt-5 overflow-auto scroll-thin">
               <table class="w-full min-w-[760px] text-left text-sm">
                 <thead class="text-xs font-bold text-muted">
-                  <tr><th class="py-3">Cliente</th><th>Estado</th><th>Fecha</th><th>Total</th><th>Envio</th><th>Acciones</th></tr>
+                  <tr><th class="py-3">Cliente</th><th>Estado</th><th>Pago</th><th>Fecha</th><th>Total</th><th>Envio</th><th>Acciones</th></tr>
                 </thead>
                 <tbody id="overview-orders" class="divide-y divide-line"></tbody>
               </table>
@@ -687,13 +687,14 @@
         <tr class="text-muted">
           <td class="py-4"><div class="flex items-center gap-3"><div class="flex h-8 w-8 items-center justify-center rounded-full bg-violet/10 text-xs font-bold text-violet">${customerName(order.customerId).slice(0, 2).toUpperCase()}</div><span class="font-semibold text-ink">${customerName(order.customerId)}</span></div></td>
           <td>${order.status}</td>
+          <td><span class="rounded-full bg-violet/10 px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-violet">${order.paymentStatus || "Pendiente"}</span></td>
           <td>${new Date(order.createdAt || Date.now()).toLocaleDateString()}</td>
           <td class="font-semibold text-ink">${money(orderTotal(order))}</td>
           <td><span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-green/10 text-green"><span class="material-symbols-outlined text-sm">local_shipping</span></span></td>
           <td><button class="goto-orders rounded-full bg-navy px-5 py-2 text-xs font-bold text-white">VIEW DETAILS</button></td>
         </tr>
       `).join("");
-      document.getElementById("overview-orders").innerHTML = rows || `<tr><td colspan="6" class="py-8 text-center text-muted">Sin pedidos todavia.</td></tr>`;
+      document.getElementById("overview-orders").innerHTML = rows || `<tr><td colspan="7" class="py-8 text-center text-muted">Sin pedidos todavia.</td></tr>`;
     }
 
     function renderProducts() {
@@ -749,7 +750,10 @@
         <div class="rounded-sm bg-white p-5 shadow-soft">
           <div class="flex flex-col justify-between gap-4 md:flex-row md:items-center">
             <div><p class="text-xs font-bold uppercase tracking-widest text-muted">${new Date(order.createdAt || Date.now()).toLocaleDateString()}</p><h3 class="mt-1 text-xl font-extrabold">${order.id}</h3><p class="text-sm text-muted">${customerName(order.customerId)} - ${money(orderTotal(order))}</p></div>
-            <span class="rounded-full bg-violet/10 px-4 py-2 text-xs font-extrabold uppercase tracking-widest text-violet">${order.status}</span>
+            <div class="flex flex-wrap gap-2">
+              <span class="rounded-full bg-violet/10 px-4 py-2 text-xs font-extrabold uppercase tracking-widest text-violet">${order.status}</span>
+              <span class="rounded-full bg-green/10 px-4 py-2 text-xs font-extrabold uppercase tracking-widest text-green">${order.paymentStatus || "Pendiente"}</span>
+            </div>
           </div>
           <div class="mt-4 grid gap-3 md:grid-cols-2">
             <label class="text-xs font-bold uppercase tracking-widest text-muted">Estado<select class="order-status mt-2 w-full rounded-lg border-line bg-white text-sm normal-case tracking-normal" data-id="${order.id}" ${currentUser && !isCurrentAdmin() ? "disabled" : ""}>${orderStatuses.map(status => `<option ${status === order.status ? "selected" : ""}>${status}</option>`).join("")}</select></label>
@@ -923,8 +927,8 @@
       if (currentUser) {
         const { data: customers } = await supabaseClient.from("customer_profiles").select("id,full_name,email,phone,house_number,street,sector,province,city,address_reference,shipping_address").order("created_at", { ascending: false });
         if (customers?.length) state.customers = customers.map(customer => ({ id: customer.id, name: customer.full_name, email: customer.email, phone: customer.phone || "", houseNumber: customer.house_number || "", street: customer.street || "", sector: customer.sector || "", province: customer.province || "", city: customer.city || "", reference: customer.address_reference || "", address: customer.shipping_address || "" }));
-        const { data: orders } = await supabaseClient.from("orders").select("id,order_number,customer_id,status,carrier,tracking_code,estimated_delivery,created_at,order_items(product_id,product_name,unit_price,quantity),shipment_events(status,note,event_at)").order("created_at", { ascending: false });
-        if (orders?.length) state.orders = orders.map(order => ({ id: order.order_number, remoteId: order.id, customerId: order.customer_id, status: order.status, carrier: order.carrier || "Catalina Express", trackingCode: order.tracking_code || "", createdAt: order.created_at, eta: order.estimated_delivery || "", items: (order.order_items || []).map(item => ({ productId: item.product_id, name: item.product_name, price: Number(item.unit_price), qty: Number(item.quantity) })), history: (order.shipment_events || []).map(event => ({ status: event.status, note: event.note || statusNote(event.status), at: event.event_at })) }));
+        const { data: orders } = await supabaseClient.from("orders").select("id,order_number,customer_id,status,payment_status,carrier,tracking_code,estimated_delivery,created_at,order_items(product_id,product_name,unit_price,quantity),shipment_events(status,note,event_at)").order("created_at", { ascending: false });
+        if (orders?.length) state.orders = orders.map(order => ({ id: order.order_number, remoteId: order.id, customerId: order.customer_id, status: order.status, paymentStatus: order.payment_status || "Pendiente", carrier: order.carrier || "Catalina Express", trackingCode: order.tracking_code || "", createdAt: order.created_at, eta: order.estimated_delivery || "", items: (order.order_items || []).map(item => ({ productId: item.product_id, name: item.product_name, price: Number(item.unit_price), qty: Number(item.quantity) })), history: (order.shipment_events || []).map(event => ({ status: event.status, note: event.note || statusNote(event.status), at: event.event_at })) }));
       }
       persist();
       if (showMessage) showToast("Datos sincronizados");

@@ -50,6 +50,8 @@ create table if not exists public.orders (
   order_number text not null unique,
   customer_id uuid not null references public.customer_profiles(id) on delete restrict,
   status text not null default 'Recibido' check (status in ('Recibido', 'Preparando', 'Enviado', 'En ruta', 'Entregado', 'Cancelado')),
+  payment_status text not null default 'Pendiente' check (payment_status in ('Pendiente', 'Pagado', 'Fallido', 'Reembolsado')),
+  stripe_session_id text,
   carrier text,
   tracking_code text,
   subtotal numeric(10,2) not null default 0 check (subtotal >= 0),
@@ -60,6 +62,9 @@ create table if not exists public.orders (
   updated_at timestamptz not null default now()
 );
 
+alter table public.orders add column if not exists payment_status text not null default 'Pendiente';
+alter table public.orders add column if not exists stripe_session_id text;
+
 create table if not exists public.order_items (
   id uuid primary key default gen_random_uuid(),
   order_id uuid not null references public.orders(id) on delete cascade,
@@ -68,6 +73,19 @@ create table if not exists public.order_items (
   unit_price numeric(10,2) not null check (unit_price >= 0),
   quantity integer not null check (quantity > 0),
   created_at timestamptz not null default now()
+);
+
+create table if not exists public.payments (
+  id uuid primary key default gen_random_uuid(),
+  order_id uuid not null references public.orders(id) on delete cascade,
+  provider text not null default 'stripe',
+  provider_session_id text not null unique,
+  status text not null default 'pending',
+  amount numeric(10,2) not null default 0 check (amount >= 0),
+  currency text not null default 'usd',
+  raw_event jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
 
 create table if not exists public.shipment_events (
@@ -82,7 +100,9 @@ create table if not exists public.shipment_events (
 create index if not exists idx_products_active_category on public.products (is_active, category);
 create index if not exists idx_categories_active_name on public.categories (is_active, name);
 create index if not exists idx_orders_customer_created on public.orders (customer_id, created_at desc);
+create index if not exists idx_orders_payment_status on public.orders (payment_status, created_at desc);
 create index if not exists idx_order_items_order on public.order_items (order_id);
+create index if not exists idx_payments_order on public.payments (order_id);
 create index if not exists idx_shipment_events_order_event on public.shipment_events (order_id, event_at desc);
 
 create or replace function public.set_updated_at()
@@ -115,11 +135,17 @@ create trigger set_orders_updated_at
 before update on public.orders
 for each row execute function public.set_updated_at();
 
+drop trigger if exists set_payments_updated_at on public.payments;
+create trigger set_payments_updated_at
+before update on public.payments
+for each row execute function public.set_updated_at();
+
 alter table public.products enable row level security;
 alter table public.categories enable row level security;
 alter table public.customer_profiles enable row level security;
 alter table public.orders enable row level security;
 alter table public.order_items enable row level security;
+alter table public.payments enable row level security;
 alter table public.shipment_events enable row level security;
 
 create or replace function public.is_admin()
@@ -190,6 +216,26 @@ with check (customer_id = (select auth.uid()) or public.is_admin());
 drop policy if exists "Admins manage orders" on public.orders;
 create policy "Admins manage orders"
 on public.orders for all
+to authenticated
+using (public.is_admin())
+with check (public.is_admin());
+
+drop policy if exists "Customers read own payments" on public.payments;
+create policy "Customers read own payments"
+on public.payments for select
+to authenticated
+using (
+  exists (
+    select 1
+    from public.orders
+    where orders.id = payments.order_id
+      and (orders.customer_id = (select auth.uid()) or public.is_admin())
+  )
+);
+
+drop policy if exists "Admins manage payments" on public.payments;
+create policy "Admins manage payments"
+on public.payments for all
 to authenticated
 using (public.is_admin())
 with check (public.is_admin());
@@ -270,4 +316,5 @@ grant all on public.products to authenticated;
 grant all on public.customer_profiles to authenticated;
 grant all on public.orders to authenticated;
 grant all on public.order_items to authenticated;
+grant all on public.payments to authenticated;
 grant all on public.shipment_events to authenticated;

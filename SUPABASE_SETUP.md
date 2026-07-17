@@ -15,13 +15,23 @@
 ```text
 CATALINA_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 CATALINA_SUPABASE_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
+CATALINA_SUPABASE_SERVICE_ROLE_KEY=YOUR_SERVICE_ROLE_KEY
 STRIPE_SECRET_KEY=sk_test_or_live_...
+STRIPE_WEBHOOK_SECRET=whsec_...
 ```
 
-7. Mark `STRIPE_SECRET_KEY` as secret in Sites. Never place it in `catalina.html`.
+7. Mark `CATALINA_SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`, and `STRIPE_WEBHOOK_SECRET` as secrets in Sites. Never place them in `catalina.html`.
 
-8. Redeploy the latest Sites version after setting the variables.
+8. In Stripe, create a webhook endpoint pointing to:
+
+```text
+https://YOUR_SITE_URL/api/stripe-webhook
+```
+
+Subscribe it to `checkout.session.completed`, then copy the signing secret into `STRIPE_WEBHOOK_SECRET`.
+
+9. Redeploy the latest Sites version after setting the variables.
 
 Customers can create accounts from the site with the `Crear` button. After signing in, they should use `Usar mi sesion` in the profile form, complete their shipping details, and save the profile before placing an order.
 
-The public client must only use the publishable key. Do not place the service role key in Sites or in `catalina.html`.
+The public client must only use the publishable key. Do not place the service role key in `catalina.html`; keep it only as a secret environment variable for the server/webhook.
