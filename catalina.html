@@ -938,30 +938,9 @@
                 <th class="pb-4 text-right text-[10px] font-bold tracking-widest text-outline uppercase">Total</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-outline-variant/10">
-              <tr class="hover:bg-surface-container-high transition-colors cursor-pointer nav-link" data-page="tracking">
-                <td class="py-6 text-sm font-bold">#CT-90234</td>
-                <td class="py-6 text-sm text-on-surface-variant">May 12, 2024</td>
-                <td class="py-6 text-sm">
-                  <div class="flex -space-x-2">
-                    <div class="w-8 h-8 rounded-full border-2 border-surface-container-low bg-surface-container-highest flex items-center justify-center text-[10px] font-bold">H</div>
-                    <div class="w-8 h-8 rounded-full border-2 border-surface-container-low bg-surface-container-highest flex items-center justify-center text-[10px] font-bold">N</div>
-                    <div class="w-8 h-8 rounded-full border-2 border-surface-container-low bg-surface-container-highest flex items-center justify-center text-[10px] font-bold">+1</div>
-                  </div>
-                </td>
-                <td class="py-6"><span class="px-3 py-1 rounded-full bg-primary-container text-on-primary-container text-[10px] font-bold">SHIPPED</span></td>
-                <td class="py-6 text-right text-sm font-bold">$124.00</td>
-              </tr>
-              <tr class="hover:bg-surface-container-high transition-colors">
-                <td class="py-6 text-sm font-bold">#CT-89412</td>
-                <td class="py-6 text-sm text-on-surface-variant">Apr 08, 2024</td>
-                <td class="py-6 text-sm">
-                  <div class="flex -space-x-2">
-                    <div class="w-8 h-8 rounded-full border-2 border-surface-container-low bg-surface-container-highest flex items-center justify-center text-[10px] font-bold">C</div>
-                  </div>
-                </td>
-                <td class="py-6"><span class="px-3 py-1 rounded-full bg-surface-container-highest text-on-surface-variant text-[10px] font-bold">DELIVERED</span></td>
-                <td class="py-6 text-right text-sm font-bold">$58.00</td>
+            <tbody id="customer-orders" class="divide-y divide-outline-variant/10">
+              <tr>
+                <td colspan="5" class="py-10 text-center text-sm text-on-surface-variant">Inicia sesion para ver tus pedidos.</td>
               </tr>
             </tbody>
           </table>
@@ -1776,6 +1755,7 @@
   ];
   let storefrontSupabaseClient = null;
   let currentCustomerUser = null;
+  let customerOrders = [];
 
   function getStorefrontSupabaseClient() {
     if (storefrontSupabaseClient) return storefrontSupabaseClient;
@@ -1799,6 +1779,61 @@
       : 'Sin sesion iniciada. Crea una cuenta o entra para guardar tu perfil en Supabase.';
   }
 
+  function orderTotalFromRows(order) {
+    return (order.order_items || []).reduce((sum, item) => sum + Number(item.unit_price || 0) * Number(item.quantity || 0), 0);
+  }
+
+  function renderCustomerOrders() {
+    const body = document.getElementById('customer-orders');
+    if (!body) return;
+    if (!currentCustomerUser) {
+      body.innerHTML = `<tr><td colspan="5" class="py-10 text-center text-sm text-on-surface-variant">Inicia sesion para ver tus pedidos.</td></tr>`;
+      return;
+    }
+    if (!customerOrders.length) {
+      body.innerHTML = `<tr><td colspan="5" class="py-10 text-center text-sm text-on-surface-variant">Todavia no tienes pedidos guardados.</td></tr>`;
+      return;
+    }
+    body.innerHTML = customerOrders.map(order => {
+      const items = order.order_items || [];
+      const total = Number(order.total || orderTotalFromRows(order));
+      return `
+        <tr class="hover:bg-surface-container-high transition-colors cursor-pointer nav-link" data-page="tracking">
+          <td class="py-6 text-sm font-bold">#${escapeHtml(order.order_number || order.id)}</td>
+          <td class="py-6 text-sm text-on-surface-variant">${new Date(order.created_at || Date.now()).toLocaleDateString()}</td>
+          <td class="py-6 text-sm">
+            <div class="flex -space-x-2">
+              ${items.slice(0, 3).map(item => `<div class="w-8 h-8 rounded-full border-2 border-surface-container-low bg-surface-container-highest flex items-center justify-center text-[10px] font-bold">${escapeHtml((item.product_name || 'P').slice(0, 1).toUpperCase())}</div>`).join('')}
+              ${items.length > 3 ? `<div class="w-8 h-8 rounded-full border-2 border-surface-container-low bg-surface-container-highest flex items-center justify-center text-[10px] font-bold">+${items.length - 3}</div>` : ''}
+            </div>
+          </td>
+          <td class="py-6"><span class="px-3 py-1 rounded-full bg-primary-container text-on-primary-container text-[10px] font-bold uppercase">${escapeHtml(order.status || 'Recibido')}</span></td>
+          <td class="py-6 text-right text-sm font-bold">$${total.toFixed(2)}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  async function loadCustomerOrders() {
+    const client = getStorefrontSupabaseClient();
+    if (!client || !currentCustomerUser) {
+      customerOrders = [];
+      renderCustomerOrders();
+      return;
+    }
+    const { data, error } = await client
+      .from('orders')
+      .select('id,order_number,status,carrier,tracking_code,subtotal,shipping_amount,total,estimated_delivery,created_at,order_items(product_name,unit_price,quantity),shipment_events(status,note,event_at)')
+      .eq('customer_id', currentCustomerUser.id)
+      .order('created_at', { ascending: false });
+    if (error) {
+      showToast(error.message);
+      return;
+    }
+    customerOrders = data || [];
+    renderCustomerOrders();
+  }
+
   async function initCustomerAuth() {
     const client = getStorefrontSupabaseClient();
     if (!client) {
@@ -1808,11 +1843,22 @@
     const { data } = await client.auth.getSession();
     currentCustomerUser = data.session?.user || null;
     renderCustomerAuthState();
-    if (currentCustomerUser) await loadCustomerProfileFromSupabase();
+    if (currentCustomerUser) {
+      await loadCustomerProfileFromSupabase();
+      await loadCustomerOrders();
+    } else {
+      renderCustomerOrders();
+    }
     client.auth.onAuthStateChange(async (_event, session) => {
       currentCustomerUser = session?.user || null;
       renderCustomerAuthState();
-      if (currentCustomerUser) await loadCustomerProfileFromSupabase();
+      if (currentCustomerUser) {
+        await loadCustomerProfileFromSupabase();
+        await loadCustomerOrders();
+      } else {
+        customerOrders = [];
+        renderCustomerOrders();
+      }
     });
   }
 
@@ -1849,6 +1895,7 @@
     currentCustomerUser = data.user;
     renderCustomerAuthState();
     await loadCustomerProfileFromSupabase();
+    await loadCustomerOrders();
     showToast('Sesion iniciada');
   }
 
@@ -1857,6 +1904,8 @@
     if (!client) return;
     await client.auth.signOut();
     currentCustomerUser = null;
+    customerOrders = [];
+    renderCustomerOrders();
     renderCustomerAuthState();
     showToast('Sesion cerrada');
   }
@@ -2289,8 +2338,67 @@
     };
   }
 
+  function isUuid(value) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value || "");
+  }
+
+  function createOrderNumber() {
+    const stamp = Date.now().toString().slice(-6);
+    const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
+    return `CAT-${stamp}${suffix}`;
+  }
+
+  async function createSupabaseOrderBeforePayment(customer) {
+    const client = getStorefrontSupabaseClient();
+    if (!client || !currentCustomerUser) throw new Error('Inicia sesion para guardar y rastrear tu pedido.');
+    const profileSaved = await saveCustomerProfileToSupabase(customer);
+    if (!profileSaved) throw new Error('No se pudo guardar el perfil antes del pago.');
+
+    const { subtotal } = calculateCartTotals();
+    const estimated = new Date();
+    estimated.setDate(estimated.getDate() + 3);
+    const orderNumber = createOrderNumber();
+    const { data: order, error: orderError } = await client
+      .from('orders')
+      .insert({
+        order_number: orderNumber,
+        customer_id: currentCustomerUser.id,
+        status: 'Recibido',
+        carrier: 'Catalina Express',
+        subtotal,
+        shipping_amount: 0,
+        estimated_delivery: estimated.toISOString().slice(0, 10)
+      })
+      .select('id,order_number,status,total,created_at')
+      .single();
+    if (orderError) throw new Error(orderError.message);
+
+    const items = cart.map(item => {
+      const product = productCatalog.find(candidate => candidate.name === item.name);
+      return {
+        order_id: order.id,
+        product_id: product && isUuid(product.id) ? product.id : null,
+        product_name: item.name,
+        unit_price: item.price,
+        quantity: item.qty
+      };
+    });
+    const { error: itemsError } = await client.from('order_items').insert(items);
+    if (itemsError) throw new Error(itemsError.message);
+
+    await client.from('shipment_events').insert({
+      order_id: order.id,
+      status: 'Recibido',
+      note: 'Pedido recibido. Pago enviado a Stripe para confirmacion.'
+    });
+    localStorage.setItem('catalina-last-order-number', order.order_number);
+    await loadCustomerOrders();
+    return order;
+  }
+
   function validateCheckoutReview() {
     if (!cart.length) return 'Agrega productos antes de continuar.';
+    if (!currentCustomerUser) return 'Inicia sesion o crea una cuenta para guardar y rastrear tu pedido.';
     const customer = getCheckoutCustomer();
     if (!customer.name || !customer.email || !customer.houseNumber || !customer.street || !customer.sector || !customer.province || !customer.city) return 'Completa nombre, email, casa, calle, sector, provincia y ciudad.';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email)) return 'Escribe un email valido.';
@@ -2316,11 +2424,13 @@
     showCheckoutMessage('Conectando con Stripe...', false);
 
     try {
+      const customer = getCheckoutCustomer();
+      await createSupabaseOrderBeforePayment(customer);
       const response = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          customer: getCheckoutCustomer(),
+          customer,
           items: cart.map(item => ({
             name: item.name,
             price: item.price,
