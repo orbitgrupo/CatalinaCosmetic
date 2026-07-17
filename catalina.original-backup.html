@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CATALINA LABS</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "on-error-container": "#752121",
+            "surface-container-low": "#f0f4f7",
+            "on-surface": "#2a3439",
+            "secondary": "#526075",
+            "surface-container-highest": "#d9e4ea",
+            "surface-tint": "#426372",
+            "primary": "#426372",
+            "inverse-on-surface": "#9a9d9f",
+            "on-tertiary-fixed-variant": "#48596f",
+            "outline": "#717c82",
+            "surface-container-lowest": "#ffffff",
+            "on-tertiary": "#f7f9ff",
+            "tertiary-dim": "#43546a",
+            "surface-bright": "#f7f9fb",
+            "secondary-container": "#d5e3fd",
+            "error-container": "#fe8983",
+            "surface": "#f7f9fb",
+            "error-dim": "#4e0309",
+            "on-error": "#fff7f6",
+            "surface-dim": "#cfdce3",
+            "on-surface-variant": "#566166",
+            "on-primary": "#f0f9ff",
+            "primary-fixed": "#c5e8fa",
+            "on-secondary-fixed-variant": "#4e5c71",
+            "secondary-fixed-dim": "#c7d5ee",
+            "on-primary-fixed": "#224352",
+            "inverse-surface": "#0b0f10",
+            "tertiary-container": "#ccdef8",
+            "tertiary-fixed-dim": "#bed0ea",
+            "surface-container-high": "#e1e9ee",
+            "primary-container": "#c5e8fa",
+            "on-tertiary-fixed": "#2c3d51",
+            "secondary-dim": "#465469",
+            "tertiary": "#4f6076",
+            "on-primary-container": "#355665",
+            "primary-fixed-dim": "#b7d9ec",
+            "error": "#9f403d",
+            "surface-variant": "#d9e4ea",
+            "primary-dim": "#365766",
+            "background": "#f7f9fb",
+            "on-background": "#2a3439",
+            "on-tertiary-container": "#3e5065",
+            "inverse-primary": "#c2e5f7",
+            "tertiary-fixed": "#ccdef8",
+            "on-secondary": "#f8f8ff",
+            "outline-variant": "#a9b4b9",
+            "on-secondary-fixed": "#324054",
+            "secondary-fixed": "#d5e3fd",
+            "on-secondary-container": "#455367",
+            "on-primary-fixed-variant": "#3f606f",
+            "surface-container": "#e8eff3"
+          },
+          borderRadius: {
+            DEFAULT: "0.125rem",
+            lg: "0.25rem",
+            xl: "0.5rem",
+            full: "0.75rem"
+          },
+          fontFamily: {
+            headline: ["Manrope"],
+            body: ["Manrope"],
+            label: ["Manrope"]
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+    }
+    body { font-family: 'Manrope', sans-serif; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .page { display: none; }
+    .page.active { display: block; }
+    .nav-link { cursor: pointer; }
+    * { box-sizing: border-box; }
+  </style>
+</head>
+<body class="bg-surface text-on-surface">
+
+<!-- TOP NAV -->
+<nav class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl shadow-sm shadow-slate-200/10">
+  <div class="flex justify-between items-center max-w-7xl mx-auto px-8 h-20">
+    <div class="text-2xl font-bold tracking-tighter text-slate-900 uppercase cursor-pointer nav-link" data-page="home">CATALINA</div>
+    <div class="hidden md:flex items-center space-x-8">
+      <span class="text-slate-600 hover:text-slate-900 transition-all font-medium tracking-tight cursor-pointer nav-link" data-page="catalog">Serums</span>
+      <span class="text-slate-600 hover:text-slate-900 transition-all font-medium tracking-tight cursor-pointer nav-link" data-page="catalog">Cleansers</span>
+      <span class="text-slate-600 hover:text-slate-900 transition-all font-medium tracking-tight cursor-pointer nav-link" data-page="catalog">Moisturizers</span>
+      <span class="text-slate-600 hover:text-slate-900 transition-all font-medium tracking-tight cursor-pointer nav-link" data-page="home">About</span>
+    </div>
+    <div class="hidden lg:flex flex-1 max-w-xs mx-8">
+      <div class="relative w-full group">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
+        <input class="block w-full pl-10 pr-4 py-2 bg-slate-50 border-none rounded-full text-sm placeholder:text-slate-400 focus:ring-1 focus:ring-primary focus:bg-white transition-all outline-none font-medium" placeholder="Search formulations..." type="text"/>
+      </div>
+    </div>
+    <div class="flex items-center space-x-6">
+      <button class="text-slate-600 hover:text-sky-700 transition-all active:scale-95 nav-link" data-page="cart">
+        <span class="material-symbols-outlined">shopping_bag</span>
+      </button>
+      <button class="text-slate-600 hover:text-sky-700 transition-all active:scale-95 nav-link" data-page="profile">
+        <span class="material-symbols-outlined">person</span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ======================== HOME ======================== -->
+<div id="page-home" class="page active">
+  <main class="pt-20">
+    <!-- Hero -->
+    <section class="relative min-h-[90vh] flex items-center overflow-hidden bg-surface-container-low">
+      <div class="max-w-7xl mx-auto px-8 w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center py-24">
+        <div class="lg:col-span-6 z-10">
+          <span class="label-md uppercase tracking-[0.2em] text-primary font-bold mb-6 block">Clinical Precision</span>
+          <h1 class="text-6xl md:text-8xl font-extrabold tracking-tighter text-on-surface leading-[0.9] mb-8">
+            The Science of<br/>Pure Radiance.
+          </h1>
+          <p class="text-xl text-on-surface-variant max-w-lg mb-10 leading-relaxed">
+            Formulated at the intersection of molecular biology and aesthetic dermatology. Transparency in every drop, precision in every result.
+          </p>
+          <button class="bg-primary text-on-primary px-8 py-4 rounded-lg font-semibold hover:bg-primary-dim transition-colors shadow-lg shadow-primary/10 nav-link" data-page="catalog">
+            Explore Formulations
+          </button>
+        </div>
+        <div class="lg:col-span-6 relative flex justify-center lg:justify-end">
+          <div class="relative w-full aspect-[4/5] max-w-md">
+            <img class="w-full h-full object-cover rounded-xl shadow-2xl shadow-on-surface/5" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBnJFE6BP05X7e4PPbB7UZpRDagPOc05fMKVMX6XD8130If9E27dGKm0Dv01CxZhtSoqL_NgKc5r0s5DQd4vwAfz4HqpzVAOJRtTIjF7QyAvof7U_vEXsOZ_cIatALocajbTvSJctm6ffTSmmIT_UmeceItf9VZ5sqC0Au_dy1jNIJXTZBQxUPGnBMLY84nEx6rXswlrZ1jUyraur7KC1DwNIMXZg6SteodXBI1Wy7kA6UHsKPZeYiLSbnU_3v_dKxrJlw7m3QKSOQ" alt="Skincare bottle"/>
+            <div class="absolute -bottom-4 -left-4 bg-white/40 backdrop-blur-2xl p-6 rounded-lg border border-white/20 shadow-xl max-w-xs">
+              <span class="text-xs font-bold tracking-widest text-primary block mb-2 uppercase">Batch ID: CL-2024X</span>
+              <p class="text-sm font-medium text-on-surface italic">"98% Pure Hyaluronic Acid derived through bio-fermentation."</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- New Formulations -->
+    <section class="py-24 bg-surface">
+      <div class="max-w-7xl mx-auto px-8">
+        <div class="flex justify-between items-end mb-16">
+          <div>
+            <span class="label-md uppercase tracking-[0.2em] text-primary font-bold mb-4 block">New Arrivals</span>
+            <h2 class="text-4xl font-bold tracking-tighter">New Formulations</h2>
+          </div>
+          <span class="text-primary font-bold border-b-2 border-primary-container pb-1 hover:border-primary transition-all cursor-pointer nav-link" data-page="catalog">View All Research</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div class="md:col-span-2 md:row-span-2 group relative overflow-hidden rounded-xl bg-surface-container">
+            <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC5NqCRJKiNRI4lQ2g1RdtIcH8cDtEyFsL9Ojoyw2xQ1iGAT9OzBqNdirRJHj4ufimI0WehKaJZPBbFO9djuTxMD0s6IM6x17tFL-Fqj6XUe29CJDGtbpg286VlGu1MjviGHColPR3UVbBRvmmrYcFbPueIxJGWSUvFCi-g0gLmndii4ftHgWRJ3xKwQ7BVWxpGcxzFlv4_TGUywlc0QdzNb9vhcxzx-j9VfGb6NgsvxxB7fk1Oe7lsp1nDJOxI1Qwnn42J5dUM3Zc" alt="Serum"/>
+            <div class="absolute inset-0 bg-gradient-to-t from-on-surface/80 via-transparent to-transparent"></div>
+            <div class="absolute bottom-0 left-0 p-10">
+              <span class="bg-primary-container text-on-primary-container px-3 py-1 rounded-full text-xs font-bold mb-4 inline-block uppercase tracking-widest">Active Ingredient: Retinol+</span>
+              <h3 class="text-3xl font-bold text-white mb-4">Molecular Resurfacing Complex</h3>
+              <button class="text-white font-medium flex items-center space-x-2 nav-link" data-page="catalog">
+                <span>Study Results</span>
+                <span class="material-symbols-outlined text-sm">arrow_forward</span>
+              </button>
+            </div>
+          </div>
+          <div class="md:col-span-2 group relative overflow-hidden rounded-xl bg-surface-container-high aspect-video">
+            <div class="flex h-full">
+              <div class="w-1/2 p-8 flex flex-col justify-center">
+                <span class="text-xs font-bold text-primary tracking-widest uppercase mb-2">Lab Report</span>
+                <h3 class="text-xl font-bold mb-2">pH Balance Mist</h3>
+                <p class="text-sm text-on-surface-variant mb-4">Restores skin barrier in under 60 seconds.</p>
+                <span class="text-primary text-sm font-bold">€48.00</span>
+              </div>
+              <div class="w-1/2 overflow-hidden">
+                <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBqqL9eFMsxIk3B7fSBAx7s7SpNnismIfrZjDe-oKsbcpllA0h7JTP9IdkgpZrUXUA9AaeojvN0tlpl4NjnjPxNgQVUQpMPnOlpgcKGRrCuXzuFtkV5K3DY09u2sJ1I8Pnm75Y9Z2Wdq9H1nbtYAJ4lEnQhF8" alt="Mist"/>
+              </div>
+            </div>
+          </div>
+          <div class="md:col-span-1 group relative overflow-hidden rounded-xl bg-surface-container-highest">
+            <div class="p-6">
+              <img class="w-full aspect-square object-cover rounded-lg mb-6 shadow-sm" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBvz7B4lSkOl3ifWctYjWokcdD_qIAD3_ItTyaHq7jzO3yzuHptgNBUNcxRATE4-PSgyahg613wiOANPW6dKIxS4BbYXUkggA44Jps1lST0y_BUQ-DLEDkMuwZV_hTEBGMKx6f9lTwX5QLiYrDTjz4XfpQMDPD4c-RF_j0_EckEoQBh8kDo0mOWs5cXciHFDLGCJA3GBb7EOzIHKhTs4ko0GZxdbuCQVE2Tn9HUIxVVwSEDWSJEw5HwStAx-H6lm7I5bO-tZi2QztI" alt="C-Complex"/>
+              <h3 class="font-bold text-lg mb-1">C-Complex</h3>
+              <span class="text-xs text-on-surface-variant uppercase tracking-widest">Concentrated Drop</span>
+            </div>
+          </div>
+          <div class="md:col-span-1 group relative overflow-hidden rounded-xl bg-surface-container-lowest border border-outline-variant/10">
+            <div class="p-6">
+              <div class="aspect-square bg-surface flex items-center justify-center rounded-lg mb-6">
+                <span class="material-symbols-outlined text-5xl text-primary/30">science</span>
+              </div>
+              <h3 class="font-bold text-lg mb-1">Trial Kit</h3>
+              <p class="text-xs text-on-surface-variant mb-4">7-Day Scientific Regimen</p>
+              <button class="w-full py-2 bg-on-surface text-surface text-xs font-bold rounded uppercase tracking-widest">Order Sample</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bundles -->
+    <section class="py-24 bg-surface-container-low">
+      <div class="max-w-7xl mx-auto px-8">
+        <div class="max-w-3xl mb-16">
+          <span class="label-md uppercase tracking-[0.2em] text-primary font-bold mb-4 block">The Regimens</span>
+          <h2 class="text-4xl font-bold tracking-tighter mb-6">Curated Bundles</h2>
+          <p class="text-on-surface-variant leading-relaxed">Systematic approaches to complex skin concerns. Our bundles are designed to work in synergy, maximizing bioavailability and structural integrity of the epidermis.</p>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div class="bg-white p-2 rounded-xl shadow-sm hover:shadow-xl transition-shadow duration-500">
+            <div class="aspect-[4/5] overflow-hidden rounded-lg mb-6">
+              <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNEyxYlPimTYAKzC4SPBg59sB3zCiMGNoK0ddBev0CsGztpAsdO9GUeAnQ1kVpCv98BZWLWiLhOY6L10lpyhtMQ0Urg_ss8OQqSBQBq7rSwhwKiLIc6nkV42a0HNbDSrSeqh8fKBF7u7P9LUs9bl5R_Qmo_7c_oL5bxs0QEgq_mlIHUzNTKKOfC7Q-trM_A_JQTdqCDopBnyzxvZODW3ypK1jfaLabrK0K30iZQBAbqz_8-wBnjq5M9IfipDNKPtGI-R1jC5R-K2w" alt="Hydration Bundle"/>
+            </div>
+            <div class="px-6 pb-8">
+              <div class="flex justify-between items-center mb-2">
+                <h3 class="text-xl font-bold">The Hydration Core</h3>
+                <span class="text-primary font-bold">€145.00</span>
+              </div>
+              <p class="text-sm text-on-surface-variant mb-6 italic">Deep cell replenishment system.</p>
+              <ul class="space-y-3 mb-8">
+                <li class="flex items-center text-xs font-medium text-on-surface-variant uppercase tracking-wide"><span class="w-1.5 h-1.5 rounded-full bg-primary-container mr-3"></span>Cleansing Milk (200ml)</li>
+                <li class="flex items-center text-xs font-medium text-on-surface-variant uppercase tracking-wide"><span class="w-1.5 h-1.5 rounded-full bg-primary-container mr-3"></span>H-Complex Serum (30ml)</li>
+                <li class="flex items-center text-xs font-medium text-on-surface-variant uppercase tracking-wide"><span class="w-1.5 h-1.5 rounded-full bg-primary-container mr-3"></span>Lipid Barrier Cream (50ml)</li>
+              </ul>
+              <button class="w-full py-4 border border-on-surface text-on-surface font-bold rounded-lg hover:bg-on-surface hover:text-white transition-colors">Select Regimen</button>
+            </div>
+          </div>
+          <div class="bg-white p-2 rounded-xl shadow-sm hover:shadow-xl transition-shadow duration-500 transform lg:-translate-y-8">
+            <div class="aspect-[4/5] overflow-hidden rounded-lg mb-6">
+              <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAxxIpZHCDdlNkGZez2T3PUiA84OHQPSWDLEjusZ1e1_6YT5ckMuUYr8JSXDO4Odc3S81PStWkEOPFhe6AyMVz0ROLkxD7CX_q6-QC110DmZwRMAN0MFEv3r91Fr8LY9S3IyFqN41-BnoOamNDaYOgduC3fp00Cl1xvVtS4iXLH1YqwwSd2WgJvPDUKEenlzifNPlnt7CbildG1HzGX8TfKUMXdUw6co2WrmzLXt-37MAJIFe9TmKZQQM6sY_D88X2zzF9dWzjAtqk" alt="Age Bundle"/>
+            </div>
+            <div class="px-6 pb-8">
+              <div class="flex justify-between items-center mb-2">
+                <h3 class="text-xl font-bold">Advanced Age-Logic</h3>
+                <span class="text-primary font-bold">€210.00</span>
+              </div>
+              <p class="text-sm text-on-surface-variant mb-6 italic">Telomere support and repair.</p>
+              <ul class="space-y-3 mb-8">
+                <li class="flex items-center text-xs font-medium text-on-surface-variant uppercase tracking-wide"><span class="w-1.5 h-1.5 rounded-full bg-primary-container mr-3"></span>Peptide Concentrate (15ml)</li>
+                <li class="flex items-center text-xs font-medium text-on-surface-variant uppercase tracking-wide"><span class="w-1.5 h-1.5 rounded-full bg-primary-container mr-3"></span>Retinoid Oil (30ml)</li>
+                <li class="flex items-center text-xs font-medium text-on-surface-variant uppercase tracking-wide"><span class="w-1.5 h-1.5 rounded-full bg-primary-container mr-3"></span>Overnight Mask (75ml)</li>
+              </ul>
+              <button class="w-full py-4 border border-on-surface text-on-surface font-bold rounded-lg hover:bg-on-surface hover:text-white transition-colors">Select Regimen</button>
+            </div>
+          </div>
+          <div class="bg-white p-2 rounded-xl shadow-sm hover:shadow-xl transition-shadow duration-500">
+            <div class="aspect-[4/5] overflow-hidden rounded-lg mb-6">
+              <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAo6GhDBculSLFmA1eS8IvAqd1EXYLbLE6y44LOcIiMgqGzrovRjn7H2qd7jZpzu9L3b0O75LrY6Exbv6edzwfcuayd60V8XnAHMqhiZJv8_OfsNKWs5WUobpE_yUrPlYZhB2cqRjfUF_z0tpTWl3lOO99jfbE9Z7efbw23-JOCrDpdYmdrnpZLr9bJL7LrjxrweLGNuwKbrHpz3kejeK-kbmLAuwvu-dW8L2M55xnkRBtQALHeYeVLVAWKOxGy09juu396JDajdVs" alt="Clarity Bundle"/>
+            </div>
+            <div class="px-6 pb-8">
+              <div class="flex justify-between items-center mb-2">
+                <h3 class="text-xl font-bold">The Clarity System</h3>
+                <span class="text-primary font-bold">€120.00</span>
+              </div>
+              <p class="text-sm text-on-surface-variant mb-6 italic">Pore refinement and detox.</p>
+              <ul class="space-y-3 mb-8">
+                <li class="flex items-center text-xs font-medium text-on-surface-variant uppercase tracking-wide"><span class="w-1.5 h-1.5 rounded-full bg-primary-container mr-3"></span>Enzymatic Wash (150ml)</li>
+                <li class="flex items-center text-xs font-medium text-on-surface-variant uppercase tracking-wide"><span class="w-1.5 h-1.5 rounded-full bg-primary-container mr-3"></span>AHA/BHA Toner (100ml)</li>
+                <li class="flex items-center text-xs font-medium text-on-surface-variant uppercase tracking-wide"><span class="w-1.5 h-1.5 rounded-full bg-primary-container mr-3"></span>Lightweight Gel Fluid (50ml)</li>
+              </ul>
+              <button class="w-full py-4 border border-on-surface text-on-surface font-bold rounded-lg hover:bg-on-surface hover:text-white transition-colors">Select Regimen</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Transparency -->
+    <section class="py-24 bg-surface">
+      <div class="max-w-7xl mx-auto px-8">
+        <div class="bg-on-surface text-surface rounded-xl p-12 md:p-20 overflow-hidden relative">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-12 relative z-10">
+            <div>
+              <h2 class="text-4xl md:text-5xl font-bold tracking-tighter mb-8">Clinical Integrity.<br/>Zero Secrets.</h2>
+              <p class="text-surface-dim text-lg leading-relaxed mb-10 max-w-md">We provide full concentration disclosure for every active ingredient. No fillers, no synthetic fragrances, no compromise on data.</p>
+              <div class="grid grid-cols-2 gap-8">
+                <div>
+                  <span class="text-4xl font-bold block mb-2">100%</span>
+                  <span class="text-xs uppercase tracking-widest text-surface-variant">Traceable Sourcing</span>
+                </div>
+                <div>
+                  <span class="text-4xl font-bold block mb-2">0.0</span>
+                  <span class="text-xs uppercase tracking-widest text-surface-variant">Synthetic Additives</span>
+                </div>
+              </div>
+            </div>
+            <div class="flex flex-col justify-end">
+              <div class="space-y-6">
+                <div class="p-6 border border-white/10 rounded-lg hover:bg-white/5 transition-colors cursor-pointer group">
+                  <div class="flex justify-between items-center">
+                    <span class="text-xl font-bold">Download Clinical Trials</span>
+                    <span class="material-symbols-outlined transition-transform group-hover:translate-x-1">arrow_forward</span>
+                  </div>
+                </div>
+                <div class="p-6 border border-white/10 rounded-lg hover:bg-white/5 transition-colors cursor-pointer group">
+                  <div class="flex justify-between items-center">
+                    <span class="text-xl font-bold">Ingredient Encyclopedia</span>
+                    <span class="material-symbols-outlined transition-transform group-hover:translate-x-1">arrow_forward</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ======================== CATALOG ======================== -->
+<div id="page-catalog" class="page">
+  <main class="pt-32 pb-24 px-8 max-w-7xl mx-auto">
+    <header class="mb-16">
+      <div class="label-md tracking-[0.1em] text-outline mb-4 font-semibold uppercase">The Lab Archives</div>
+      <h1 class="text-5xl md:text-6xl font-headline font-extrabold tracking-tighter text-on-surface mb-8">Clinical Formulations</h1>
+      <div class="flex flex-wrap gap-4 no-scrollbar overflow-x-auto pb-4">
+        <button class="px-6 py-2 bg-primary text-on-primary rounded-full text-sm font-medium transition-all hover:opacity-90">All Formulations</button>
+        <button class="px-6 py-2 bg-surface-container-high text-on-surface rounded-full text-sm font-medium transition-all hover:bg-surface-container-highest">Acids</button>
+        <button class="px-6 py-2 bg-surface-container-high text-on-surface rounded-full text-sm font-medium transition-all hover:bg-surface-container-highest">Oils</button>
+        <button class="px-6 py-2 bg-surface-container-high text-on-surface rounded-full text-sm font-medium transition-all hover:bg-surface-container-highest">Vitamins</button>
+        <button class="px-6 py-2 bg-surface-container-high text-on-surface rounded-full text-sm font-medium transition-all hover:bg-surface-container-highest">Retinoids</button>
+      </div>
+    </header>
+    <section class="mb-12 flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div class="flex flex-wrap items-center gap-6">
+        <span class="label-md font-bold text-on-surface-variant uppercase tracking-widest">Filter by Concern:</span>
+        <div class="flex gap-3">
+          <span class="px-4 py-1.5 rounded-full bg-secondary-container text-on-secondary-container text-xs font-semibold uppercase tracking-wider cursor-pointer hover:opacity-80 transition-opacity">Hydration</span>
+          <span class="px-4 py-1.5 rounded-full bg-surface-container text-on-surface-variant text-xs font-semibold uppercase tracking-wider cursor-pointer hover:bg-secondary-container hover:text-on-secondary-container transition-all">Acne</span>
+          <span class="px-4 py-1.5 rounded-full bg-surface-container text-on-surface-variant text-xs font-semibold uppercase tracking-wider cursor-pointer hover:bg-secondary-container hover:text-on-secondary-container transition-all">Aging</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 text-on-surface-variant group cursor-pointer">
+        <span class="label-md font-bold uppercase tracking-widest">Sort by Efficacy</span>
+        <span class="material-symbols-outlined text-lg group-hover:translate-y-0.5 transition-transform">expand_more</span>
+      </div>
+    </section>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
+      <!-- Product 1 -->
+      <div class="flex flex-col group">
+        <div class="aspect-[4/5] bg-surface-container-low overflow-hidden mb-6 relative">
+          <img class="w-full h-full object-cover mix-blend-multiply opacity-90 transition-transform duration-700 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAinDoVQz3KBulg_sRllUlJKVY0YlraOCZE04DQ1Qs_fDaKViKHh5X0mPoZGMTC8SHwT_QpKUOTfvHkNFXPs-xlOCcvTEl6m0THk5zJEKtjwXZCAvN_OFtz93WvYjkKtQgUBHkqXCkl548KO2ZghWa9v2vw1oLc-PVB1tIYIw02A9RdP6W_MD4DLoZOEdYhs1k6Akxrmr2hflXF2jLTvI1uPBbDXGH-S-KuTveqpZOT0fXMxFKlFHW5UoQ4OigwZyIJN8d0KFTQbiY" alt="Product"/>
+          <div class="absolute top-4 left-4"><span class="px-3 py-1 bg-white/80 backdrop-blur-md text-[10px] font-bold tracking-[0.2em] text-on-surface uppercase rounded-lg">Scientific Grade</span></div>
+        </div>
+        <div class="space-y-1">
+          <span class="label-sm text-primary font-bold uppercase tracking-[0.1em]">Vitamin C 23% + HA Spheres 2%</span>
+          <h3 class="headline-sm font-extrabold text-on-surface group-hover:text-primary transition-colors">Ascorbic Acid Suspension</h3>
+          <p class="body-md text-on-surface-variant leading-relaxed py-2">A water-free, silicone-free stable suspension of 23% pure L-Ascorbic Acid powder.</p>
+          <div class="flex items-center justify-between pt-4">
+            <span class="text-xl font-headline font-bold">$11.50</span>
+            <button class="px-5 py-2 bg-primary text-on-primary text-xs font-bold uppercase tracking-widest rounded-lg hover:opacity-90 transition-opacity add-to-cart" data-name="Ascorbic Acid Suspension" data-price="11.50" data-img="https://lh3.googleusercontent.com/aida-public/AB6AXuAinDoVQz3KBulg_sRllUlJKVY0YlraOCZE04DQ1Qs_fDaKViKHh5X0mPoZGMTC8SHwT_QpKUOTfvHkNFXPs-xlOCcvTEl6m0THk5zJEKtjwXZCAvN_OFtz93WvYjkKtQgUBHkqXCkl548KO2ZghWa9v2vw1oLc-PVB1tIYIw02A9RdP6W_MD4DLoZOEdYhs1k6Akxrmr2hflXF2jLTvI1uPBbDXGH-S-KuTveqpZOT0fXMxFKlFHW5UoQ4OigwZyIJN8d0KFTQbiY">Add to Batch</button>
+          </div>
+        </div>
+      </div>
+      <!-- Product 2 -->
+      <div class="flex flex-col group lg:mt-12">
+        <div class="aspect-[4/5] bg-surface-container-low overflow-hidden mb-6 relative">
+          <img class="w-full h-full object-cover mix-blend-multiply opacity-90 transition-transform duration-700 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC13aK7yB7xZ1QVURbJed1BDnmSDn1kbeqIKnRrrsDUpudZGnvkdvfVy88PNjZ6bsTND3IWTZEq-gVfo_cW-whG6pSnNwcJxlUdMPb7RXSYs_3lBNJ512oR4wLQtKcbgIjV6Yn6pDgXnmP_TaUD4REM1rx1hEHPRZcWLDb2tBFYfq5bNDxCk_9XLStXBkUQXcA-OZLZ1p9_welC5tpj7vZcq91aHLyXxDBRNkK2CPDdg1ax7fa4BPgmQ2YpJzGIzZfRuH5Eh-wCkXc" alt="Product"/>
+          <div class="absolute top-4 left-4"><span class="px-3 py-1 bg-white/80 backdrop-blur-md text-[10px] font-bold tracking-[0.2em] text-on-surface uppercase rounded-lg">High Efficacy</span></div>
+        </div>
+        <div class="space-y-1">
+          <span class="label-sm text-primary font-bold uppercase tracking-[0.1em]">Niacinamide 10% + Zinc 1%</span>
+          <h3 class="headline-sm font-extrabold text-on-surface group-hover:text-primary transition-colors">High-Strength Vitamin Formula</h3>
+          <p class="body-md text-on-surface-variant leading-relaxed py-2">Targets visible shine and signs of congestion for balanced dermal appearance.</p>
+          <div class="flex items-center justify-between pt-4">
+            <span class="text-xl font-headline font-bold">$8.90</span>
+            <button class="px-5 py-2 bg-primary text-on-primary text-xs font-bold uppercase tracking-widest rounded-lg hover:opacity-90 transition-opacity add-to-cart" data-name="High-Strength Vitamin Formula" data-price="8.90" data-img="https://lh3.googleusercontent.com/aida-public/AB6AXuC13aK7yB7xZ1QVURbJed1BDnmSDn1kbeqIKnRrrsDUpudZGnvkdvfVy88PNjZ6bsTND3IWTZEq-gVfo_cW-whG6pSnNwcJxlUdMPb7RXSYs_3lBNJ512oR4wLQtKcbgIjV6Yn6pDgXnmP_TaUD4REM1rx1hEHPRZcWLDb2tBFYfq5bNDxCk_9XLStXBkUQXcA-OZLZ1p9_welC5tpj7vZcq91aHLyXxDBRNkK2CPDdg1ax7fa4BPgmQ2YpJzGIzZfRuH5Eh-wCkXc">Add to Batch</button>
+          </div>
+        </div>
+      </div>
+      <!-- Product 3 -->
+      <div class="flex flex-col group">
+        <div class="aspect-[4/5] bg-surface-container-low overflow-hidden mb-6 relative">
+          <img class="w-full h-full object-cover mix-blend-multiply opacity-90 transition-transform duration-700 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDntx5mTX4YxfgklZgXpziatIp3KpliM-VxpLSWwp4y2z353qjznP_1FJWwg1KENiwub6_Wg4UjgT6VJ4w_CfDGeGMJx539RJvqcRATaolV_l0OInP1XcB2tMTZTZjM4mdtkq9PVxbE8g-nvnEK350TkU2FiB3UxveXeOQumBKt3Kc8jx1fkZ6PUwpAJ4DtA098ACHxAITIb9roSRdikXuSsob9fu4g6ZubsfyeKcKJGPtBJ4tbJ0x2NmFBJJSluXb2e7HA17_ZMa0" alt="Product"/>
+          <div class="absolute top-4 left-4"><span class="px-3 py-1 bg-white/80 backdrop-blur-md text-[10px] font-bold tracking-[0.2em] text-on-surface uppercase rounded-lg">Organic Cold-Pressed</span></div>
+        </div>
+        <div class="space-y-1">
+          <span class="label-sm text-primary font-bold uppercase tracking-[0.1em]">Rose Hip Seed Oil 100%</span>
+          <h3 class="headline-sm font-extrabold text-on-surface group-hover:text-primary transition-colors">Pure Organic Formulation</h3>
+          <p class="body-md text-on-surface-variant leading-relaxed py-2">Supports healthy skin and provides restorative moisture to all skin types.</p>
+          <div class="flex items-center justify-between pt-4">
+            <span class="text-xl font-headline font-bold">$12.40</span>
+            <button class="px-5 py-2 bg-primary text-on-primary text-xs font-bold uppercase tracking-widest rounded-lg hover:opacity-90 transition-opacity add-to-cart" data-name="Pure Organic Formulation" data-price="12.40" data-img="https://lh3.googleusercontent.com/aida-public/AB6AXuDntx5mTX4YxfgklZgXpziatIp3KpliM-VxpLSWwp4y2z353qjznP_1FJWwg1KENiwub6_Wg4UjgT6VJ4w_CfDGeGMJx539RJvqcRATaolV_l0OInP1XcB2tMTZTZjM4mdtkq9PVxbE8g-nvnEK350TkU2FiB3UxveXeOQumBKt3Kc8jx1fkZ6PUwpAJ4DtA098ACHxAITIb9roSRdikXuSsob9fu4g6ZubsfyeKcKJGPtBJ4tbJ0x2NmFBJJSluXb2e7HA17_ZMa0">Add to Batch</button>
+          </div>
+        </div>
+      </div>
+      <!-- Product 4 -->
+      <div class="flex flex-col group">
+        <div class="aspect-[4/5] bg-surface-container-low overflow-hidden mb-6 relative">
+          <img class="w-full h-full object-cover mix-blend-multiply opacity-90 transition-transform duration-700 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtwkDR_5RDlhoV9YQuP_pU4A3xjojaB16UltXehyoJKV1_yVz6O9gVI254dSqudYutnD8rp8Wv6yeAOc04RI1hgaOR0vVeMDxPnnjcAkqVWpLPM0pab6H26GEePdM-FXelfN32HkFJQWcT8Vs6K9kxiQST8btXzqZp_KzBTE3xGUFR-zx5bMhNr32CGFbPu9X-yZUSnt_uQLsQHc1vhEY83I98bl-AqkD5MdWv0J8Cyt0vR3v0j_oDPoUVT3vJYRMejzph-hepQhs" alt="Product"/>
+          <div class="absolute top-4 left-4"><span class="px-3 py-1 bg-white/80 backdrop-blur-md text-[10px] font-bold tracking-[0.2em] text-on-surface uppercase rounded-lg">Surface Hydrator</span></div>
+        </div>
+        <div class="space-y-1">
+          <span class="label-sm text-primary font-bold uppercase tracking-[0.1em]">Natural Moisturizing Factors + HA</span>
+          <h3 class="headline-sm font-extrabold text-on-surface group-hover:text-primary transition-colors">Surface Hydration Formula</h3>
+          <p class="body-md text-on-surface-variant leading-relaxed py-2">Keeping the outer layer of the skin protected and well-hydrated.</p>
+          <div class="flex items-center justify-between pt-4">
+            <span class="text-xl font-headline font-bold">$9.20</span>
+            <button class="px-5 py-2 bg-primary text-on-primary text-xs font-bold uppercase tracking-widest rounded-lg hover:opacity-90 transition-opacity add-to-cart" data-name="Surface Hydration Formula" data-price="9.20" data-img="https://lh3.googleusercontent.com/aida-public/AB6AXuBtwkDR_5RDlhoV9YQuP_pU4A3xjojaB16UltXehyoJKV1_yVz6O9gVI254dSqudYutnD8rp8Wv6yeAOc04RI1hgaOR0vVeMDxPnnjcAkqVWpLPM0pab6H26GEePdM-FXelfN32HkFJQWcT8Vs6K9kxiQST8btXzqZp_KzBTE3xGUFR-zx5bMhNr32CGFbPu9X-yZUSnt_uQLsQHc1vhEY83I98bl-AqkD5MdWv0J8Cyt0vR3v0j_oDPoUVT3vJYRMejzph-hepQhs">Add to Batch</button>
+          </div>
+        </div>
+      </div>
+      <!-- Product 5 -->
+      <div class="flex flex-col group lg:mt-12">
+        <div class="aspect-[4/5] bg-surface-container-low overflow-hidden mb-6 relative">
+          <img class="w-full h-full object-cover mix-blend-multiply opacity-90 transition-transform duration-700 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCh0otZd3sb2Mved6Cp22a3LeUeDHG6PlTQW4x1eXzjqddMyaiI56XnY6rYH3W764K-lBr1DxYTIpad7IyHazfEs_LmteVtSCUblOCCA94aADlT3KDXmOGYzoq9H5K7ZiD420wRUMLZm5Kgp_dU6JzMKSZ7UyY-JtUYmq1s_38_ZFT6AoLaTDg9ytutXBMFp64ffUv_OXSkkyOltpawQndxdRSUmoR3I0HjBbpmjwBdEdGfyGDgylSoKJChJVqB68JXwhvmq0-dKUk" alt="Product"/>
+          <div class="absolute top-4 left-4"><span class="px-3 py-1 bg-white/80 backdrop-blur-md text-[10px] font-bold tracking-[0.2em] text-on-surface uppercase rounded-lg">Multi-Technology</span></div>
+        </div>
+        <div class="space-y-1">
+          <span class="label-sm text-primary font-bold uppercase tracking-[0.1em]">Buffet + Copper Peptides 1%</span>
+          <h3 class="headline-sm font-extrabold text-on-surface group-hover:text-primary transition-colors">Advanced Multi-Peptide Serum</h3>
+          <p class="body-md text-on-surface-variant leading-relaxed py-2">Targets multiple signs of aging at once using complex peptide technologies.</p>
+          <div class="flex items-center justify-between pt-4">
+            <span class="text-xl font-headline font-bold">$34.10</span>
+            <button class="px-5 py-2 bg-primary text-on-primary text-xs font-bold uppercase tracking-widest rounded-lg hover:opacity-90 transition-opacity add-to-cart" data-name="Advanced Multi-Peptide Serum" data-price="34.10" data-img="https://lh3.googleusercontent.com/aida-public/AB6AXuCh0otZd3sb2Mved6Cp22a3LeUeDHG6PlTQW4x1eXzjqddMyaiI56XnY6rYH3W764K-lBr1DxYTIpad7IyHazfEs_LmteVtSCUblOCCA94aADlT3KDXmOGYzoq9H5K7ZiD420wRUMLZm5Kgp_dU6JzMKSZ7UyY-JtUYmq1s_38_ZFT6AoLaTDg9ytutXBMFp64ffUv_OXSkkyOltpawQndxdRSUmoR3I0HjBbpmjwBdEdGfyGDgylSoKJChJVqB68JXwhvmq0-dKUk">Add to Batch</button>
+          </div>
+        </div>
+      </div>
+      <!-- Product 6 -->
+      <div class="flex flex-col group">
+        <div class="aspect-[4/5] bg-surface-container-low overflow-hidden mb-6 relative">
+          <img class="w-full h-full object-cover mix-blend-multiply opacity-90 transition-transform duration-700 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzbHyIwdvNpcRkw0owsod51ivuhaGV2npaH3VMNOngtReqFMva5meTa8fdco_L1wmoCCbem1QP_rTuZ7vBw-hH6fvJGxUo8it-lt7VSKwrfmVmzJZGpfrsSlAj3u9lYMesKTFu2tjLJcDfwaRxJ3zV4wy4yD7NczO846BVKtQN_fmfmR2Gkdc22CJU1CZmoDTTx-BEMRoeKfTmR7EBhVuUf4_2hJMtWyzYC9pnlEWqWVHxCh8htIJxjnI-6irRsONQJknZnQ6-md8" alt="Product"/>
+          <div class="absolute top-4 left-4"><span class="px-3 py-1 bg-white/80 backdrop-blur-md text-[10px] font-bold tracking-[0.2em] text-on-surface uppercase rounded-lg">Direct Acid</span></div>
+        </div>
+        <div class="space-y-1">
+          <span class="label-sm text-primary font-bold uppercase tracking-[0.1em]">Glycolic Acid 7% Toning Solution</span>
+          <h3 class="headline-sm font-extrabold text-on-surface group-hover:text-primary transition-colors">Exfoliating Toning Solution</h3>
+          <p class="body-md text-on-surface-variant leading-relaxed py-2">Offers mild exfoliation for improved skin radiance and visible clarity.</p>
+          <div class="flex items-center justify-between pt-4">
+            <span class="text-xl font-headline font-bold">$10.50</span>
+            <button class="px-5 py-2 bg-primary text-on-primary text-xs font-bold uppercase tracking-widest rounded-lg hover:opacity-90 transition-opacity add-to-cart" data-name="Exfoliating Toning Solution" data-price="10.50" data-img="https://lh3.googleusercontent.com/aida-public/AB6AXuCzbHyIwdvNpcRkw0owsod51ivuhaGV2npaH3VMNOngtReqFMva5meTa8fdco_L1wmoCCbem1QP_rTuZ7vBw-hH6fvJGxUo8it-lt7VSKwrfmVmzJZGpfrsSlAj3u9lYMesKTFu2tjLJcDfwaRxJ3zV4wy4yD7NczO846BVKtQN_fmfmR2Gkdc22CJU1CZmoDTTx-BEMRoeKfTmR7EBhVuUf4_2hJMtWyzYC9pnlEWqWVHxCh8htIJxjnI-6irRsONQJknZnQ6-md8">Add to Batch</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Lab Banner -->
+    <section class="mt-24 bg-surface-container-low py-16 -mx-8 px-8">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="bg-surface p-10 shadow-sm rounded-lg">
+          <span class="material-symbols-outlined text-primary mb-6 scale-125 block">science</span>
+          <h4 class="font-headline font-bold text-xl mb-4">Precision Manufacturing</h4>
+          <p class="text-on-surface-variant">Each batch is formulated in controlled laboratory environments to ensure active ingredient stability.</p>
+        </div>
+        <div class="bg-surface p-10 shadow-sm rounded-lg">
+          <span class="material-symbols-outlined text-primary mb-6 scale-125 block">visibility</span>
+          <h4 class="font-headline font-bold text-xl mb-4">Radical Transparency</h4>
+          <p class="text-on-surface-variant">We provide full chemical breakdowns and clinical trial results for every product in our catalog.</p>
+        </div>
+        <div class="bg-surface p-10 shadow-sm rounded-lg">
+          <span class="material-symbols-outlined text-primary mb-6 scale-125 block">eco</span>
+          <h4 class="font-headline font-bold text-xl mb-4">Sustainable Synthesis</h4>
+          <p class="text-on-surface-variant">Our molecules are sourced and synthesized with a commitment to minimal environmental impact.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ======================== CART ======================== -->
+<div id="page-cart" class="page">
+  <main class="pt-32 pb-24 max-w-7xl mx-auto px-8">
+    <div class="flex flex-col gap-12 lg:flex-row">
+      <div class="flex-1">
+        <header class="mb-12">
+          <span class="label-md uppercase tracking-[0.1em] text-on-surface-variant font-semibold">Shopping Protocol</span>
+          <h1 class="text-4xl font-extrabold tracking-tighter mt-2 text-on-surface">Selected Formulations</h1>
+        </header>
+        <div id="cart-items" class="flex flex-col gap-8"></div>
+        <div id="cart-empty" class="hidden text-center py-24 text-on-surface-variant">
+          <span class="material-symbols-outlined text-6xl mb-4 block opacity-30">shopping_bag</span>
+          <p class="font-bold text-xl mb-2">Your batch is empty</p>
+          <p class="mb-8">Add formulations from the catalog to get started.</p>
+          <button class="bg-primary text-on-primary px-8 py-4 rounded-lg font-bold nav-link" data-page="catalog">Browse Formulations</button>
+        </div>
+        <!-- Logistics -->
+        <div id="cart-logistics" class="mt-16 bg-surface-container-low p-10 rounded-lg">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+            <div>
+              <h4 class="label-md uppercase tracking-[0.2em] font-extrabold text-on-surface mb-6 flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">local_shipping</span> Logistics Precision
+              </h4>
+              <div class="space-y-4">
+                <div class="flex justify-between pb-4 border-b border-outline-variant/20"><span class="text-on-surface-variant">Shipping Protocol</span><span class="font-bold">Next-Day Express</span></div>
+                <div class="flex justify-between pb-4 border-b border-outline-variant/20"><span class="text-on-surface-variant">Processing Station</span><span class="font-bold">Zurich Lab 04</span></div>
+                <div class="flex justify-between"><span class="text-on-surface-variant">Estimated Arrival</span><span class="font-bold text-primary">Nov 14, 2024</span></div>
+              </div>
+            </div>
+            <div>
+              <h4 class="label-md uppercase tracking-[0.2em] font-extrabold text-on-surface mb-6 flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">biotech</span> Packaging Specs
+              </h4>
+              <p class="text-on-surface-variant leading-relaxed text-sm">All formulations are sealed in UV-protected medical-grade glass and cushioned with 100% biodegradable fiber-pulp inserts to maintain molecular stability during transit.</p>
+              <div class="mt-4 flex gap-2">
+                <span class="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">UV-Shield</span>
+                <span class="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">Tamper-Proof</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Summary -->
+      <div class="lg:w-[400px]">
+        <div class="bg-surface-container-highest p-8 rounded-lg sticky top-32">
+          <h2 class="label-md uppercase tracking-[0.2em] font-extrabold text-on-surface mb-8">Order Summary</h2>
+          <div class="space-y-4 mb-8">
+            <div class="flex justify-between items-center">
+              <span class="text-on-surface-variant" id="cart-count-label">Subtotal (0 units)</span>
+              <span class="font-medium" id="cart-subtotal">$0.00</span>
+            </div>
+            <div class="flex justify-between items-center"><span class="text-on-surface-variant">Expedited Logistics</span><span class="font-medium text-primary">Free</span></div>
+            <div class="flex justify-between items-center"><span class="text-on-surface-variant">Estimated Taxes (8%)</span><span class="font-medium" id="cart-tax">$0.00</span></div>
+          </div>
+          <div class="border-t border-outline-variant/30 pt-6 mb-8">
+            <div class="flex justify-between items-end">
+              <span class="text-lg font-bold">Total</span>
+              <span class="text-3xl font-extrabold tracking-tighter text-on-surface" id="cart-total">$0.00</span>
+            </div>
+          </div>
+          <div class="mb-8">
+            <label class="label-sm uppercase tracking-widest text-on-surface-variant font-bold mb-2 block">Protocol Code</label>
+            <div class="flex gap-2">
+              <input class="bg-surface border-none outline-none focus:ring-1 focus:ring-primary text-sm px-4 py-3 w-full rounded" placeholder="ENTER CODE" type="text"/>
+              <button class="bg-surface-container-high px-4 text-xs font-bold uppercase hover:bg-outline-variant/20 transition-colors rounded">Apply</button>
+            </div>
+          </div>
+          <button class="w-full bg-primary text-on-primary py-5 rounded font-bold uppercase tracking-[0.15em] text-sm flex justify-center items-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all nav-link" data-page="tracking">
+            Proceed to Secure Checkout
+            <span class="material-symbols-outlined text-sm">arrow_forward</span>
+          </button>
+          <div class="mt-8 flex flex-col items-center gap-4">
+            <p class="text-[10px] text-on-surface-variant text-center leading-relaxed">SECURE ENCRYPTED TRANSACTION // CATALINA LABS PROTECTS ALL PHARMACEUTICAL-GRADE DATA.</p>
+            <div class="flex gap-4 opacity-40 grayscale">
+              <span class="material-symbols-outlined">payments</span>
+              <span class="material-symbols-outlined">credit_card</span>
+              <span class="material-symbols-outlined">security</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ======================== PROFILE ======================== -->
+<div id="page-profile" class="page">
+  <main class="pt-32 pb-24 px-8 max-w-7xl mx-auto">
+    <header class="mb-16 flex flex-col md:flex-row md:items-end md:justify-between gap-8">
+      <div class="space-y-4">
+        <div class="inline-block py-1 px-3 bg-secondary-container text-on-secondary-container rounded-full text-[10px] font-bold tracking-[0.1em] uppercase">Profile Dashboard</div>
+        <h1 class="text-4xl md:text-5xl font-extrabold tracking-tighter text-on-surface">Julian Thorne</h1>
+        <p class="text-on-surface-variant max-w-lg leading-relaxed">Member since March 2024. Your personalized skincare regimen is calibrated to your specific climate and skin-type data.</p>
+      </div>
+      <div class="flex gap-4">
+        <button class="bg-surface-container-high px-6 py-3 rounded-lg font-medium text-sm transition-all hover:bg-surface-container-highest">Edit Profile</button>
+        <button class="bg-primary text-on-primary px-6 py-3 rounded-lg font-medium text-sm transition-all hover:opacity-90">Consult Lab</button>
+      </div>
+    </header>
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+      <!-- Skin Routine -->
+      <section class="md:col-span-8 bg-surface-container-lowest p-8 rounded-lg shadow-sm">
+        <div class="flex justify-between items-center mb-8">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-primary">science</span>
+            <h2 class="text-xl font-bold tracking-tight">Skin Routine</h2>
+          </div>
+          <span class="text-xs font-bold tracking-[0.1em] text-outline uppercase">Active Regimen v2.1</span>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div class="group cursor-pointer">
+            <div class="aspect-[4/5] bg-surface-container-low mb-4 rounded-lg overflow-hidden flex items-center justify-center p-4">
+              <img class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAw5OXuH9MTLBbzgeQYvqzGGPG4DFEiM2-GcUdH-A1-Gh_5efDFpUGF6hLKUYnWt1Om4GxjXVha3EfufJBIxX1FDNvuKgZjgHSjN7kp8_NAjA6PXF7TwWcJuGacfpgZKLyG4BVGAVW8eXdChjxB9flgNpmatUwqedf62rPLZZ3TFrRxmWtm6dq2hcPXPzWNH-MVW_pN5-4hkbFIpTAl1bighHahHEdl00KrmjjsEOF2hBjrARgCdKsK52bV_bzjsFzta2b-2e6fMZg" alt="Serum"/>
+            </div>
+            <div class="text-[10px] font-bold tracking-widest text-primary uppercase mb-1">AM / PM</div>
+            <h3 class="font-bold text-sm mb-1">Hyaluronic Complex</h3>
+            <p class="text-xs text-on-surface-variant">2% Pure Acid + B5</p>
+          </div>
+          <div class="group cursor-pointer">
+            <div class="aspect-[4/5] bg-surface-container-low mb-4 rounded-lg overflow-hidden flex items-center justify-center p-4">
+              <img class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCwac05Of9pQNOlCeW8jGk-tE3LiiADcNVgbbIYCkRidjaRv4MbUdpG6XyCRbpnYLsMG4VdEev_I3eVhXAX2yLhzGoZ_3ne7UsjWcBNJyEAUZ9S6AToCDo2E3vRq5gn5HnVIfPn2CCYynpRA8U2COyu7RnfPtfMk3jT-yd9drtjYrIMzQtX9maaU1C118D7Z7XsXuhtYKMMoULL2TvCDOs49kHoATFCwda2Sj3tC3-szuRsctKcsopXQQEDEiZ2mxqz-2NeVc04Efo" alt="Brightener"/>
+            </div>
+            <div class="text-[10px] font-bold tracking-widest text-primary uppercase mb-1">AM Focus</div>
+            <h3 class="font-bold text-sm mb-1">C-Lab Brightener</h3>
+            <p class="text-xs text-on-surface-variant">Stabilized Vitamin C</p>
+          </div>
+          <div class="group cursor-pointer">
+            <div class="aspect-[4/5] bg-surface-container-low mb-4 rounded-lg overflow-hidden flex items-center justify-center p-4">
+              <img class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAsuxsImag7icYrAOe3I7NwzEdpmdIKWtqMZrOn1P36m0xuJj2fNVRERf9sr8mp30qyi13cm9GUO0xCKwT3bN3swYRXmg48epD4IYs6VCf41LEJ_IEfpBHPEFVE8RM0Z_rkFjqyVZmpGE8I2CD-tzIYiflAlj-4OAC-51wIzw0OeldWHl0a9istSTwllmfITad_f0Ev_y9lMqMH-WmJqlTR2gY_st9ULS1h2E_9KsfZhHTTThuUSBJzp6iGsK_YHPLwUHFme9c4RM0" alt="Niacinamide"/>
+            </div>
+            <div class="text-[10px] font-bold tracking-widest text-primary uppercase mb-1">PM Recovery</div>
+            <h3 class="font-bold text-sm mb-1">Niacinamide Flux</h3>
+            <p class="text-xs text-on-surface-variant">Pore Refining Formula</p>
+          </div>
+        </div>
+      </section>
+      <!-- Preferences -->
+      <section class="md:col-span-4 bg-surface-container-high p-8 rounded-lg">
+        <div class="flex items-center gap-3 mb-8">
+          <span class="material-symbols-outlined text-primary">settings_input_component</span>
+          <h2 class="text-xl font-bold tracking-tight">Preferences</h2>
+        </div>
+        <div class="space-y-6">
+          <div class="pb-4 border-b border-outline-variant/20">
+            <div class="flex justify-between items-center mb-1">
+              <span class="text-xs font-bold tracking-wider text-on-surface uppercase">Skin Sensitivity</span>
+              <span class="text-xs font-medium text-primary">Moderate</span>
+            </div>
+            <div class="w-full bg-surface-container-lowest h-1 rounded-full">
+              <div class="bg-primary w-2/3 h-full rounded-full"></div>
+            </div>
+          </div>
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <label class="text-sm font-medium">Fragrance-Free Only</label>
+              <div class="w-10 h-5 bg-primary rounded-full relative"><div class="absolute right-1 top-1 w-3 h-3 bg-white rounded-full"></div></div>
+            </div>
+            <div class="flex items-center justify-between">
+              <label class="text-sm font-medium">Cruelty-Free Filter</label>
+              <div class="w-10 h-5 bg-primary rounded-full relative"><div class="absolute right-1 top-1 w-3 h-3 bg-white rounded-full"></div></div>
+            </div>
+            <div class="flex items-center justify-between">
+              <label class="text-sm font-medium">Lab Updates (SMS)</label>
+              <div class="w-10 h-5 bg-surface-container-highest rounded-full relative"><div class="absolute left-1 top-1 w-3 h-3 bg-white rounded-full"></div></div>
+            </div>
+          </div>
+          <div class="pt-4">
+            <button class="w-full py-3 bg-surface-container-lowest text-xs font-bold tracking-[0.1em] uppercase border-b-2 border-primary">Update Bio-Data</button>
+          </div>
+        </div>
+      </section>
+      <!-- Order Archives -->
+      <section class="md:col-span-12 bg-surface-container-low p-8 rounded-lg overflow-hidden">
+        <div class="flex justify-between items-center mb-8">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-primary">inventory_2</span>
+            <h2 class="text-xl font-bold tracking-tight">Order Archives</h2>
+          </div>
+          <span class="text-xs font-bold tracking-[0.1em] text-primary uppercase hover:opacity-70 transition-all cursor-pointer nav-link" data-page="history">View Full History</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead>
+              <tr class="border-b border-outline-variant/20">
+                <th class="pb-4 text-[10px] font-bold tracking-widest text-outline uppercase">Order ID</th>
+                <th class="pb-4 text-[10px] font-bold tracking-widest text-outline uppercase">Date</th>
+                <th class="pb-4 text-[10px] font-bold tracking-widest text-outline uppercase">Items</th>
+                <th class="pb-4 text-[10px] font-bold tracking-widest text-outline uppercase">Status</th>
+                <th class="pb-4 text-right text-[10px] font-bold tracking-widest text-outline uppercase">Total</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant/10">
+              <tr class="hover:bg-surface-container-high transition-colors cursor-pointer nav-link" data-page="tracking">
+                <td class="py-6 text-sm font-bold">#CT-90234</td>
+                <td class="py-6 text-sm text-on-surface-variant">May 12, 2024</td>
+                <td class="py-6 text-sm">
+                  <div class="flex -space-x-2">
+                    <div class="w-8 h-8 rounded-full border-2 border-surface-container-low bg-surface-container-highest flex items-center justify-center text-[10px] font-bold">H</div>
+                    <div class="w-8 h-8 rounded-full border-2 border-surface-container-low bg-surface-container-highest flex items-center justify-center text-[10px] font-bold">N</div>
+                    <div class="w-8 h-8 rounded-full border-2 border-surface-container-low bg-surface-container-highest flex items-center justify-center text-[10px] font-bold">+1</div>
+                  </div>
+                </td>
+                <td class="py-6"><span class="px-3 py-1 rounded-full bg-primary-container text-on-primary-container text-[10px] font-bold">SHIPPED</span></td>
+                <td class="py-6 text-right text-sm font-bold">$124.00</td>
+              </tr>
+              <tr class="hover:bg-surface-container-high transition-colors">
+                <td class="py-6 text-sm font-bold">#CT-89412</td>
+                <td class="py-6 text-sm text-on-surface-variant">Apr 08, 2024</td>
+                <td class="py-6 text-sm">
+                  <div class="flex -space-x-2">
+                    <div class="w-8 h-8 rounded-full border-2 border-surface-container-low bg-surface-container-highest flex items-center justify-center text-[10px] font-bold">C</div>
+                  </div>
+                </td>
+                <td class="py-6"><span class="px-3 py-1 rounded-full bg-surface-container-highest text-on-surface-variant text-[10px] font-bold">DELIVERED</span></td>
+                <td class="py-6 text-right text-sm font-bold">$58.00</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<!-- ======================== HISTORY ======================== -->
+<div id="page-history" class="page">
+  <main class="pt-32 pb-24 px-8 max-w-7xl mx-auto">
+    <header class="mb-16">
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+          <span class="label-md uppercase tracking-[0.2em] text-primary mb-4 block font-bold">Archives</span>
+          <h1 class="text-5xl font-extrabold tracking-tighter text-on-surface leading-none">Order History</h1>
+        </div>
+        <div class="flex gap-4">
+          <div class="flex flex-col"><span class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mb-1">Total Formulations</span><span class="text-2xl font-light tracking-tight">14 Units</span></div>
+          <div class="w-px h-10 bg-outline-variant/20 mx-4"></div>
+          <div class="flex flex-col"><span class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mb-1">Account Tier</span><span class="text-2xl font-light tracking-tight">Clinical Elite</span></div>
+        </div>
+      </div>
+    </header>
+    <div class="space-y-12">
+      <!-- Order 1 -->
+      <section class="group">
+        <div class="flex flex-col md:flex-row gap-8 items-start">
+          <div class="w-full md:w-64 shrink-0">
+            <div class="bg-surface-container-low p-6 rounded-lg">
+              <div class="mb-6"><span class="block text-[10px] uppercase tracking-widest text-primary font-bold mb-1">Order Ref</span><span class="text-sm font-medium text-on-surface">#CL-8829-2024</span></div>
+              <div class="mb-6"><span class="block text-[10px] uppercase tracking-widest text-primary font-bold mb-1">Transaction Date</span><span class="text-sm font-medium text-on-surface">OCT 14, 2024</span></div>
+              <div class="pt-4 border-t border-outline-variant/10">
+                <span class="block text-[10px] uppercase tracking-widest text-primary font-bold mb-1">Status</span>
+                <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-primary"></div><span class="text-sm font-medium text-on-surface">Delivered</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="flex-grow space-y-4">
+            <div class="bg-surface-container-lowest p-8 rounded-lg flex flex-col md:flex-row gap-8 items-center border border-outline-variant/5">
+              <div class="w-24 h-32 bg-surface-container shrink-0 rounded overflow-hidden">
+                <img class="w-full h-full object-cover grayscale mix-blend-multiply opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-lVo-EZhh9gu7nuoFEuk2mijmGiSZ0o_5kj00O1Q-OHA8uAZAHUy_XjbMCx9_N1fWVqJQ2RnonHeSCpizkVrpazOBAg_UVZXGbDNTVnv_OM5y8BedI0sV2apXzRnAdhp4kOtKlEyuenSb0qN20BC1K3ODPHOlFxQ12-aLtoG62JCEfLdnI1A9siOkN19KUA7OXCojKEF3H0B3slKMeZsCpXPColMSEax0WVjZitVcDZUWT3RLxEoUSZf3KezbuB2ZcoXf_0XDSc0" alt=""/>
+              </div>
+              <div class="flex-grow">
+                <div class="flex items-start justify-between mb-2">
+                  <div><span class="label-sm uppercase tracking-widest text-on-surface-variant mb-1 block">Active Concentrate</span><h3 class="text-xl font-bold tracking-tight">Hyaluronic Acid Complex 2.5%</h3></div>
+                  <span class="text-lg font-light tracking-tighter">$84.00</span>
+                </div>
+                <p class="text-on-surface-variant text-sm leading-relaxed max-w-md">Multi-molecular weight hydration therapy designed for deep cellular penetration and barrier restoration.</p>
+                <div class="mt-4 flex flex-wrap gap-2">
+                  <span class="bg-secondary-container text-on-secondary-container text-[10px] px-3 py-1 rounded-full font-bold tracking-widest uppercase">Clinical Grade</span>
+                  <span class="bg-surface-container-high text-on-surface-variant text-[10px] px-3 py-1 rounded-full font-bold tracking-widest uppercase">Vegan</span>
+                </div>
+              </div>
+              <div class="shrink-0 flex flex-col gap-2 w-full md:w-auto">
+                <button class="bg-primary text-on-primary px-8 py-3 rounded-lg text-sm font-bold tracking-widest uppercase hover:bg-primary-dim transition-all">Reorder</button>
+                <button class="text-primary text-sm font-bold tracking-widest uppercase py-3 border-b-2 border-transparent hover:border-primary transition-all text-center nav-link" data-page="tracking">Details</button>
+              </div>
+            </div>
+            <div class="bg-surface-container-lowest p-8 rounded-lg flex flex-col md:flex-row gap-8 items-center border border-outline-variant/5">
+              <div class="w-24 h-32 bg-surface-container shrink-0 rounded overflow-hidden">
+                <img class="w-full h-full object-cover grayscale mix-blend-multiply opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4uDksreFzKSZPSDHX9y4Wj8FQY_ENoRuNDgyuaa7C98d1LkyuYGJBWHZjVolB6nnpkyhZXfyjvUT54ZgekrJL0W_jP8DwnavpiEvpFPcm3pJE65dKJznZm6hRTnVEiE4_D4Wc25qGdq17nHnrgEy97yDgXI56ojmmFFBmeEb5GU1_HJVC_CTGRf224v6dVhz6WMQ4f82TcRfmmbcu3zlHBZa8HBcdUXSpCY_AQZxWJAx6IRXI5I42L1PTxhIWOOhkDaq4051GOj8" alt=""/>
+              </div>
+              <div class="flex-grow">
+                <div class="flex items-start justify-between mb-2">
+                  <div><span class="label-sm uppercase tracking-widest text-on-surface-variant mb-1 block">Purifying Emulsion</span><h3 class="text-xl font-bold tracking-tight">Squalane Gentle Cleanser</h3></div>
+                  <span class="text-lg font-light tracking-tighter">$36.00</span>
+                </div>
+                <p class="text-on-surface-variant text-sm leading-relaxed max-w-md">Non-stripping pH balanced formula for daily impurities removal while maintaining lipid integrity.</p>
+                <div class="mt-4"><span class="bg-secondary-container text-on-secondary-container text-[10px] px-3 py-1 rounded-full font-bold tracking-widest uppercase">Sensitive Safe</span></div>
+              </div>
+              <div class="shrink-0 flex flex-col gap-2 w-full md:w-auto">
+                <button class="bg-primary text-on-primary px-8 py-3 rounded-lg text-sm font-bold tracking-widest uppercase hover:bg-primary-dim transition-all">Reorder</button>
+                <button class="text-primary text-sm font-bold tracking-widest uppercase py-3 border-b-2 border-transparent hover:border-primary transition-all text-center">Details</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- Order 2 -->
+      <section class="group">
+        <div class="flex flex-col md:flex-row gap-8 items-start">
+          <div class="w-full md:w-64 shrink-0">
+            <div class="bg-surface-container-low p-6 rounded-lg opacity-70">
+              <div class="mb-6"><span class="block text-[10px] uppercase tracking-widest text-primary font-bold mb-1">Order Ref</span><span class="text-sm font-medium text-on-surface">#CL-4412-2024</span></div>
+              <div class="mb-6"><span class="block text-[10px] uppercase tracking-widest text-primary font-bold mb-1">Transaction Date</span><span class="text-sm font-medium text-on-surface">AUG 28, 2024</span></div>
+              <div class="pt-4 border-t border-outline-variant/10">
+                <span class="block text-[10px] uppercase tracking-widest text-primary font-bold mb-1">Status</span>
+                <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-outline"></div><span class="text-sm font-medium text-on-surface">Archived</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="flex-grow">
+            <div class="bg-surface-container-lowest p-8 rounded-lg flex flex-col md:flex-row gap-8 items-center border border-outline-variant/5">
+              <div class="w-24 h-32 bg-surface-container shrink-0 rounded overflow-hidden">
+                <img class="w-full h-full object-cover grayscale mix-blend-multiply opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCH8FUQoSeFZ0bS_IExckHU3D-YjhkG6Qu4DZ6qGDigriHTOPEZz53wU98Q-64rGqretUPzQGhgVHNpw4W7bdoy1v-IBXPj9buHgoBFxCEeBWgWtj4Q5HZ5iK1jnL5AS-UaPJbG3zKxCT6xsUveUI6fGqbJ0lHqcss0jrVKulY4ys3ua_paH72oc3krXop7HvkVLvhcmU4jYjGG7b71VZa4f0yzdlC8rDzjRar3c4weQwu-ruR9TOL9cXf9V923RMtPwnidCZPVYB8" alt=""/>
+              </div>
+              <div class="flex-grow">
+                <div class="flex items-start justify-between mb-2">
+                  <div><span class="label-sm uppercase tracking-widest text-on-surface-variant mb-1 block">Nocturnal Recovery</span><h3 class="text-xl font-bold tracking-tight">Retinoid Complex 0.5%</h3></div>
+                  <span class="text-lg font-light tracking-tighter">$112.00</span>
+                </div>
+                <p class="text-on-surface-variant text-sm leading-relaxed max-w-md">Advanced time-release retinoid technology for accelerated cellular turnover without irritation.</p>
+                <div class="mt-4"><span class="bg-secondary-container text-on-secondary-container text-[10px] px-3 py-1 rounded-full font-bold tracking-widest uppercase">Targeted Treatment</span></div>
+              </div>
+              <div class="shrink-0 flex flex-col gap-2 w-full md:w-auto">
+                <button class="bg-primary text-on-primary px-8 py-3 rounded-lg text-sm font-bold tracking-widest uppercase hover:bg-primary-dim transition-all">Reorder</button>
+                <button class="text-primary text-sm font-bold tracking-widest uppercase py-3 border-b-2 border-transparent hover:border-primary transition-all text-center">Details</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+    <div class="mt-20 flex justify-center">
+      <button class="flex items-center gap-4 text-primary font-bold tracking-widest uppercase py-4 px-12 border border-outline-variant/30 hover:border-primary transition-all">
+        <span>Access Full Archive</span>
+        <span class="material-symbols-outlined text-sm">history</span>
+      </button>
+    </div>
+  </main>
+</div>
+
+<!-- ======================== TRACKING ======================== -->
+<div id="page-tracking" class="page">
+  <main class="pt-32 pb-24 max-w-7xl mx-auto px-8">
+    <header class="mb-12">
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+          <span class="font-label text-[10px] tracking-[0.2em] uppercase text-primary font-bold">Laboratory Logistics</span>
+          <h1 class="text-4xl md:text-5xl font-extrabold tracking-tighter mt-2 text-on-surface">Order #CAT-9240182</h1>
+          <p class="text-on-surface-variant mt-2 font-medium">Estimated Delivery: <span class="text-on-surface">Oct 24, 2024</span></p>
+        </div>
+        <div class="flex gap-3">
+          <button class="px-6 py-3 bg-surface-container-high text-on-surface-variant font-semibold rounded-lg hover:bg-surface-container-highest transition-colors">Support</button>
+          <button class="px-6 py-3 bg-primary text-on-primary font-semibold rounded-lg shadow-sm hover:opacity-90 transition-opacity">Invoice PDF</button>
+        </div>
+      </div>
+    </header>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <section class="lg:col-span-8 space-y-8">
+        <!-- Progress Bar -->
+        <div class="bg-surface-container-lowest p-10 rounded-xl shadow-sm">
+          <div class="relative flex justify-between items-center mb-4">
+            <div class="absolute top-1/2 left-0 w-full h-[2px] bg-surface-container-highest -translate-y-1/2 z-0"></div>
+            <div class="absolute top-1/2 left-0 w-2/3 h-[2px] bg-primary -translate-y-1/2 z-0"></div>
+            <div class="relative z-10 flex flex-col items-center">
+              <div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center border-4 border-surface-container-lowest">
+                <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1;">check</span>
+              </div>
+              <span class="mt-3 text-[10px] tracking-widest font-bold uppercase text-on-surface">Ordered</span>
+            </div>
+            <div class="relative z-10 flex flex-col items-center">
+              <div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center border-4 border-surface-container-lowest">
+                <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1;">check</span>
+              </div>
+              <span class="mt-3 text-[10px] tracking-widest font-bold uppercase text-on-surface">Processing</span>
+            </div>
+            <div class="relative z-10 flex flex-col items-center">
+              <div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center border-4 border-surface-container-lowest">
+                <span class="material-symbols-outlined text-sm">local_shipping</span>
+              </div>
+              <span class="mt-3 text-[10px] tracking-widest font-bold uppercase text-primary">Shipped</span>
+            </div>
+            <div class="relative z-10 flex flex-col items-center">
+              <div class="w-10 h-10 rounded-full bg-surface-container-highest text-on-surface-variant flex items-center justify-center border-4 border-surface-container-lowest">
+                <span class="material-symbols-outlined text-sm">home</span>
+              </div>
+              <span class="mt-3 text-[10px] tracking-widest font-bold uppercase text-on-surface-variant">Delivered</span>
+            </div>
+          </div>
+        </div>
+        <!-- Logistics Log -->
+        <div class="bg-surface-container-lowest p-10 rounded-xl shadow-sm">
+          <h3 class="text-[10px] tracking-[0.2em] uppercase text-primary font-bold mb-8">Logistics Log</h3>
+          <div class="space-y-8">
+            <div class="flex gap-6 relative">
+              <div class="absolute left-[7px] top-6 bottom-[-24px] w-[1px] bg-outline-variant/30"></div>
+              <div class="w-4 h-4 rounded-full bg-primary mt-1.5 ring-4 ring-primary-container relative z-10"></div>
+              <div class="flex-1">
+                <p class="font-bold text-on-surface">In Transit - Regional Distribution Center</p>
+                <p class="text-sm text-on-surface-variant">Package has arrived at the facility in Zurich, Switzerland.</p>
+                <span class="text-[11px] text-outline font-medium mt-1 inline-block">OCT 22, 2024 — 09:14 AM</span>
+              </div>
+            </div>
+            <div class="flex gap-6 relative">
+              <div class="absolute left-[7px] top-6 bottom-[-24px] w-[1px] bg-outline-variant/30"></div>
+              <div class="w-4 h-4 rounded-full bg-outline-variant mt-1.5 relative z-10"></div>
+              <div class="flex-1">
+                <p class="font-bold text-on-surface">Package Shipped</p>
+                <p class="text-sm text-on-surface-variant">Departed from Catalina Labs Central Lab.</p>
+                <span class="text-[11px] text-outline font-medium mt-1 inline-block">OCT 21, 2024 — 02:45 PM</span>
+              </div>
+            </div>
+            <div class="flex gap-6">
+              <div class="w-4 h-4 rounded-full bg-outline-variant mt-1.5 relative z-10"></div>
+              <div class="flex-1">
+                <p class="font-bold text-on-surface">Order Validated</p>
+                <p class="text-sm text-on-surface-variant">Clinical formulation check and quality control completed.</p>
+                <span class="text-[11px] text-outline font-medium mt-1 inline-block">OCT 20, 2024 — 11:30 AM</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Map -->
+        <div class="h-64 rounded-xl overflow-hidden shadow-sm relative">
+          <img class="w-full h-full object-cover grayscale brightness-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDfM4MU_V9CHsXIwvVO2mbq4shcNSeKfV2-aCzMHk7bqR23IK5LzqE7ECATYc6-pXMdB5KUXXN4OHjcBJqHSmCh9nTjba8FIspKlnzsH1eVsZjPY21DvCyTjTLpH7y9OdnaPfjDRKTIsgklCvuJLdJ_fTZo7CWfz4Jaz5FuGBRHQ4mZiPW-tt-5ZborCcRn4pCMCws80-9-vc-33UCnCo4liMjcg9Q-jF_0IJuwDwxr9wsknXFlUSH0G8Wx8KIxQj-XZ5lgKM_NUmw" alt="Map"/>
+          <div class="absolute inset-0 bg-primary/5 pointer-events-none"></div>
+          <div class="absolute bottom-6 left-6 bg-white/90 backdrop-blur p-4 rounded-lg shadow-xl border border-outline-variant/20">
+            <div class="flex items-center gap-3">
+              <span class="material-symbols-outlined text-primary" style="font-variation-settings:'FILL' 1;">location_on</span>
+              <div>
+                <p class="font-bold text-xs uppercase tracking-wider text-on-surface">Current Location</p>
+                <p class="text-sm text-on-surface-variant">47.3769° N, 8.5417° E</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- Sidebar -->
+      <aside class="lg:col-span-4 space-y-8">
+        <div class="bg-surface-container-low p-8 rounded-xl">
+          <h3 class="text-[10px] tracking-[0.2em] uppercase text-on-surface font-bold mb-6">Order Composition</h3>
+          <div class="space-y-6">
+            <div class="flex gap-4">
+              <div class="w-20 h-24 bg-white rounded-lg overflow-hidden flex-shrink-0">
+                <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCpcw_JzAfZ-3PO8wcPx0z5rytekUj7oHMzQ2GF0-6xALYJ9O1BdUYeADBfdYIiXbUTignDNcp8BpQ58-_HQ2VP9bwGnhFQquW829A1JEVijO0g4rn3lgpxWiZqYVOuiI1CVaWWzQPa17HWK5pwyyi0VwPw2pHVzhNptus5jdYudmDO7_xK1xcxR24c4zk9KQqtu0iuE-RHgNgheWeCq-_-122OxSFU_i-PSlcOS6xbYz4AndRs8VOOLvuweBhCgqQOCauWcIIEW_8" alt=""/>
+              </div>
+              <div class="flex flex-col justify-between py-1">
+                <div><h4 class="font-bold text-sm leading-tight">Molecular Hyaluronic Acid 2%</h4><p class="text-xs text-on-surface-variant mt-1">30ml / High Viscosity</p></div>
+                <div class="flex justify-between items-center">
+                  <span class="px-2 py-0.5 bg-secondary-container text-on-secondary-container text-[10px] font-bold rounded-full uppercase">Qty: 1</span>
+                  <span class="font-bold text-sm text-primary">$84.00</span>
+                </div>
+              </div>
+            </div>
+            <div class="flex gap-4">
+              <div class="w-20 h-24 bg-white rounded-lg overflow-hidden flex-shrink-0">
+                <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDUJfZ5sSAbRVbDSVw_hMglWklUx8uUXphHbo0BIVkQkS2G1eoR86hKCPvVUbSP8uqqRGV-dZWNpew8pu5_3C_AKH3343b0lkzNd3f7Qds59FNWlVPyCPJmzVHbuclErIj11BgPYSVXmH0WmOPUFk90D9AF370JvpJzF819RNVvZGAaelw2TP1SRR2PwUcVfIBtTKTMozyrdQuRBPbxfLQnBQSDqDGgXDSADe3NFMvAEoSnO_n6-bnWHkD2hsjRwkf97QY4gzdRAD8" alt=""/>
+              </div>
+              <div class="flex flex-col justify-between py-1">
+                <div><h4 class="font-bold text-sm leading-tight">Ceramide Barrier Shield</h4><p class="text-xs text-on-surface-variant mt-1">50ml / Lipid-Rich</p></div>
+                <div class="flex justify-between items-center">
+                  <span class="px-2 py-0.5 bg-secondary-container text-on-secondary-container text-[10px] font-bold rounded-full uppercase">Qty: 1</span>
+                  <span class="font-bold text-sm text-primary">$120.00</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mt-8 pt-8 border-t border-outline-variant/20 space-y-3">
+            <div class="flex justify-between text-sm"><span class="text-on-surface-variant">Subtotal</span><span class="font-medium">$204.00</span></div>
+            <div class="flex justify-between text-sm"><span class="text-on-surface-variant">Express Logistics</span><span class="font-medium text-primary">Free</span></div>
+            <div class="flex justify-between text-lg font-extrabold pt-2"><span>Total</span><span>$204.00</span></div>
+          </div>
+        </div>
+        <div class="bg-surface-container-lowest p-8 rounded-xl shadow-sm">
+          <h3 class="text-[10px] tracking-[0.2em] uppercase text-on-surface font-bold mb-6">Dispatch Details</h3>
+          <div class="space-y-6">
+            <div>
+              <p class="text-[10px] uppercase tracking-widest text-outline font-bold mb-1">Shipping Address</p>
+              <p class="text-sm font-medium leading-relaxed">Julianne V. Sterling<br/>Seefeldstrasse 122<br/>8008 Zürich, Switzerland</p>
+            </div>
+            <div>
+              <p class="text-[10px] uppercase tracking-widest text-outline font-bold mb-1">Carrier Method</p>
+              <div class="flex items-center gap-2"><span class="material-symbols-outlined text-sm text-primary">biotech</span><p class="text-sm font-medium">Global Express Pharmaceutical Chain</p></div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+
+<!-- ======================== FOOTER (shared) ======================== -->
+<footer class="bg-slate-50 border-t border-slate-200/20 w-full py-16">
+  <div class="max-w-7xl mx-auto px-8 grid grid-cols-1 md:grid-cols-2 gap-12">
+    <div>
+      <div class="text-xl font-bold text-slate-900 mb-6 uppercase tracking-tighter">CATALINA LABS</div>
+      <p class="text-slate-600 max-w-sm leading-relaxed text-sm">© 2024 CATALINA LABS. FORMULATED WITH SCIENTIFIC PRECISION.</p>
+    </div>
+    <div class="grid grid-cols-2 gap-8">
+      <div class="flex flex-col gap-4">
+        <span class="text-xs font-bold uppercase tracking-widest text-slate-900">Discovery</span>
+        <a class="text-slate-500 hover:text-sky-600 transition-colors text-sm" href="#">Sustainability</a>
+        <a class="text-slate-500 hover:text-sky-600 transition-colors text-sm" href="#">Clinical Trials</a>
+      </div>
+      <div class="flex flex-col gap-4">
+        <span class="text-xs font-bold uppercase tracking-widest text-slate-900">Support</span>
+        <a class="text-slate-500 hover:text-sky-600 transition-colors text-sm" href="#">Privacy Policy</a>
+        <a class="text-slate-500 hover:text-sky-600 transition-colors text-sm" href="#">Contact</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- Toast notification -->
+<div id="toast" class="fixed bottom-8 right-8 z-50 bg-on-surface text-surface px-6 py-4 rounded-lg shadow-2xl font-bold text-sm uppercase tracking-widest flex items-center gap-3 opacity-0 translate-y-4 transition-all duration-300 pointer-events-none">
+  <span class="material-symbols-outlined text-primary-fixed">check_circle</span>
+  <span id="toast-msg">Added to batch</span>
+</div>
+
+<script>
+  // ─── Cart State ───────────────────────────────────────────────
+  let cart = [];
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    document.getElementById('toast-msg').textContent = msg;
+    t.classList.remove('opacity-0', 'translate-y-4');
+    t.classList.add('opacity-100', 'translate-y-0');
+    setTimeout(() => {
+      t.classList.add('opacity-0', 'translate-y-4');
+      t.classList.remove('opacity-100', 'translate-y-0');
+    }, 2000);
+  }
+
+  function addToCart(name, price, img) {
+    const existing = cart.find(i => i.name === name);
+    if (existing) {
+      existing.qty++;
+    } else {
+      cart.push({ name, price: parseFloat(price), img, qty: 1 });
+    }
+    renderCart();
+    showToast('Added to batch');
+  }
+
+  function removeFromCart(name) {
+    cart = cart.filter(i => i.name !== name);
+    renderCart();
+  }
+
+  function changeQty(name, delta) {
+    const item = cart.find(i => i.name === name);
+    if (item) {
+      item.qty += delta;
+      if (item.qty <= 0) removeFromCart(name);
+      else renderCart();
+    }
+  }
+
+  function renderCart() {
+    const container = document.getElementById('cart-items');
+    const empty = document.getElementById('cart-empty');
+    const logistics = document.getElementById('cart-logistics');
+
+    if (cart.length === 0) {
+      container.innerHTML = '';
+      empty.classList.remove('hidden');
+      logistics.classList.add('hidden');
+    } else {
+      empty.classList.add('hidden');
+      logistics.classList.remove('hidden');
+      container.innerHTML = cart.map(item => `
+        <div class="bg-surface-container-lowest p-6 rounded-lg flex flex-col md:flex-row gap-8 items-start">
+          <div class="w-32 h-40 bg-surface-container-low flex-shrink-0 overflow-hidden rounded">
+            <img class="w-full h-full object-cover" src="${item.img}" alt="${item.name}"/>
+          </div>
+          <div class="flex-1 py-1">
+            <div class="flex justify-between items-start">
+              <div>
+                <h3 class="text-xl font-bold mt-1 tracking-tight">${item.name}</h3>
+              </div>
+              <span class="text-xl font-medium tracking-tight">$${(item.price * item.qty).toFixed(2)}</span>
+            </div>
+            <div class="mt-6 flex items-center gap-6">
+              <div class="flex items-center bg-surface-container-low rounded-full px-4 py-1">
+                <button class="p-1 hover:text-primary transition-colors" onclick="changeQty('${item.name}',-1)"><span class="material-symbols-outlined text-sm">remove</span></button>
+                <span class="px-4 font-bold text-sm">${String(item.qty).padStart(2,'0')}</span>
+                <button class="p-1 hover:text-primary transition-colors" onclick="changeQty('${item.name}',1)"><span class="material-symbols-outlined text-sm">add</span></button>
+              </div>
+              <button class="label-md font-bold uppercase tracking-widest text-outline-variant hover:text-error transition-colors flex items-center gap-1" onclick="removeFromCart('${item.name}')">
+                <span class="material-symbols-outlined text-lg">close</span> Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Update summary
+    const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+    const tax = subtotal * 0.08;
+    const total = subtotal + tax;
+    const count = cart.reduce((s, i) => s + i.qty, 0);
+    document.getElementById('cart-count-label').textContent = `Subtotal (${count} unit${count !== 1 ? 's' : ''})`;
+    document.getElementById('cart-subtotal').textContent = `$${subtotal.toFixed(2)}`;
+    document.getElementById('cart-tax').textContent = `$${tax.toFixed(2)}`;
+    document.getElementById('cart-total').textContent = `$${total.toFixed(2)}`;
+  }
+
+  // ─── Page Navigation ─────────────────────────────────────────
+  function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const target = document.getElementById('page-' + id);
+    if (target) {
+      target.classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  document.addEventListener('click', (e) => {
+    const link = e.target.closest('.nav-link');
+    if (link) {
+      const page = link.dataset.page;
+      if (page) showPage(page);
+    }
+    const atc = e.target.closest('.add-to-cart');
+    if (atc) {
+      addToCart(atc.dataset.name, atc.dataset.price, atc.dataset.img);
+    }
+  });
+
+  // Initialize
+  renderCart();
+</script>
+</body>
+</html>
