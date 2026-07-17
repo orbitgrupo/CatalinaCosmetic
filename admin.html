@@ -417,8 +417,60 @@
 
     let state = loadState();
     let homeContent = loadHomeContent();
+    const ADMIN_AUTH_STORAGE_KEY = "catalina-admin-auth-v1";
+    const ADMIN_ACTIVITY_STORAGE_KEY = "catalina-admin-last-activity-v1";
+    const ADMIN_SECURITY_TIMEOUT_MS = 8 * 60 * 60 * 1000;
     let supabaseClient = null;
     let currentUser = null;
+    let adminSecurityTimer = null;
+    let adminSecurityActivityBound = false;
+    let lastAdminActivityWrite = 0;
+
+    function getAdminLastActivity() {
+      const value = Number(localStorage.getItem(ADMIN_ACTIVITY_STORAGE_KEY) || 0);
+      return Number.isFinite(value) && value > 0 ? value : 0;
+    }
+
+    function noteAdminActivity(force = false) {
+      if (!currentUser) return;
+      const now = Date.now();
+      if (!force && now - lastAdminActivityWrite < 30000) return;
+      lastAdminActivityWrite = now;
+      localStorage.setItem(ADMIN_ACTIVITY_STORAGE_KEY, String(now));
+      scheduleAdminSecurityLogout();
+    }
+
+    function isAdminSecurityExpired() {
+      const lastActivity = getAdminLastActivity();
+      if (!lastActivity) return false;
+      return Date.now() - lastActivity > ADMIN_SECURITY_TIMEOUT_MS;
+    }
+
+    function scheduleAdminSecurityLogout() {
+      clearTimeout(adminSecurityTimer);
+      if (!currentUser) return;
+      const lastActivity = getAdminLastActivity() || Date.now();
+      const remaining = ADMIN_SECURITY_TIMEOUT_MS - (Date.now() - lastActivity);
+      if (remaining <= 0) {
+        logoutSupabase({ security: true });
+        return;
+      }
+      adminSecurityTimer = setTimeout(() => logoutSupabase({ security: true }), Math.min(remaining, 2147483647));
+    }
+
+    function bindAdminSecurityActivity() {
+      if (adminSecurityActivityBound) return;
+      adminSecurityActivityBound = true;
+      ["click", "keydown", "pointerdown", "touchstart", "scroll"].forEach(eventName => {
+        window.addEventListener(eventName, () => noteAdminActivity(), { passive: true });
+      });
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible" && currentUser) {
+          if (isAdminSecurityExpired()) logoutSupabase({ security: true });
+          else noteAdminActivity(true);
+        }
+      });
+    }
 
     function loadHomeContent() {
       const saved = localStorage.getItem(HOME_STORAGE_KEY);
@@ -874,9 +926,41 @@
       const url = window.CATALINA_SUPABASE_URL || config.supabaseUrl || "";
       const key = window.CATALINA_SUPABASE_PUBLISHABLE_KEY || config.supabasePublishableKey || "";
       if (url && key && window.supabase) {
-        supabaseClient = window.supabase.createClient(url, key);
+        supabaseClient = window.supabase.createClient(url, key, {
+          auth: {
+            storageKey: ADMIN_AUTH_STORAGE_KEY,
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true
+          }
+        });
         const { data } = await supabaseClient.auth.getSession();
         currentUser = data.session?.user || null;
+        if (currentUser) {
+          bindAdminSecurityActivity();
+          if (!getAdminLastActivity()) noteAdminActivity(true);
+          if (isAdminSecurityExpired()) {
+            await logoutSupabase({ security: true });
+            return;
+          }
+          scheduleAdminSecurityLogout();
+        }
+        supabaseClient.auth.onAuthStateChange(async (event, session) => {
+          currentUser = session?.user || null;
+          if (currentUser) {
+            bindAdminSecurityActivity();
+            if (event === "SIGNED_IN" || !getAdminLastActivity()) noteAdminActivity(true);
+            if (isAdminSecurityExpired()) {
+              await logoutSupabase({ security: true });
+              return;
+            }
+            scheduleAdminSecurityLogout();
+          } else {
+            clearTimeout(adminSecurityTimer);
+          }
+          if (currentUser) await pullFromSupabase(false);
+          else renderAll();
+        });
         await pullFromSupabase(false);
       }
       renderAll();
@@ -894,6 +978,8 @@
       const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
       if (error) return showToast(error.message);
       currentUser = data.user;
+      bindAdminSecurityActivity();
+      noteAdminActivity(true);
       await pullFromSupabase(false);
       showToast("Sesion iniciada");
     }
@@ -905,17 +991,23 @@
       const { data, error } = await supabaseClient.auth.signUp({ email, password });
       if (error) return showToast(error.message);
       currentUser = data.user || null;
+      if (currentUser) {
+        bindAdminSecurityActivity();
+        noteAdminActivity(true);
+      }
       renderAll();
       prepareOwnProfileForm();
       showToast(currentUser ? "Cuenta creada" : "Revisa tu email");
     }
 
-    async function logoutSupabase() {
+    async function logoutSupabase(options = {}) {
       if (!supabaseClient) return;
       await supabaseClient.auth.signOut();
+      clearTimeout(adminSecurityTimer);
+      localStorage.removeItem(ADMIN_ACTIVITY_STORAGE_KEY);
       currentUser = null;
       renderAll();
-      showToast("Sesion cerrada");
+      showToast(options.security ? "Sesion cerrada por seguridad. Vuelve a entrar para continuar." : "Sesion cerrada");
     }
 
     async function pullFromSupabase(showMessage = true) {

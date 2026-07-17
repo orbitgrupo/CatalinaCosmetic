@@ -1753,9 +1753,15 @@
     { name: "Cabello", slug: "cabello", description: "Tratamientos para brillo, fuerza, cuero cabelludo y puntas." },
     { name: "Kit", slug: "kit", description: "Rutinas completas y combinaciones listas para usar." }
   ];
+  const CUSTOMER_AUTH_STORAGE_KEY = 'catalina-customer-auth-v1';
+  const CUSTOMER_ACTIVITY_STORAGE_KEY = 'catalina-customer-last-activity-v1';
+  const CUSTOMER_SECURITY_TIMEOUT_MS = 24 * 60 * 60 * 1000;
   let storefrontSupabaseClient = null;
   let currentCustomerUser = null;
   let customerOrders = [];
+  let customerSecurityTimer = null;
+  let customerSecurityActivityBound = false;
+  let lastCustomerActivityWrite = 0;
 
   function getStorefrontSupabaseClient() {
     if (storefrontSupabaseClient) return storefrontSupabaseClient;
@@ -1763,8 +1769,61 @@
     const url = window.CATALINA_SUPABASE_URL || config.supabaseUrl || "";
     const key = window.CATALINA_SUPABASE_PUBLISHABLE_KEY || config.supabasePublishableKey || "";
     if (!url || !key || !window.supabase) return null;
-    storefrontSupabaseClient = window.supabase.createClient(url, key);
+    storefrontSupabaseClient = window.supabase.createClient(url, key, {
+      auth: {
+        storageKey: CUSTOMER_AUTH_STORAGE_KEY,
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
+      }
+    });
     return storefrontSupabaseClient;
+  }
+
+  function getCustomerLastActivity() {
+    const value = Number(localStorage.getItem(CUSTOMER_ACTIVITY_STORAGE_KEY) || 0);
+    return Number.isFinite(value) && value > 0 ? value : 0;
+  }
+
+  function noteCustomerActivity(force = false) {
+    if (!currentCustomerUser) return;
+    const now = Date.now();
+    if (!force && now - lastCustomerActivityWrite < 30000) return;
+    lastCustomerActivityWrite = now;
+    localStorage.setItem(CUSTOMER_ACTIVITY_STORAGE_KEY, String(now));
+    scheduleCustomerSecurityLogout();
+  }
+
+  function isCustomerSecurityExpired() {
+    const lastActivity = getCustomerLastActivity();
+    if (!lastActivity) return false;
+    return Date.now() - lastActivity > CUSTOMER_SECURITY_TIMEOUT_MS;
+  }
+
+  function scheduleCustomerSecurityLogout() {
+    clearTimeout(customerSecurityTimer);
+    if (!currentCustomerUser) return;
+    const lastActivity = getCustomerLastActivity() || Date.now();
+    const remaining = CUSTOMER_SECURITY_TIMEOUT_MS - (Date.now() - lastActivity);
+    if (remaining <= 0) {
+      logoutCustomer({ security: true });
+      return;
+    }
+    customerSecurityTimer = setTimeout(() => logoutCustomer({ security: true }), Math.min(remaining, 2147483647));
+  }
+
+  function bindCustomerSecurityActivity() {
+    if (customerSecurityActivityBound) return;
+    customerSecurityActivityBound = true;
+    ['click', 'keydown', 'pointerdown', 'touchstart', 'scroll'].forEach(eventName => {
+      window.addEventListener(eventName, () => noteCustomerActivity(), { passive: true });
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && currentCustomerUser) {
+        if (isCustomerSecurityExpired()) logoutCustomer({ security: true });
+        else noteCustomerActivity(true);
+      }
+    });
   }
 
   function renderCustomerAuthState() {
@@ -1847,6 +1906,15 @@
     }
     const { data } = await client.auth.getSession();
     currentCustomerUser = data.session?.user || null;
+    if (currentCustomerUser) {
+      bindCustomerSecurityActivity();
+      if (!getCustomerLastActivity()) noteCustomerActivity(true);
+      if (isCustomerSecurityExpired()) {
+        await logoutCustomer({ security: true });
+        return;
+      }
+      scheduleCustomerSecurityLogout();
+    }
     renderCustomerAuthState();
     if (currentCustomerUser) {
       await loadCustomerProfileFromSupabase();
@@ -1854,8 +1922,19 @@
     } else {
       renderCustomerOrders();
     }
-    client.auth.onAuthStateChange(async (_event, session) => {
+    client.auth.onAuthStateChange(async (event, session) => {
       currentCustomerUser = session?.user || null;
+      if (currentCustomerUser) {
+        bindCustomerSecurityActivity();
+        if (event === 'SIGNED_IN' || !getCustomerLastActivity()) noteCustomerActivity(true);
+        if (isCustomerSecurityExpired()) {
+          await logoutCustomer({ security: true });
+          return;
+        }
+        scheduleCustomerSecurityLogout();
+      } else {
+        clearTimeout(customerSecurityTimer);
+      }
       renderCustomerAuthState();
       if (currentCustomerUser) {
         await loadCustomerProfileFromSupabase();
@@ -1877,6 +1956,10 @@
     const { data, error } = await client.auth.signUp({ email, password, options: { data: { full_name: name } } });
     if (error) return showToast(error.message);
     currentCustomerUser = data.user || currentCustomerUser;
+    if (currentCustomerUser) {
+      bindCustomerSecurityActivity();
+      noteCustomerActivity(true);
+    }
     document.getElementById('profile-name').value = name;
     document.getElementById('profile-email').value = email;
     if (currentCustomerUser) await saveCustomerProfileToSupabase({
@@ -1898,21 +1981,25 @@
     const { data, error } = await client.auth.signInWithPassword({ email, password });
     if (error) return showToast(error.message);
     currentCustomerUser = data.user;
+    bindCustomerSecurityActivity();
+    noteCustomerActivity(true);
     renderCustomerAuthState();
     await loadCustomerProfileFromSupabase();
     await loadCustomerOrders();
     showToast('Sesion iniciada');
   }
 
-  async function logoutCustomer() {
+  async function logoutCustomer(options = {}) {
     const client = getStorefrontSupabaseClient();
     if (!client) return;
     await client.auth.signOut();
+    clearTimeout(customerSecurityTimer);
+    localStorage.removeItem(CUSTOMER_ACTIVITY_STORAGE_KEY);
     currentCustomerUser = null;
     customerOrders = [];
     renderCustomerOrders();
     renderCustomerAuthState();
-    showToast('Sesion cerrada');
+    showToast(options.security ? 'Sesion cerrada por seguridad. Vuelve a entrar para continuar.' : 'Sesion cerrada');
   }
 
   function escapeHtml(value) {
