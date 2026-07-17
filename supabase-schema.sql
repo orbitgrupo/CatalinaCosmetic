@@ -208,10 +208,6 @@ to authenticated
 using (customer_id = (select auth.uid()) or public.is_admin());
 
 drop policy if exists "Customers create own orders" on public.orders;
-create policy "Customers create own orders"
-on public.orders for insert
-to authenticated
-with check (customer_id = (select auth.uid()) or public.is_admin());
 
 drop policy if exists "Admins manage orders" on public.orders;
 create policy "Admins manage orders"
@@ -254,17 +250,6 @@ using (
 );
 
 drop policy if exists "Customers create own order items" on public.order_items;
-create policy "Customers create own order items"
-on public.order_items for insert
-to authenticated
-with check (
-  exists (
-    select 1
-    from public.orders
-    where orders.id = order_items.order_id
-      and (orders.customer_id = (select auth.uid()) or public.is_admin())
-  )
-);
 
 drop policy if exists "Admins manage order items" on public.order_items;
 create policy "Admins manage order items"
@@ -287,18 +272,6 @@ using (
 );
 
 drop policy if exists "Customers create initial shipment event" on public.shipment_events;
-create policy "Customers create initial shipment event"
-on public.shipment_events for insert
-to authenticated
-with check (
-  status = 'Recibido'
-  and exists (
-    select 1
-    from public.orders
-    where orders.id = shipment_events.order_id
-      and (orders.customer_id = (select auth.uid()) or public.is_admin())
-  )
-);
 
 drop policy if exists "Admins manage shipment events" on public.shipment_events;
 create policy "Admins manage shipment events"

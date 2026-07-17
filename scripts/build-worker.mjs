@@ -48,6 +48,36 @@ function cleanCheckoutItems(items) {
   })).filter(item => item.price > 0);
 }
 
+function cleanRequestedItems(items) {
+  if (!Array.isArray(items)) return [];
+  return items.slice(0, 50).map(item => ({
+    productId: String(item.productId || ""),
+    name: String(item.name || "").slice(0, 160),
+    quantity: Math.max(1, Math.min(99, Math.round(Number(item.quantity || 1))))
+  })).filter(item => item.productId || item.name);
+}
+
+function createOrderNumber() {
+  const stamp = Date.now().toString().slice(-6);
+  const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
+  return \`CAT-\${stamp}\${suffix}\`;
+}
+
+async function getSupabaseUser(request, env) {
+  const url = env.CATALINA_SUPABASE_URL || env.SUPABASE_URL || "";
+  const key = env.CATALINA_SUPABASE_PUBLISHABLE_KEY || env.SUPABASE_PUBLISHABLE_KEY || "";
+  const auth = request.headers.get("authorization") || "";
+  if (!url || !key || !auth.toLowerCase().startsWith("bearer ")) return null;
+  const response = await fetch(\`\${url}/auth/v1/user\`, {
+    headers: {
+      "apikey": key,
+      "authorization": auth
+    }
+  });
+  if (!response.ok) return null;
+  return response.json();
+}
+
 function bytesToHex(buffer) {
   return [...new Uint8Array(buffer)].map(byte => byte.toString(16).padStart(2, "0")).join("");
 }
@@ -89,6 +119,93 @@ async function supabaseRest(env, path, options = {}) {
   const data = text ? JSON.parse(text) : null;
   if (!response.ok) throw new Error(data?.message || "Supabase no acepto la operacion.");
   return data;
+}
+
+async function getActiveProducts(env) {
+  return supabaseRest(env, "products?select=id,name,price,image_url,is_active&is_active=eq.true", { method: "GET" });
+}
+
+function buildServerCheckoutItems(requestedItems, products) {
+  const byId = new Map(products.map(product => [product.id, product]));
+  const byName = new Map(products.map(product => [product.name, product]));
+  return requestedItems.map(item => {
+    const product = byId.get(item.productId) || byName.get(item.name);
+    if (!product) throw new Error(\`Producto no disponible: \${item.name || item.productId}\`);
+    return {
+      productId: product.id,
+      name: product.name,
+      price: Number(product.price || 0),
+      priceCents: Math.round(Number(product.price || 0) * 100),
+      quantity: item.quantity,
+      image: product.image_url || ""
+    };
+  }).filter(item => item.priceCents > 0);
+}
+
+async function createPendingOrder(env, user, customer, items) {
+  const orderNumber = createOrderNumber();
+  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const estimated = new Date();
+  estimated.setDate(estimated.getDate() + 3);
+
+  await supabaseRest(env, "customer_profiles?on_conflict=id", {
+    method: "POST",
+    headers: { "prefer": "resolution=merge-duplicates,return=minimal" },
+    body: JSON.stringify({
+      id: user.id,
+      full_name: String(customer.name || user.email || "").slice(0, 200),
+      email: String(customer.email || user.email || "").slice(0, 200),
+      phone: String(customer.phone || "").slice(0, 80),
+      house_number: String(customer.houseNumber || "").slice(0, 80),
+      street: String(customer.street || "").slice(0, 180),
+      sector: String(customer.sector || "").slice(0, 120),
+      province: String(customer.province || "").slice(0, 120),
+      city: String(customer.city || "").slice(0, 120),
+      address_reference: String(customer.reference || "").slice(0, 240),
+      shipping_address: String(customer.address || "").slice(0, 450)
+    })
+  });
+
+  const orders = await supabaseRest(env, "orders", {
+    method: "POST",
+    headers: { "prefer": "return=representation" },
+    body: JSON.stringify({
+      order_number: orderNumber,
+      customer_id: user.id,
+      status: "Recibido",
+      payment_status: "Pendiente",
+      carrier: "Catalina Express",
+      subtotal,
+      shipping_amount: 0,
+      estimated_delivery: estimated.toISOString().slice(0, 10)
+    })
+  });
+  const order = orders?.[0];
+  if (!order?.id) throw new Error("No se pudo crear el pedido.");
+
+  await supabaseRest(env, "order_items", {
+    method: "POST",
+    headers: { "prefer": "return=minimal" },
+    body: JSON.stringify(items.map(item => ({
+      order_id: order.id,
+      product_id: item.productId,
+      product_name: item.name,
+      unit_price: item.price,
+      quantity: item.quantity
+    })))
+  });
+
+  await supabaseRest(env, "shipment_events", {
+    method: "POST",
+    headers: { "prefer": "return=minimal" },
+    body: JSON.stringify({
+      order_id: order.id,
+      status: "Recibido",
+      note: "Pedido creado por servidor. Pago pendiente de confirmacion Stripe."
+    })
+  });
+
+  return order;
 }
 
 async function markStripeCheckoutPaid(event, env) {
@@ -153,25 +270,32 @@ async function createStripeCheckoutSession(request, env) {
     return jsonResponse({ error: "Solicitud invalida." }, 400);
   }
 
-  const items = cleanCheckoutItems(payload.items);
+  const user = await getSupabaseUser(request, env);
+  if (!user?.id) return jsonResponse({ error: "Inicia sesion para comprar." }, 401);
+
+  const requestedItems = cleanRequestedItems(payload.items);
+  if (!requestedItems.length) return jsonResponse({ error: "El carrito esta vacio." }, 400);
+
+  const products = await getActiveProducts(env);
+  const items = buildServerCheckoutItems(requestedItems, products || []);
   if (!items.length) return jsonResponse({ error: "El carrito esta vacio." }, 400);
 
   const origin = new URL(request.url).origin;
   const customer = payload.customer || {};
-  const order = payload.order || {};
-  const subtotalCents = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const order = await createPendingOrder(env, user, customer, items);
+  const subtotalCents = items.reduce((sum, item) => sum + item.priceCents * item.quantity, 0);
   const taxCents = Math.round(subtotalCents * 0.08);
   const params = new URLSearchParams();
 
   params.set("mode", "payment");
-  params.set("success_url", \`\${origin}/?checkout=success&session_id={CHECKOUT_SESSION_ID}&order=\${encodeURIComponent(order.orderNumber || "")}\`);
+  params.set("success_url", \`\${origin}/?checkout=success&session_id={CHECKOUT_SESSION_ID}&order=\${encodeURIComponent(order.order_number || "")}\`);
   params.set("cancel_url", \`\${origin}/?checkout=cancel\`);
   params.set("billing_address_collection", "auto");
   params.set("phone_number_collection[enabled]", "true");
   params.set("metadata[source]", "catalina-cosmetic");
-  if (order.orderNumber) params.set("metadata[order_number]", String(order.orderNumber).slice(0, 80));
+  if (order.order_number) params.set("metadata[order_number]", String(order.order_number).slice(0, 80));
   if (order.id) params.set("metadata[order_id]", String(order.id).slice(0, 80));
-  if (order.customerId) params.set("metadata[customer_id]", String(order.customerId).slice(0, 80));
+  params.set("metadata[customer_id]", String(user.id).slice(0, 80));
   if (customer.email) params.set("customer_email", String(customer.email).slice(0, 200));
   if (customer.name) params.set("metadata[customer_name]", String(customer.name).slice(0, 200));
   if (customer.address) params.set("metadata[shipping_address]", String(customer.address).slice(0, 450));
@@ -179,7 +303,7 @@ async function createStripeCheckoutSession(request, env) {
   items.forEach((item, index) => {
     params.set(\`line_items[\${index}][quantity]\`, String(item.quantity));
     params.set(\`line_items[\${index}][price_data][currency]\`, "usd");
-    params.set(\`line_items[\${index}][price_data][unit_amount]\`, String(item.price));
+    params.set(\`line_items[\${index}][price_data][unit_amount]\`, String(item.priceCents));
     params.set(\`line_items[\${index}][price_data][product_data][name]\`, item.name);
     if (item.image.startsWith("https://")) params.set(\`line_items[\${index}][price_data][product_data][images][0]\`, item.image);
   });

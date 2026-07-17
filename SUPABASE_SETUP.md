@@ -34,4 +34,11 @@ Subscribe it to `checkout.session.completed`, then copy the signing secret into 
 
 Customers can create accounts from the site with the `Crear` button. After signing in, they should use `Usar mi sesion` in the profile form, complete their shipping details, and save the profile before placing an order.
 
+Checkout security:
+
+- The browser sends only product identifiers and quantities.
+- The server reads active products from Supabase, calculates prices, creates the pending order, and then creates the Stripe session.
+- Customers can read their own orders, but cannot create or update orders directly through the browser.
+- Stripe confirms payment through `/api/stripe-webhook` before the order changes to `Pagado`.
+
 The public client must only use the publishable key. Do not place the service role key in `catalina.html`; keep it only as a secret environment variable for the server/webhook.

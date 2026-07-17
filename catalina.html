@@ -2031,7 +2031,7 @@
           <p class="body-md text-on-surface-variant leading-relaxed py-2">${escapeHtml(product.description)}</p>
           <div class="flex items-center justify-between gap-4 pt-4">
             <span class="text-xl font-headline font-bold">$${Number(product.price).toFixed(2)}</span>
-            <button class="px-5 py-2 bg-primary text-on-primary text-xs font-bold uppercase tracking-widest rounded-lg hover:opacity-90 transition-opacity add-to-cart" data-name="${escapeHtml(product.name)}" data-price="${Number(product.price).toFixed(2)}" data-img="${escapeHtml(image)}">Agregar</button>
+            <button class="px-5 py-2 bg-primary text-on-primary text-xs font-bold uppercase tracking-widest rounded-lg hover:opacity-90 transition-opacity add-to-cart" data-id="${escapeHtml(product.id)}" data-name="${escapeHtml(product.name)}" data-price="${Number(product.price).toFixed(2)}" data-img="${escapeHtml(image)}">Agregar</button>
           </div>
         </div>
       </div>
@@ -2183,7 +2183,7 @@
   });
   document.getElementById('detail-add-cart').addEventListener('click', () => {
     if (!selectedDetailProduct) return;
-    const qty = addToCart(selectedDetailProduct.name, selectedDetailProduct.price, selectedDetailProduct.images[0]);
+    const qty = addToCart(selectedDetailProduct.id, selectedDetailProduct.name, selectedDetailProduct.price, selectedDetailProduct.images[0]);
     animateDetailAddButton(qty);
   });
   document.getElementById('signup-form').addEventListener('submit', signupCustomer);
@@ -2275,12 +2275,13 @@
     if (selectedDetailProduct) updateDetailCartCount(selectedDetailProduct.name);
   }
 
-  function addToCart(name, price, img) {
+  function addToCart(productId, name, price, img) {
     const existing = cart.find(i => i.name === name);
     if (existing) {
       existing.qty++;
+      if (productId) existing.productId = productId;
     } else {
-      cart.push({ name, price: parseFloat(price), img, qty: 1 });
+      cart.push({ productId: productId || "", name, price: parseFloat(price), img, qty: 1 });
     }
     renderCart();
     const qty = getCartQty(name);
@@ -2353,55 +2354,6 @@
     return `CAT-${stamp}${suffix}`;
   }
 
-  async function createSupabaseOrderBeforePayment(customer) {
-    const client = getStorefrontSupabaseClient();
-    if (!client || !currentCustomerUser) throw new Error('Inicia sesion para guardar y rastrear tu pedido.');
-    const profileSaved = await saveCustomerProfileToSupabase(customer);
-    if (!profileSaved) throw new Error('No se pudo guardar el perfil antes del pago.');
-
-    const { subtotal } = calculateCartTotals();
-    const estimated = new Date();
-    estimated.setDate(estimated.getDate() + 3);
-    const orderNumber = createOrderNumber();
-    const { data: order, error: orderError } = await client
-      .from('orders')
-      .insert({
-        order_number: orderNumber,
-        customer_id: currentCustomerUser.id,
-        status: 'Recibido',
-        payment_status: 'Pendiente',
-        carrier: 'Catalina Express',
-        subtotal,
-        shipping_amount: 0,
-        estimated_delivery: estimated.toISOString().slice(0, 10)
-      })
-      .select('id,order_number,status,payment_status,total,created_at')
-      .single();
-    if (orderError) throw new Error(orderError.message);
-
-    const items = cart.map(item => {
-      const product = productCatalog.find(candidate => candidate.name === item.name);
-      return {
-        order_id: order.id,
-        product_id: product && isUuid(product.id) ? product.id : null,
-        product_name: item.name,
-        unit_price: item.price,
-        quantity: item.qty
-      };
-    });
-    const { error: itemsError } = await client.from('order_items').insert(items);
-    if (itemsError) throw new Error(itemsError.message);
-
-    await client.from('shipment_events').insert({
-      order_id: order.id,
-      status: 'Recibido',
-      note: 'Pedido recibido. Pago enviado a Stripe para confirmacion.'
-    });
-    localStorage.setItem('catalina-last-order-number', order.order_number);
-    await loadCustomerOrders();
-    return order;
-  }
-
   function validateCheckoutReview() {
     if (!cart.length) return 'Agrega productos antes de continuar.';
     if (!currentCustomerUser) return 'Inicia sesion o crea una cuenta para guardar y rastrear tu pedido.';
@@ -2431,22 +2383,23 @@
 
     try {
       const customer = getCheckoutCustomer();
-      const pendingOrder = await createSupabaseOrderBeforePayment(customer);
+      await saveCustomerProfileToSupabase(customer);
+      const client = getStorefrontSupabaseClient();
+      const { data: sessionData } = await client.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) throw new Error('Inicia sesion para comprar.');
       const response = await fetch('/api/create-checkout-session', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: {
+          'content-type': 'application/json',
+          'authorization': `Bearer ${accessToken}`
+        },
         body: JSON.stringify({
           customer,
-          order: {
-            id: pendingOrder.id,
-            orderNumber: pendingOrder.order_number,
-            customerId: currentCustomerUser?.id || ""
-          },
           items: cart.map(item => ({
+            productId: item.productId || "",
             name: item.name,
-            price: item.price,
-            quantity: item.qty,
-            image: item.img
+            quantity: item.qty
           }))
         })
       });
@@ -2534,7 +2487,7 @@
     }
     const atc = e.target.closest('.add-to-cart');
     if (atc) {
-      addToCart(atc.dataset.name, atc.dataset.price, atc.dataset.img);
+      addToCart(atc.dataset.id || "", atc.dataset.name, atc.dataset.price, atc.dataset.img);
       return;
     }
     const productCard = e.target.closest('.product-card');
