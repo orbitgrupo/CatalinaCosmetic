@@ -2403,6 +2403,11 @@
           }))
         })
       });
+      const contentType = response.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        const text = await response.text();
+        throw new Error(text.startsWith('<') ? 'El servidor devolvio HTML en vez de JSON. Revisa que el sitio este publico y que Supabase tenga el esquema actualizado.' : text);
+      }
       const payload = await response.json();
       if (!response.ok || !payload.url) throw new Error(payload.error || 'No se pudo crear el pago.');
       window.location.href = payload.url;

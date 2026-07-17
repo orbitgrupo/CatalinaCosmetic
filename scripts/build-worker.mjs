@@ -260,73 +260,77 @@ async function handleStripeWebhook(request, env) {
 }
 
 async function createStripeCheckoutSession(request, env) {
-  const secretKey = env.STRIPE_SECRET_KEY || "";
-  if (!secretKey) return jsonResponse({ error: "Stripe no esta configurado. Agrega STRIPE_SECRET_KEY en Sites." }, 503);
-
-  let payload;
   try {
-    payload = await request.json();
-  } catch {
-    return jsonResponse({ error: "Solicitud invalida." }, 400);
+    const secretKey = env.STRIPE_SECRET_KEY || "";
+    if (!secretKey) return jsonResponse({ error: "Stripe no esta configurado. Agrega STRIPE_SECRET_KEY en Sites." }, 503);
+
+    let payload;
+    try {
+      payload = await request.json();
+    } catch {
+      return jsonResponse({ error: "Solicitud invalida." }, 400);
+    }
+
+    const user = await getSupabaseUser(request, env);
+    if (!user?.id) return jsonResponse({ error: "Inicia sesion para comprar." }, 401);
+
+    const requestedItems = cleanRequestedItems(payload.items);
+    if (!requestedItems.length) return jsonResponse({ error: "El carrito esta vacio." }, 400);
+
+    const products = await getActiveProducts(env);
+    const items = buildServerCheckoutItems(requestedItems, products || []);
+    if (!items.length) return jsonResponse({ error: "El carrito esta vacio." }, 400);
+
+    const origin = new URL(request.url).origin;
+    const customer = payload.customer || {};
+    const order = await createPendingOrder(env, user, customer, items);
+    const subtotalCents = items.reduce((sum, item) => sum + item.priceCents * item.quantity, 0);
+    const taxCents = Math.round(subtotalCents * 0.08);
+    const params = new URLSearchParams();
+
+    params.set("mode", "payment");
+    params.set("success_url", \`\${origin}/?checkout=success&session_id={CHECKOUT_SESSION_ID}&order=\${encodeURIComponent(order.order_number || "")}\`);
+    params.set("cancel_url", \`\${origin}/?checkout=cancel\`);
+    params.set("billing_address_collection", "auto");
+    params.set("phone_number_collection[enabled]", "true");
+    params.set("metadata[source]", "catalina-cosmetic");
+    if (order.order_number) params.set("metadata[order_number]", String(order.order_number).slice(0, 80));
+    if (order.id) params.set("metadata[order_id]", String(order.id).slice(0, 80));
+    params.set("metadata[customer_id]", String(user.id).slice(0, 80));
+    if (customer.email) params.set("customer_email", String(customer.email).slice(0, 200));
+    if (customer.name) params.set("metadata[customer_name]", String(customer.name).slice(0, 200));
+    if (customer.address) params.set("metadata[shipping_address]", String(customer.address).slice(0, 450));
+
+    items.forEach((item, index) => {
+      params.set(\`line_items[\${index}][quantity]\`, String(item.quantity));
+      params.set(\`line_items[\${index}][price_data][currency]\`, "usd");
+      params.set(\`line_items[\${index}][price_data][unit_amount]\`, String(item.priceCents));
+      params.set(\`line_items[\${index}][price_data][product_data][name]\`, item.name);
+      if (item.image.startsWith("https://")) params.set(\`line_items[\${index}][price_data][product_data][images][0]\`, item.image);
+    });
+
+    if (taxCents > 0) {
+      const taxIndex = items.length;
+      params.set(\`line_items[\${taxIndex}][quantity]\`, "1");
+      params.set(\`line_items[\${taxIndex}][price_data][currency]\`, "usd");
+      params.set(\`line_items[\${taxIndex}][price_data][unit_amount]\`, String(taxCents));
+      params.set(\`line_items[\${taxIndex}][price_data][product_data][name]\`, "Estimated taxes");
+    }
+
+    const stripeResponse = await fetch("https://api.stripe.com/v1/checkout/sessions", {
+      method: "POST",
+      headers: {
+        "authorization": \`Bearer \${secretKey}\`,
+        "content-type": "application/x-www-form-urlencoded"
+      },
+      body: params
+    });
+    const session = await stripeResponse.json();
+    if (!stripeResponse.ok) return jsonResponse({ error: session.error?.message || "Stripe no pudo crear el pago." }, 502);
+    return jsonResponse({ id: session.id, url: session.url });
+  } catch (error) {
+    return jsonResponse({ error: error.message || "No se pudo preparar el pago." }, 500);
   }
-
-  const user = await getSupabaseUser(request, env);
-  if (!user?.id) return jsonResponse({ error: "Inicia sesion para comprar." }, 401);
-
-  const requestedItems = cleanRequestedItems(payload.items);
-  if (!requestedItems.length) return jsonResponse({ error: "El carrito esta vacio." }, 400);
-
-  const products = await getActiveProducts(env);
-  const items = buildServerCheckoutItems(requestedItems, products || []);
-  if (!items.length) return jsonResponse({ error: "El carrito esta vacio." }, 400);
-
-  const origin = new URL(request.url).origin;
-  const customer = payload.customer || {};
-  const order = await createPendingOrder(env, user, customer, items);
-  const subtotalCents = items.reduce((sum, item) => sum + item.priceCents * item.quantity, 0);
-  const taxCents = Math.round(subtotalCents * 0.08);
-  const params = new URLSearchParams();
-
-  params.set("mode", "payment");
-  params.set("success_url", \`\${origin}/?checkout=success&session_id={CHECKOUT_SESSION_ID}&order=\${encodeURIComponent(order.order_number || "")}\`);
-  params.set("cancel_url", \`\${origin}/?checkout=cancel\`);
-  params.set("billing_address_collection", "auto");
-  params.set("phone_number_collection[enabled]", "true");
-  params.set("metadata[source]", "catalina-cosmetic");
-  if (order.order_number) params.set("metadata[order_number]", String(order.order_number).slice(0, 80));
-  if (order.id) params.set("metadata[order_id]", String(order.id).slice(0, 80));
-  params.set("metadata[customer_id]", String(user.id).slice(0, 80));
-  if (customer.email) params.set("customer_email", String(customer.email).slice(0, 200));
-  if (customer.name) params.set("metadata[customer_name]", String(customer.name).slice(0, 200));
-  if (customer.address) params.set("metadata[shipping_address]", String(customer.address).slice(0, 450));
-
-  items.forEach((item, index) => {
-    params.set(\`line_items[\${index}][quantity]\`, String(item.quantity));
-    params.set(\`line_items[\${index}][price_data][currency]\`, "usd");
-    params.set(\`line_items[\${index}][price_data][unit_amount]\`, String(item.priceCents));
-    params.set(\`line_items[\${index}][price_data][product_data][name]\`, item.name);
-    if (item.image.startsWith("https://")) params.set(\`line_items[\${index}][price_data][product_data][images][0]\`, item.image);
-  });
-
-  if (taxCents > 0) {
-    const taxIndex = items.length;
-    params.set(\`line_items[\${taxIndex}][quantity]\`, "1");
-    params.set(\`line_items[\${taxIndex}][price_data][currency]\`, "usd");
-    params.set(\`line_items[\${taxIndex}][price_data][unit_amount]\`, String(taxCents));
-    params.set(\`line_items[\${taxIndex}][price_data][product_data][name]\`, "Estimated taxes");
-  }
-
-  const stripeResponse = await fetch("https://api.stripe.com/v1/checkout/sessions", {
-    method: "POST",
-    headers: {
-      "authorization": \`Bearer \${secretKey}\`,
-      "content-type": "application/x-www-form-urlencoded"
-    },
-    body: params
-  });
-  const session = await stripeResponse.json();
-  if (!stripeResponse.ok) return jsonResponse({ error: session.error?.message || "Stripe no pudo crear el pago." }, 502);
-  return jsonResponse({ id: session.id, url: session.url });
 }
 
 export default {
