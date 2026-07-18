@@ -425,6 +425,8 @@
     let adminSecurityTimer = null;
     let adminSecurityActivityBound = false;
     let lastAdminActivityWrite = 0;
+    let adminRealtimeChannel = null;
+    let adminSyncInterval = null;
 
     function getAdminLastActivity() {
       const value = Number(localStorage.getItem(ADMIN_ACTIVITY_STORAGE_KEY) || 0);
@@ -470,6 +472,21 @@
           else noteAdminActivity(true);
         }
       });
+    }
+
+    function startAdminDataSync() {
+      if (!supabaseClient) return;
+      if (!adminSyncInterval) adminSyncInterval = setInterval(() => pullFromSupabase(false), 30000);
+      if (adminRealtimeChannel || !supabaseClient.channel) return;
+      adminRealtimeChannel = supabaseClient.channel("catalina-admin-sync")
+        .on("postgres_changes", { event: "*", schema: "public", table: "products" }, () => pullFromSupabase(false))
+        .on("postgres_changes", { event: "*", schema: "public", table: "categories" }, () => pullFromSupabase(false))
+        .on("postgres_changes", { event: "*", schema: "public", table: "customer_profiles" }, () => pullFromSupabase(false))
+        .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => pullFromSupabase(false))
+        .on("postgres_changes", { event: "*", schema: "public", table: "order_items" }, () => pullFromSupabase(false))
+        .on("postgres_changes", { event: "*", schema: "public", table: "shipment_events" }, () => pullFromSupabase(false))
+        .on("postgres_changes", { event: "*", schema: "public", table: "payments" }, () => pullFromSupabase(false))
+        .subscribe();
     }
 
     function loadHomeContent() {
@@ -566,6 +583,56 @@
 
     function customerName(id) {
       return state.customers.find(customer => customer.id === id)?.name || "Cliente";
+    }
+
+    function customerById(id) {
+      return state.customers.find(customer => customer.id === id) || {};
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[char]));
+    }
+
+    function createTrackingCode(orderNumber = "") {
+      const clean = String(orderNumber || crypto.randomUUID()).replace(/[^A-Z0-9]/gi, "").toUpperCase();
+      const checksum = clean.split("").reduce((sum, char, index) => sum + char.charCodeAt(0) * (index + 3), 0) % 997;
+      return `CAT${clean.slice(-10)}${String(checksum).padStart(3, "0")}`;
+    }
+
+    function code39BarcodeSvg(value) {
+      const patterns = {
+        "0": "nnnwwnwnn", "1": "wnnwnnnnw", "2": "nnwwnnnnw", "3": "wnwwnnnnn", "4": "nnnwwnnnw",
+        "5": "wnnwwnnnn", "6": "nnwwwnnnn", "7": "nnnwnnwnw", "8": "wnnwnnwnn", "9": "nnwwnnwnn",
+        "A": "wnnnnwnnw", "B": "nnwnnwnnw", "C": "wnwnnwnnn", "D": "nnnnwwnnw", "E": "wnnnwwnnn",
+        "F": "nnwnwwnnn", "G": "nnnnnwwnw", "H": "wnnnnwwnn", "I": "nnwnnwwnn", "J": "nnnnwwwnn",
+        "K": "wnnnnnnww", "L": "nnwnnnnww", "M": "wnwnnnnwn", "N": "nnnnwnnww", "O": "wnnnwnnwn",
+        "P": "nnwnwnnwn", "Q": "nnnnnnwww", "R": "wnnnnnwwn", "S": "nnwnnnwwn", "T": "nnnnwnwwn",
+        "U": "wwnnnnnnw", "V": "nwwnnnnnw", "W": "wwwnnnnnn", "X": "nwnnwnnnw", "Y": "wwnnwnnnn",
+        "Z": "nwwnwnnnn", "-": "nwnnnnwnw", ".": "wwnnnnwnn", " ": "nwwnnnwnn", "$": "nwnwnwnnn",
+        "/": "nwnwnnnwn", "+": "nwnnnwnwn", "%": "nnnwnwnwn", "*": "nwnnwnwnn"
+      };
+      const encoded = `*${String(value || "").toUpperCase().replace(/[^A-Z0-9 ./$+%-]/g, "")}*`;
+      let x = 0;
+      const narrow = 2;
+      const wide = 5;
+      const height = 72;
+      const rects = [];
+      encoded.split("").forEach(char => {
+        const pattern = patterns[char] || patterns["-"];
+        pattern.split("").forEach((part, index) => {
+          const width = part === "w" ? wide : narrow;
+          if (index % 2 === 0) rects.push(`<rect x="${x}" y="0" width="${width}" height="${height}" fill="#111827"/>`);
+          x += width;
+        });
+        x += narrow;
+      });
+      return `<svg class="h-20 w-full" viewBox="0 0 ${x} ${height}" preserveAspectRatio="none" role="img" aria-label="Codigo de barras ${escapeHtml(value)}">${rects.join("")}</svg>`;
     }
 
     function slugify(value) {
@@ -798,21 +865,77 @@
 
     function renderOrders() {
       const visibleOrders = currentUser && !isCurrentAdmin() ? state.orders.filter(order => order.customerId === currentUser.id) : state.orders;
-      document.getElementById("admin-orders").innerHTML = visibleOrders.map(order => `
+      document.getElementById("admin-orders").innerHTML = visibleOrders.map(order => {
+        const customer = customerById(order.customerId);
+        const trackingCode = order.trackingCode || "";
+        const labelReady = (order.paymentStatus || "") === "Pagado" && trackingCode;
+        return `
         <div class="rounded-sm bg-white p-5 shadow-soft">
           <div class="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-            <div><p class="text-xs font-bold uppercase tracking-widest text-muted">${new Date(order.createdAt || Date.now()).toLocaleDateString()}</p><h3 class="mt-1 text-xl font-extrabold">${order.id}</h3><p class="text-sm text-muted">${customerName(order.customerId)} - ${money(orderTotal(order))}</p></div>
+            <div><p class="text-xs font-bold uppercase tracking-widest text-muted">${new Date(order.createdAt || Date.now()).toLocaleDateString()}</p><h3 class="mt-1 text-xl font-extrabold">${escapeHtml(order.id)}</h3><p class="text-sm text-muted">${escapeHtml(customer.name || customerName(order.customerId))} - ${money(orderTotal(order))}</p></div>
             <div class="flex flex-wrap gap-2">
-              <span class="rounded-full bg-violet/10 px-4 py-2 text-xs font-extrabold uppercase tracking-widest text-violet">${order.status}</span>
-              <span class="rounded-full bg-green/10 px-4 py-2 text-xs font-extrabold uppercase tracking-widest text-green">${order.paymentStatus || "Pendiente"}</span>
+              <span class="rounded-full bg-violet/10 px-4 py-2 text-xs font-extrabold uppercase tracking-widest text-violet">${escapeHtml(order.status)}</span>
+              <span class="rounded-full bg-green/10 px-4 py-2 text-xs font-extrabold uppercase tracking-widest text-green">${escapeHtml(order.paymentStatus || "Pendiente")}</span>
             </div>
           </div>
           <div class="mt-4 grid gap-3 md:grid-cols-2">
             <label class="text-xs font-bold uppercase tracking-widest text-muted">Estado<select class="order-status mt-2 w-full rounded-lg border-line bg-white text-sm normal-case tracking-normal" data-id="${order.id}" ${currentUser && !isCurrentAdmin() ? "disabled" : ""}>${orderStatuses.map(status => `<option ${status === order.status ? "selected" : ""}>${status}</option>`).join("")}</select></label>
-            <label class="text-xs font-bold uppercase tracking-widest text-muted">Transportista<input class="order-carrier mt-2 w-full rounded-lg border-line text-sm normal-case tracking-normal" data-id="${order.id}" value="${order.carrier || ""}" ${currentUser && !isCurrentAdmin() ? "disabled" : ""}></label>
+            <label class="text-xs font-bold uppercase tracking-widest text-muted">Transportista<input class="order-carrier mt-2 w-full rounded-lg border-line text-sm normal-case tracking-normal" data-id="${order.id}" value="${escapeHtml(order.carrier || "")}" ${currentUser && !isCurrentAdmin() ? "disabled" : ""}></label>
+          </div>
+          <div class="mt-5 grid gap-4 lg:grid-cols-[1fr_360px]">
+            <div class="rounded-lg border border-line bg-soft p-4">
+              <p class="text-xs font-extrabold uppercase tracking-widest text-muted">Productos del pedido</p>
+              <div class="mt-3 grid gap-2">
+                ${(order.items || []).map(item => `
+                  <div class="flex justify-between gap-3 rounded-lg bg-white px-3 py-2 text-sm">
+                    <span class="font-semibold">${escapeHtml(item.name)} x${Number(item.qty || 1)}</span>
+                    <span>${money(Number(item.price || 0) * Number(item.qty || 1))}</span>
+                  </div>
+                `).join("") || `<p class="text-sm text-muted">Sin productos registrados.</p>`}
+              </div>
+              <div class="mt-4 grid gap-2 text-sm text-muted">
+                <p><span class="font-bold text-ink">Cliente:</span> ${escapeHtml(customer.name || "Cliente")}</p>
+                <p><span class="font-bold text-ink">Email:</span> ${escapeHtml(customer.email || "")}</p>
+                <p><span class="font-bold text-ink">Telefono:</span> ${escapeHtml(customer.phone || "")}</p>
+                <p><span class="font-bold text-ink">Direccion:</span> ${escapeHtml(customer.address || "Sin direccion registrada")}</p>
+              </div>
+            </div>
+            <div class="shipping-label rounded-lg border-2 border-dashed border-ink bg-white p-4" id="shipping-label-${escapeHtml(order.id)}">
+              <div class="flex items-start justify-between gap-3 border-b border-line pb-3">
+                <div>
+                  <p class="text-[10px] font-extrabold uppercase tracking-widest text-muted">Etiqueta de envio</p>
+                  <h4 class="mt-1 text-lg font-extrabold">CATALINA</h4>
+                </div>
+                <div class="text-right text-[10px] font-bold uppercase tracking-widest text-muted">
+                  <p>${escapeHtml(order.carrier || "Catalina Express")}</p>
+                  <p>${escapeHtml(order.status || "Recibido")}</p>
+                </div>
+              </div>
+              <div class="grid gap-3 py-4 text-sm">
+                <div>
+                  <p class="text-[10px] font-extrabold uppercase tracking-widest text-muted">Para</p>
+                  <p class="text-base font-extrabold">${escapeHtml(customer.name || "Cliente")}</p>
+                  <p class="text-muted">${escapeHtml(customer.phone || "")}</p>
+                </div>
+                <div>
+                  <p class="text-[10px] font-extrabold uppercase tracking-widest text-muted">Direccion</p>
+                  <p class="font-semibold leading-5">${escapeHtml(customer.address || "Sin direccion registrada")}</p>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <div><p class="text-[10px] font-extrabold uppercase tracking-widest text-muted">Pedido</p><p class="font-bold">${escapeHtml(order.id)}</p></div>
+                  <div><p class="text-[10px] font-extrabold uppercase tracking-widest text-muted">Tracking</p><p class="font-bold">${escapeHtml(trackingCode || "Pendiente")}</p></div>
+                </div>
+              </div>
+              <div class="rounded-lg bg-white p-2">${trackingCode ? code39BarcodeSvg(trackingCode) : `<div class="flex h-20 items-center justify-center rounded border border-line text-xs font-bold uppercase tracking-widest text-muted">Pago pendiente o sin tracking</div>`}</div>
+              <div class="mt-3 flex gap-2 print:hidden">
+                <button class="print-label flex-1 rounded-lg bg-navy px-3 py-2 text-xs font-bold uppercase tracking-widest text-white" data-id="${escapeHtml(order.id)}" ${labelReady ? "" : "disabled"}>Imprimir</button>
+                <button class="generate-tracking rounded-lg border border-line px-3 py-2 text-xs font-bold uppercase tracking-widest text-muted" data-id="${escapeHtml(order.id)}" ${trackingCode || currentUser && !isCurrentAdmin() ? "disabled" : ""}>Tracking</button>
+              </div>
+            </div>
           </div>
         </div>
-      `).join("") || `<div class="rounded-sm bg-white p-8 text-center text-muted shadow-soft">Sin pedidos todavia.</div>`;
+      `;
+      }).join("") || `<div class="rounded-sm bg-white p-8 text-center text-muted shadow-soft">Sin pedidos todavia.</div>`;
     }
 
     function switchView(id) {
@@ -934,6 +1057,7 @@
             detectSessionInUrl: true
           }
         });
+        startAdminDataSync();
         const { data } = await supabaseClient.auth.getSession();
         currentUser = data.session?.user || null;
         if (currentUser) {
@@ -1013,14 +1137,14 @@
     async function pullFromSupabase(showMessage = true) {
       if (!supabaseClient) return;
       const { data: products } = await supabaseClient.from("products").select("id,name,category,description,price,stock,image_url,is_active").eq("is_active", true).order("created_at", { ascending: false });
-      if (products?.length) state.products = products.map(product => ({ id: product.id, name: product.name, category: product.category, description: product.description || "", price: Number(product.price), stock: Number(product.stock), image: product.image_url || images.skin }));
+      if (products) state.products = products.map(product => ({ id: product.id, name: product.name, category: product.category, description: product.description || "", price: Number(product.price), stock: Number(product.stock), image: product.image_url || images.skin }));
       const { data: categories } = await supabaseClient.from("categories").select("id,name,slug,description,image_url,is_active").eq("is_active", true).order("name", { ascending: true });
-      if (categories?.length) state.categories = categories.map(category => ({ id: category.id, name: category.name, slug: category.slug, description: category.description || "", image: category.image_url || images.skin, isActive: category.is_active !== false }));
+      if (categories) state.categories = categories.map(category => ({ id: category.id, name: category.name, slug: category.slug, description: category.description || "", image: category.image_url || images.skin, isActive: category.is_active !== false }));
       if (currentUser) {
         const { data: customers } = await supabaseClient.from("customer_profiles").select("id,full_name,email,phone,house_number,street,sector,province,city,address_reference,shipping_address").order("created_at", { ascending: false });
-        if (customers?.length) state.customers = customers.map(customer => ({ id: customer.id, name: customer.full_name, email: customer.email, phone: customer.phone || "", houseNumber: customer.house_number || "", street: customer.street || "", sector: customer.sector || "", province: customer.province || "", city: customer.city || "", reference: customer.address_reference || "", address: customer.shipping_address || "" }));
+        if (customers) state.customers = customers.map(customer => ({ id: customer.id, name: customer.full_name, email: customer.email, phone: customer.phone || "", houseNumber: customer.house_number || "", street: customer.street || "", sector: customer.sector || "", province: customer.province || "", city: customer.city || "", reference: customer.address_reference || "", address: customer.shipping_address || "" }));
         const { data: orders } = await supabaseClient.from("orders").select("id,order_number,customer_id,status,payment_status,carrier,tracking_code,estimated_delivery,created_at,order_items(product_id,product_name,unit_price,quantity),shipment_events(status,note,event_at)").order("created_at", { ascending: false });
-        if (orders?.length) state.orders = orders.map(order => ({ id: order.order_number, remoteId: order.id, customerId: order.customer_id, status: order.status, paymentStatus: order.payment_status || "Pendiente", carrier: order.carrier || "Catalina Express", trackingCode: order.tracking_code || "", createdAt: order.created_at, eta: order.estimated_delivery || "", items: (order.order_items || []).map(item => ({ productId: item.product_id, name: item.product_name, price: Number(item.unit_price), qty: Number(item.quantity) })), history: (order.shipment_events || []).map(event => ({ status: event.status, note: event.note || statusNote(event.status), at: event.event_at })) }));
+        if (orders) state.orders = orders.map(order => ({ id: order.order_number, remoteId: order.id, customerId: order.customer_id, status: order.status, paymentStatus: order.payment_status || "Pendiente", carrier: order.carrier || "Catalina Express", trackingCode: order.tracking_code || "", createdAt: order.created_at, eta: order.estimated_delivery || "", items: (order.order_items || []).map(item => ({ productId: item.product_id, name: item.product_name, price: Number(item.unit_price), qty: Number(item.quantity) })), history: (order.shipment_events || []).map(event => ({ status: event.status, note: event.note || statusNote(event.status), at: event.event_at })) }));
       }
       persist();
       if (showMessage) showToast("Datos sincronizados");
@@ -1059,6 +1183,44 @@
       showToast("Pedido actualizado");
     }
 
+    async function generateTrackingForOrder(id) {
+      const order = state.orders.find(item => item.id === id);
+      if (!order) return;
+      if ((order.paymentStatus || "") !== "Pagado") return showToast("El pago debe estar confirmado antes de crear la etiqueta");
+      order.trackingCode = createTrackingCode(order.id);
+      if (supabaseClient && currentUser && order.remoteId) {
+        const { error } = await supabaseClient.from("orders").update({ tracking_code: order.trackingCode }).eq("id", order.remoteId);
+        if (error) return showToast(error.message);
+      }
+      persist();
+      showToast("Tracking creado");
+    }
+
+    function printShippingLabel(id) {
+      const label = document.getElementById(`shipping-label-${id}`);
+      if (!label) return;
+      const printWindow = window.open("", "_blank", "width=520,height=720");
+      if (!printWindow) return showToast("Permite ventanas emergentes para imprimir");
+      printWindow.document.write(`
+        <!doctype html>
+        <html>
+          <head>
+            <title>Etiqueta ${escapeHtml(id)}</title>
+            <style>
+              body { margin: 0; padding: 18px; font-family: Arial, sans-serif; color: #111827; }
+              .shipping-label { width: 4in; min-height: 6in; border: 2px dashed #111827; padding: 16px; box-sizing: border-box; }
+              .print\\:hidden, button { display: none !important; }
+              svg { width: 100%; height: 80px; }
+            </style>
+          </head>
+          <body>${label.outerHTML}</body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => printWindow.print(), 250);
+    }
+
     document.addEventListener("click", event => {
       const link = event.target.closest(".side-link");
       if (link?.dataset.view) switchView(link.dataset.view);
@@ -1067,6 +1229,10 @@
       if (editProduct) fillProduct(editProduct.dataset.id);
       const editCustomer = event.target.closest(".edit-customer");
       if (editCustomer) fillCustomer(editCustomer.dataset.id);
+      const printLabel = event.target.closest(".print-label");
+      if (printLabel) printShippingLabel(printLabel.dataset.id);
+      const generateTracking = event.target.closest(".generate-tracking");
+      if (generateTracking) generateTrackingForOrder(generateTracking.dataset.id);
     });
     document.addEventListener("change", event => {
       if (event.target.classList.contains("order-status")) updateOrder(event.target.dataset.id, "status", event.target.value);

@@ -63,6 +63,12 @@ function createOrderNumber() {
   return \`CAT-\${stamp}\${suffix}\`;
 }
 
+function createTrackingCode(orderNumber = "") {
+  const clean = String(orderNumber || createOrderNumber()).replace(/[^A-Z0-9]/gi, "").toUpperCase();
+  const checksum = clean.split("").reduce((sum, char, index) => sum + char.charCodeAt(0) * (index + 3), 0) % 997;
+  return \`CAT\${clean.slice(-10)}\${String(checksum).padStart(3, "0")}\`;
+}
+
 async function getSupabaseUser(request, env) {
   const url = env.CATALINA_SUPABASE_URL || env.SUPABASE_URL || "";
   const key = env.CATALINA_SUPABASE_PUBLISHABLE_KEY || env.SUPABASE_PUBLISHABLE_KEY || "";
@@ -218,7 +224,8 @@ async function markStripeCheckoutPaid(event, env) {
     body: JSON.stringify({
       payment_status: "Pagado",
       status: "Preparando",
-      stripe_session_id: session.id
+      stripe_session_id: session.id,
+      tracking_code: createTrackingCode(orderNumber)
     })
   });
   const order = updatedOrders?.[0];

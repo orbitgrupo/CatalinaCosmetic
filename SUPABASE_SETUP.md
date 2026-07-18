@@ -4,14 +4,15 @@
 2. In the SQL editor, run `supabase-schema.sql`.
 3. In the SQL editor, run `supabase-seed.sql` to load starter products.
 4. If the database was created before Stripe payments were added and checkout reports `Could not find the 'payment_status' column of 'orders' in the schema cache`, run `supabase-hotfix-payments.sql` once in the SQL editor.
-5. Create an admin user in Supabase Auth.
-6. Set the admin user's `app_metadata` to:
+5. For immediate admin/storefront sync, run `supabase-realtime-sync.sql` once in the SQL editor. Without it, the site still refreshes from Supabase every 30 seconds.
+6. Create an admin user in Supabase Auth.
+7. Set the admin user's `app_metadata` to:
 
 ```json
 { "role": "admin" }
 ```
 
-7. Add these Sites environment variables:
+8. Add these Sites environment variables:
 
 ```text
 CATALINA_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
@@ -21,9 +22,9 @@ STRIPE_SECRET_KEY=sk_test_or_live_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 ```
 
-8. Mark `CATALINA_SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`, and `STRIPE_WEBHOOK_SECRET` as secrets in Sites. Never place them in `catalina.html`.
+9. Mark `CATALINA_SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`, and `STRIPE_WEBHOOK_SECRET` as secrets in Sites. Never place them in `catalina.html`.
 
-9. In Stripe, create a webhook endpoint pointing to:
+10. In Stripe, create a webhook endpoint pointing to:
 
 ```text
 https://YOUR_SITE_URL/api/stripe-webhook
@@ -31,7 +32,7 @@ https://YOUR_SITE_URL/api/stripe-webhook
 
 Subscribe it to `checkout.session.completed`, then copy the signing secret into `STRIPE_WEBHOOK_SECRET`.
 
-10. Redeploy the latest Sites version after setting the variables.
+11. Redeploy the latest Sites version after setting the variables.
 
 Customers can create accounts from the site with the `Crear` button. After signing in, they should use `Usar mi sesion` in the profile form, complete their shipping details, and save the profile before placing an order.
 

@@ -291,3 +291,59 @@ grant all on public.orders to authenticated;
 grant all on public.order_items to authenticated;
 grant all on public.payments to authenticated;
 grant all on public.shipment_events to authenticated;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.products;
+exception
+  when duplicate_object then null;
+  when undefined_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.categories;
+exception
+  when duplicate_object then null;
+  when undefined_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.customer_profiles;
+exception
+  when duplicate_object then null;
+  when undefined_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.orders;
+exception
+  when duplicate_object then null;
+  when undefined_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.order_items;
+exception
+  when duplicate_object then null;
+  when undefined_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.shipment_events;
+exception
+  when duplicate_object then null;
+  when undefined_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.payments;
+exception
+  when duplicate_object then null;
+  when undefined_object then null;
+end $$;

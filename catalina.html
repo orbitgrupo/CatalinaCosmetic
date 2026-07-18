@@ -1762,6 +1762,8 @@
   let customerSecurityTimer = null;
   let customerSecurityActivityBound = false;
   let lastCustomerActivityWrite = 0;
+  let storefrontRealtimeChannel = null;
+  let storefrontSyncInterval = null;
 
   function getStorefrontSupabaseClient() {
     if (storefrontSupabaseClient) return storefrontSupabaseClient;
@@ -1824,6 +1826,24 @@
         else noteCustomerActivity(true);
       }
     });
+  }
+
+  function startStorefrontDataSync() {
+    const client = getStorefrontSupabaseClient();
+    if (!client) return;
+    if (!storefrontSyncInterval) storefrontSyncInterval = setInterval(() => {
+      loadProductsFromSupabase();
+      if (currentCustomerUser) loadCustomerOrders();
+    }, 30000);
+    if (storefrontRealtimeChannel || !client.channel) return;
+    storefrontRealtimeChannel = client.channel('catalina-storefront-sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => loadProductsFromSupabase())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, () => loadProductsFromSupabase())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => { if (currentCustomerUser) loadCustomerOrders(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'order_items' }, () => { if (currentCustomerUser) loadCustomerOrders(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'shipment_events' }, () => { if (currentCustomerUser) loadCustomerOrders(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'payments' }, () => { if (currentCustomerUser) loadCustomerOrders(); })
+      .subscribe();
   }
 
   function renderCustomerAuthState() {
@@ -2159,7 +2179,7 @@
         .eq("is_active", true)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      if (data?.length) {
+      if (data) {
         productCatalog = data.map(normalizeProductFromDatabase);
         renderCategoryNavigation();
         renderCatalogProducts();
@@ -2169,7 +2189,7 @@
         .select("name,slug,description,image_url,is_active")
         .eq("is_active", true)
         .order("name", { ascending: true });
-      if (!categoriesError && categories?.length) {
+      if (!categoriesError && categories) {
         categoryCatalog = categories.map(category => ({ name: category.name, slug: category.slug || slugifyCategory(category.name), description: category.description || "", image: category.image_url || "" }));
         renderCategoryNavigation();
         renderCatalogProducts();
@@ -2201,6 +2221,7 @@
     renderCatalogProducts();
     renderCategoryNavigation();
     loadProductsFromSupabase();
+    startStorefrontDataSync();
   }
 
   function getProductById(id) {
