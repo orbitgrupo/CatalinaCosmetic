@@ -7,11 +7,20 @@ begin
 exception
   when duplicate_object then null;
   when undefined_object then null;
+  when undefined_table then null;
 end $$;
 
 do $$
 begin
   alter publication supabase_realtime add table public.categories;
+exception
+  when duplicate_object then null;
+  when undefined_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.site_content;
 exception
   when duplicate_object then null;
   when undefined_object then null;

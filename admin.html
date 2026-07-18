@@ -38,6 +38,23 @@
     .side-link.active { color: #6653e9; background: #f2f0ff; }
     .scroll-thin::-webkit-scrollbar { height: 8px; width: 8px; }
     .scroll-thin::-webkit-scrollbar-thumb { background: #c8d1e3; border-radius: 999px; }
+    .admin-card { border: 1px solid #e8edf6; background: #fff; box-shadow: 0 18px 40px rgba(31, 45, 84, 0.07); }
+    .field-surface input,
+    .field-surface textarea,
+    .field-surface select { transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
+    .field-surface input:focus,
+    .field-surface textarea:focus,
+    .field-surface select:focus { border-color: #6653e9; box-shadow: 0 0 0 4px rgba(102,83,233,.10); }
+    .editor-tab.active { background: #19223c; color: #fff; box-shadow: 0 12px 24px rgba(25,34,60,.16); }
+    .editor-panel { display: none; }
+    .editor-panel.active { display: grid; }
+    .preview-phone { min-height: 620px; border-radius: 34px; border: 10px solid #19223c; background: #f7f9fb; overflow: hidden; }
+    .status-pill { border-radius: 999px; padding: 8px 12px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .12em; }
+    @media print {
+      body * { visibility: hidden; }
+      .shipping-label, .shipping-label * { visibility: visible; }
+      .shipping-label { position: absolute; left: 0; top: 0; width: 4in; min-height: 6in; box-shadow: none !important; }
+    }
   </style>
 </head>
 <body class="bg-shell text-ink">
@@ -150,17 +167,31 @@
         <section id="view-home" class="view">
           <div class="mb-5 flex flex-col justify-between gap-3 md:flex-row md:items-end">
             <div>
-              <h1 class="text-2xl font-extrabold">Pagina de inicio</h1>
-              <p class="text-sm text-muted">Edita los textos, llamadas a la accion e imagenes principales de la tienda.</p>
+              <p class="text-xs font-extrabold uppercase tracking-[0.2em] text-violet">Site Studio</p>
+              <h1 class="text-3xl font-extrabold tracking-tight">Pagina de inicio</h1>
+              <p class="text-sm text-muted">Edita contenido, revisa una vista previa y publica cambios para la tienda.</p>
             </div>
             <div class="flex gap-2">
+              <a href="./catalina.html" class="rounded-lg border border-line bg-white px-4 py-3 text-sm font-bold text-muted">Ver tienda</a>
               <button id="home-reset" class="rounded-lg border border-line bg-white px-4 py-3 text-sm font-bold text-muted">Restaurar</button>
               <button id="home-save" class="rounded-lg bg-violet px-5 py-3 text-sm font-bold text-white">Guardar inicio</button>
             </div>
           </div>
-          <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
-            <form id="home-form" class="grid gap-4 rounded-sm bg-white p-5 shadow-soft">
-              <h2 class="text-xl font-extrabold">Marca y hero</h2>
+          <div class="mb-5 flex flex-wrap gap-2">
+            <button class="editor-tab active rounded-full bg-white px-5 py-3 text-sm font-extrabold text-muted" data-home-tab="hero" type="button"><span class="material-symbols-outlined align-middle text-base">auto_awesome</span> Hero</button>
+            <button class="editor-tab rounded-full bg-white px-5 py-3 text-sm font-extrabold text-muted" data-home-tab="sections" type="button"><span class="material-symbols-outlined align-middle text-base">view_quilt</span> Secciones</button>
+            <button class="editor-tab rounded-full bg-white px-5 py-3 text-sm font-extrabold text-muted" data-home-tab="bundles" type="button"><span class="material-symbols-outlined align-middle text-base">redeem</span> Bundles</button>
+          </div>
+          <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_390px]">
+            <div class="grid gap-6">
+            <form id="home-form" class="editor-panel active field-surface gap-4 rounded-lg admin-card p-5" data-home-panel="hero">
+              <div class="flex items-center justify-between gap-4">
+                <div>
+                  <h2 class="text-xl font-extrabold">Marca y hero</h2>
+                  <p class="text-sm text-muted">La primera pantalla que ve el cliente.</p>
+                </div>
+                <span class="material-symbols-outlined rounded-full bg-violet/10 p-3 text-violet">home_app_logo</span>
+              </div>
               <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Nombre de marca<input id="home-brand-name" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
               <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Titulo del navegador<input id="home-site-title" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
               <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Eyebrow<input id="home-hero-eyebrow" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
@@ -174,8 +205,14 @@
               </div>
             </form>
 
-            <form class="grid gap-4 rounded-sm bg-white p-5 shadow-soft">
-              <h2 class="text-xl font-extrabold">Secciones y destacados</h2>
+            <form class="editor-panel field-surface gap-4 rounded-lg admin-card p-5" data-home-panel="sections">
+              <div class="flex items-center justify-between gap-4">
+                <div>
+                  <h2 class="text-xl font-extrabold">Secciones y destacados</h2>
+                  <p class="text-sm text-muted">Novedades, producto destacado y tarjeta secundaria.</p>
+                </div>
+                <span class="material-symbols-outlined rounded-full bg-blue/10 p-3 text-blue">dashboard_customize</span>
+              </div>
               <div class="grid gap-4 md:grid-cols-2">
                 <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Etiqueta novedades<input id="home-new-eyebrow" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
                 <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Titulo novedades<input id="home-new-title" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
@@ -196,8 +233,14 @@
               <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Descripcion bundles<textarea id="home-bundles-body" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" rows="3"></textarea></label>
             </form>
 
-            <form class="grid gap-4 rounded-sm bg-white p-5 shadow-soft xl:col-span-2">
-              <h2 class="text-xl font-extrabold">Bundles y footer</h2>
+            <form class="editor-panel field-surface gap-4 rounded-lg admin-card p-5" data-home-panel="bundles">
+              <div class="flex items-center justify-between gap-4">
+                <div>
+                  <h2 class="text-xl font-extrabold">Bundles y footer</h2>
+                  <p class="text-sm text-muted">Colecciones, precios visibles y cierre de pagina.</p>
+                </div>
+                <span class="material-symbols-outlined rounded-full bg-green/10 p-3 text-green">tune</span>
+              </div>
               <div class="grid gap-4 md:grid-cols-3">
                 <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Bundle 1<input id="home-bundle-one-title" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
                 <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Precio 1<input id="home-bundle-one-price" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
@@ -214,20 +257,49 @@
                 <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Footer texto<input id="home-footer-copy" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
               </div>
             </form>
+            </div>
+            <aside class="admin-card sticky top-5 h-fit rounded-lg p-4">
+              <div class="mb-4 flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-extrabold uppercase tracking-widest text-muted">Vista previa</p>
+                  <h2 class="text-lg font-extrabold">Mobile home</h2>
+                </div>
+                <button id="home-preview-refresh" class="rounded-full bg-shell p-2 text-muted" type="button"><span class="material-symbols-outlined text-lg">refresh</span></button>
+              </div>
+              <div id="home-live-preview" class="preview-phone"></div>
+            </aside>
           </div>
         </section>
 
         <section id="view-orders" class="view">
-          <div class="mb-5 flex items-center justify-between">
+          <div class="mb-5 flex flex-col justify-between gap-4 md:flex-row md:items-end">
             <div><h1 class="text-2xl font-extrabold">Pedidos y envios</h1><p class="text-sm text-muted">Actualiza estados, transportista y tracking.</p></div>
+            <div class="flex flex-wrap gap-2">
+              <input id="order-search" class="rounded-full border-line bg-white px-4 py-2 text-sm" placeholder="Buscar pedido, cliente o tracking" />
+              <select id="order-status-filter" class="rounded-full border-line bg-white px-4 py-2 text-sm">
+                <option value="">Todos los estados</option>
+                <option>Recibido</option>
+                <option>Preparando</option>
+                <option>Enviado</option>
+                <option>En ruta</option>
+                <option>Entregado</option>
+              </select>
+            </div>
           </div>
+          <div id="order-kanban-summary" class="mb-5 grid gap-3 md:grid-cols-5"></div>
           <div id="admin-orders" class="grid gap-4"></div>
         </section>
 
         <section id="view-products" class="view">
           <div class="grid grid-cols-1 gap-6 xl:grid-cols-[420px_1fr]">
-            <form id="product-form" class="grid gap-3 rounded-sm bg-white p-5 shadow-soft">
-              <h2 class="text-xl font-extrabold">Producto</h2>
+            <form id="product-form" class="field-surface grid gap-3 rounded-lg admin-card p-5">
+              <div class="flex items-center justify-between gap-4">
+                <div>
+                  <h2 class="text-xl font-extrabold">Producto</h2>
+                  <p class="text-sm text-muted">Crea productos que aparecen en la tienda.</p>
+                </div>
+                <span class="material-symbols-outlined rounded-full bg-violet/10 p-3 text-violet">add_shopping_cart</span>
+              </div>
               <input type="hidden" id="product-id" />
               <input id="product-name" class="rounded-lg border-line" placeholder="Nombre" required />
               <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Categoria
@@ -246,8 +318,18 @@
               <button class="rounded-lg bg-violet px-5 py-3 font-bold text-white">Guardar producto</button>
               <button type="button" id="product-reset" class="rounded-lg border border-line px-5 py-3 font-bold text-muted">Limpiar</button>
             </form>
-            <div class="rounded-sm bg-white p-5 shadow-soft">
-              <h2 class="text-xl font-extrabold">Inventario</h2>
+            <div class="rounded-lg admin-card p-5">
+              <div class="flex flex-col justify-between gap-3 md:flex-row md:items-end">
+                <div>
+                  <h2 class="text-xl font-extrabold">Inventario</h2>
+                  <p class="text-sm text-muted">Filtra, edita y revisa stock.</p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  <input id="product-admin-search" class="rounded-full border-line bg-white px-4 py-2 text-sm" placeholder="Buscar productos" />
+                  <select id="product-admin-category-filter" class="rounded-full border-line bg-white px-4 py-2 text-sm"></select>
+                </div>
+              </div>
+              <div id="product-insights" class="mt-5 grid gap-3 md:grid-cols-3"></div>
               <div id="admin-categories" class="mt-5 flex flex-wrap gap-2"></div>
               <div id="admin-products" class="mt-5 grid gap-3"></div>
             </div>
@@ -304,6 +386,8 @@
               <div class="mt-5 grid gap-3 text-sm font-semibold text-muted">
                 <a class="rounded-lg border border-line px-4 py-3 hover:text-violet" href="./supabase-schema.sql">supabase-schema.sql</a>
                 <a class="rounded-lg border border-line px-4 py-3 hover:text-violet" href="./supabase-seed.sql">supabase-seed.sql</a>
+                <a class="rounded-lg border border-line px-4 py-3 hover:text-violet" href="./supabase-site-content.sql">supabase-site-content.sql</a>
+                <a class="rounded-lg border border-line px-4 py-3 hover:text-violet" href="./supabase-realtime-sync.sql">supabase-realtime-sync.sql</a>
                 <a class="rounded-lg border border-line px-4 py-3 hover:text-violet" href="./SUPABASE_SETUP.md">SUPABASE_SETUP.md</a>
               </div>
             </div>
@@ -427,6 +511,11 @@
     let lastAdminActivityWrite = 0;
     let adminRealtimeChannel = null;
     let adminSyncInterval = null;
+    let orderSearchTerm = "";
+    let orderStatusFilter = "";
+    let productAdminSearchTerm = "";
+    let productAdminCategoryFilter = "";
+    let activeHomePanel = "hero";
 
     function getAdminLastActivity() {
       const value = Number(localStorage.getItem(ADMIN_ACTIVITY_STORAGE_KEY) || 0);
@@ -486,6 +575,7 @@
         .on("postgres_changes", { event: "*", schema: "public", table: "order_items" }, () => pullFromSupabase(false))
         .on("postgres_changes", { event: "*", schema: "public", table: "shipment_events" }, () => pullFromSupabase(false))
         .on("postgres_changes", { event: "*", schema: "public", table: "payments" }, () => pullFromSupabase(false))
+        .on("postgres_changes", { event: "*", schema: "public", table: "site_content" }, () => pullFromSupabase(false))
         .subscribe();
     }
 
@@ -495,9 +585,10 @@
       try { return { ...defaultHomeContent, ...JSON.parse(saved) }; } catch { return { ...defaultHomeContent }; }
     }
 
-    function persistHomeContent() {
+    async function persistHomeContent() {
       localStorage.setItem(HOME_STORAGE_KEY, JSON.stringify(homeContent));
       renderHomeEditor();
+      await saveHomeContentToSupabase();
       showToast("Inicio actualizado");
     }
 
@@ -711,48 +802,16 @@
     }
 
     function renderHomeEditor() {
-      const fieldMap = {
-        brandName: "home-brand-name",
-        siteTitle: "home-site-title",
-        heroEyebrow: "home-hero-eyebrow",
-        heroTitle: "home-hero-title",
-        heroBody: "home-hero-body",
-        heroCta: "home-hero-cta",
-        heroImage: "home-hero-image",
-        batchLabel: "home-batch-label",
-        batchCopy: "home-batch-copy",
-        newEyebrow: "home-new-eyebrow",
-        newTitle: "home-new-title",
-        newLink: "home-new-link",
-        featuredBadge: "home-featured-badge",
-        featuredTitle: "home-featured-title",
-        featuredCta: "home-featured-cta",
-        secondaryTitle: "home-secondary-title",
-        secondaryBody: "home-secondary-body",
-        secondaryPrice: "home-secondary-price",
-        bundlesEyebrow: "home-bundles-eyebrow",
-        bundlesTitle: "home-bundles-title",
-        bundlesBody: "home-bundles-body",
-        bundleOneTitle: "home-bundle-one-title",
-        bundleOnePrice: "home-bundle-one-price",
-        bundleOneBody: "home-bundle-one-body",
-        bundleTwoTitle: "home-bundle-two-title",
-        bundleTwoPrice: "home-bundle-two-price",
-        bundleTwoBody: "home-bundle-two-body",
-        bundleThreeTitle: "home-bundle-three-title",
-        bundleThreePrice: "home-bundle-three-price",
-        bundleThreeBody: "home-bundle-three-body",
-        footerBrand: "home-footer-brand",
-        footerCopy: "home-footer-copy"
-      };
-      Object.entries(fieldMap).forEach(([key, id]) => {
+      Object.entries(homeFieldMap()).forEach(([key, id]) => {
         const field = document.getElementById(id);
         if (field && document.activeElement !== field) field.value = homeContent[key] || "";
       });
+      renderHomePanels();
+      renderHomePreview();
     }
 
-    function collectHomeContent() {
-      const fieldMap = {
+    function homeFieldMap() {
+      return {
         brandName: "home-brand-name",
         siteTitle: "home-site-title",
         heroEyebrow: "home-hero-eyebrow",
@@ -786,18 +845,81 @@
         footerBrand: "home-footer-brand",
         footerCopy: "home-footer-copy"
       };
-      const next = {};
-      Object.entries(fieldMap).forEach(([key, id]) => {
-        next[key] = document.getElementById(id)?.value || "";
-      });
-      homeContent = { ...defaultHomeContent, ...next };
-      persistHomeContent();
     }
 
-    function resetHomeContent() {
+    function readHomeDraft() {
+      const next = {};
+      Object.entries(homeFieldMap()).forEach(([key, id]) => {
+        next[key] = document.getElementById(id)?.value || homeContent[key] || "";
+      });
+      return { ...defaultHomeContent, ...homeContent, ...next };
+    }
+
+    async function collectHomeContent() {
+      homeContent = readHomeDraft();
+      await persistHomeContent();
+    }
+
+    function renderHomePanels() {
+      document.querySelectorAll(".editor-tab").forEach(tab => tab.classList.toggle("active", tab.dataset.homeTab === activeHomePanel));
+      document.querySelectorAll(".editor-panel").forEach(panel => panel.classList.toggle("active", panel.dataset.homePanel === activeHomePanel));
+    }
+
+    function renderHomePreview() {
+      const preview = document.getElementById("home-live-preview");
+      if (!preview) return;
+      const draft = readHomeDraft();
+      preview.innerHTML = `
+        <div class="relative min-h-[330px] bg-ink text-white">
+          <img class="absolute inset-0 h-full w-full object-cover opacity-55" src="${escapeHtml(draft.heroImage || images.skin)}" alt="Preview"/>
+          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+          <div class="relative z-10 flex min-h-[330px] flex-col justify-end p-5">
+            <p class="mb-2 w-fit rounded-full bg-white/20 px-3 py-1 text-[9px] font-extrabold uppercase tracking-widest">${escapeHtml(draft.heroEyebrow)}</p>
+            <h3 class="text-3xl font-extrabold leading-none tracking-tight">${escapeHtml(draft.heroTitle).replace(/\n/g, "<br>")}</h3>
+            <p class="mt-3 text-xs leading-5 text-white/75">${escapeHtml(draft.heroBody)}</p>
+            <button class="mt-4 w-fit rounded-xl bg-white px-4 py-3 text-xs font-extrabold text-ink">${escapeHtml(draft.heroCta)}</button>
+          </div>
+        </div>
+        <div class="p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-[9px] font-extrabold uppercase tracking-widest text-violet">${escapeHtml(draft.newEyebrow)}</p>
+              <h4 class="text-lg font-extrabold">${escapeHtml(draft.newTitle)}</h4>
+            </div>
+            <span class="text-[10px] font-bold text-muted">${escapeHtml(draft.newLink)}</span>
+          </div>
+          <div class="mt-4 grid grid-cols-2 gap-3">
+            <div class="rounded-xl bg-white p-3 shadow-sm">
+              <p class="text-[9px] font-bold uppercase tracking-widest text-violet">${escapeHtml(draft.featuredBadge)}</p>
+              <p class="mt-1 text-sm font-extrabold leading-tight">${escapeHtml(draft.featuredTitle)}</p>
+              <p class="mt-3 text-xs font-bold text-ink">${escapeHtml(draft.featuredCta)}</p>
+            </div>
+            <div class="rounded-xl bg-white p-3 shadow-sm">
+              <p class="text-sm font-extrabold leading-tight">${escapeHtml(draft.secondaryTitle)}</p>
+              <p class="mt-2 text-[11px] text-muted">${escapeHtml(draft.secondaryBody)}</p>
+              <p class="mt-3 text-sm font-extrabold">${escapeHtml(draft.secondaryPrice)}</p>
+            </div>
+          </div>
+          <div class="mt-4 rounded-xl bg-ink p-4 text-white">
+            <p class="text-[9px] font-extrabold uppercase tracking-widest text-white/60">${escapeHtml(draft.bundlesEyebrow)}</p>
+            <h4 class="mt-1 text-xl font-extrabold">${escapeHtml(draft.bundlesTitle)}</h4>
+            <p class="mt-2 text-xs leading-5 text-white/70">${escapeHtml(draft.bundlesBody)}</p>
+          </div>
+        </div>
+      `;
+    }
+
+    function switchHomePanel(id) {
+      activeHomePanel = id || "hero";
+      renderHomePanels();
+      renderHomePreview();
+    }
+
+    async function resetHomeContent() {
       homeContent = { ...defaultHomeContent };
       localStorage.removeItem(HOME_STORAGE_KEY);
       renderHomeEditor();
+      await saveHomeContentToSupabase();
       showToast("Inicio restaurado");
     }
 
@@ -818,15 +940,52 @@
 
     function renderProducts() {
       const isCustomerSession = currentUser && !isCurrentAdmin();
+      const term = productAdminSearchTerm.toLowerCase();
+      const filtered = state.products.filter(product => {
+        const matchesTerm = !term || [product.name, product.category, product.description].join(" ").toLowerCase().includes(term);
+        const matchesCategory = !productAdminCategoryFilter || product.category === productAdminCategoryFilter;
+        return matchesTerm && matchesCategory;
+      });
+      const lowStock = state.products.filter(product => Number(product.stock || 0) <= 5).length;
+      const totalValue = state.products.reduce((sum, product) => sum + Number(product.price || 0) * Number(product.stock || 0), 0);
+      const insight = document.getElementById("product-insights");
+      if (insight) {
+        insight.innerHTML = `
+          <div class="rounded-xl bg-shell p-4"><p class="text-xs font-extrabold uppercase tracking-widest text-muted">Productos</p><p class="mt-1 text-2xl font-extrabold">${state.products.length}</p></div>
+          <div class="rounded-xl bg-shell p-4"><p class="text-xs font-extrabold uppercase tracking-widest text-muted">Stock bajo</p><p class="mt-1 text-2xl font-extrabold text-coral">${lowStock}</p></div>
+          <div class="rounded-xl bg-shell p-4"><p class="text-xs font-extrabold uppercase tracking-widest text-muted">Valor inventario</p><p class="mt-1 text-2xl font-extrabold">${money(totalValue)}</p></div>
+        `;
+      }
+      const filterSelect = document.getElementById("product-admin-category-filter");
+      if (filterSelect && document.activeElement !== filterSelect) {
+        const names = categoryNames();
+        filterSelect.innerHTML = `<option value="">Todas las categorias</option>${names.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join("")}`;
+        filterSelect.value = names.includes(productAdminCategoryFilter) ? productAdminCategoryFilter : "";
+      }
       document.querySelectorAll("#product-form input, #product-form select, #product-form textarea, #product-form button").forEach(field => field.disabled = isCustomerSession);
-      document.getElementById("admin-products").innerHTML = state.products.map(product => `
-        <div class="rounded-lg border border-line p-4">
-          <div class="flex justify-between gap-3">
-            <div><p class="font-bold">${product.name}</p><p class="text-xs text-muted">${product.category} - ${money(product.price)} - Stock ${product.stock}</p></div>
-            ${isCustomerSession ? "" : `<button class="edit-product text-sm font-bold text-violet" data-id="${product.id}">Editar</button>`}
+      document.getElementById("admin-products").innerHTML = filtered.map(product => {
+        const stock = Number(product.stock || 0);
+        const stockTone = stock <= 0 ? "bg-coral/10 text-coral" : stock <= 5 ? "bg-coral/10 text-coral" : "bg-green/10 text-green";
+        return `
+        <div class="group rounded-xl border border-line bg-white p-4 transition-all hover:-translate-y-0.5 hover:shadow-soft">
+          <div class="grid gap-4 md:grid-cols-[96px_1fr_auto] md:items-center">
+            <img class="h-24 w-24 rounded-xl object-cover bg-shell" src="${escapeHtml(product.image || images.skin)}" alt="${escapeHtml(product.name)}"/>
+            <div>
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="status-pill bg-violet/10 text-violet">${escapeHtml(product.category)}</span>
+                <span class="status-pill ${stockTone}">Stock ${stock}</span>
+              </div>
+              <p class="mt-3 text-lg font-extrabold">${escapeHtml(product.name)}</p>
+              <p class="mt-1 line-clamp-2 text-sm text-muted">${escapeHtml(product.description || "Sin descripcion")}</p>
+            </div>
+            <div class="flex flex-col items-start gap-2 md:items-end">
+              <p class="text-xl font-extrabold">${money(product.price)}</p>
+              ${isCustomerSession ? "" : `<button class="edit-product rounded-full bg-ink px-4 py-2 text-xs font-extrabold uppercase tracking-widest text-white" data-id="${escapeHtml(product.id)}">Editar</button>`}
+            </div>
           </div>
         </div>
-      `).join("");
+      `;
+      }).join("") || `<div class="rounded-xl border border-dashed border-line p-8 text-center text-sm text-muted">No hay productos con ese filtro.</div>`;
     }
 
     function renderCategoryControls() {
@@ -864,7 +1023,22 @@
     }
 
     function renderOrders() {
-      const visibleOrders = currentUser && !isCurrentAdmin() ? state.orders.filter(order => order.customerId === currentUser.id) : state.orders;
+      const sourceOrders = currentUser && !isCurrentAdmin() ? state.orders.filter(order => order.customerId === currentUser.id) : state.orders;
+      const summary = document.getElementById("order-kanban-summary");
+      if (summary) {
+        summary.innerHTML = orderStatuses.map(status => {
+          const count = sourceOrders.filter(order => order.status === status).length;
+          return `<button class="order-summary-filter rounded-xl bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5" data-status="${escapeHtml(status)}" type="button"><p class="text-xs font-extrabold uppercase tracking-widest text-muted">${escapeHtml(status)}</p><p class="mt-1 text-2xl font-extrabold">${count}</p></button>`;
+        }).join("");
+      }
+      const term = orderSearchTerm.toLowerCase();
+      const visibleOrders = sourceOrders.filter(order => {
+        const customer = customerById(order.customerId);
+        const haystack = [order.id, order.status, order.paymentStatus, order.trackingCode, order.carrier, customer.name, customer.email, customer.phone, customer.address].join(" ").toLowerCase();
+        const matchesTerm = !term || haystack.includes(term);
+        const matchesStatus = !orderStatusFilter || order.status === orderStatusFilter;
+        return matchesTerm && matchesStatus;
+      });
       document.getElementById("admin-orders").innerHTML = visibleOrders.map(order => {
         const customer = customerById(order.customerId);
         const trackingCode = order.trackingCode || "";
@@ -1140,6 +1314,11 @@
       if (products) state.products = products.map(product => ({ id: product.id, name: product.name, category: product.category, description: product.description || "", price: Number(product.price), stock: Number(product.stock), image: product.image_url || images.skin }));
       const { data: categories } = await supabaseClient.from("categories").select("id,name,slug,description,image_url,is_active").eq("is_active", true).order("name", { ascending: true });
       if (categories) state.categories = categories.map(category => ({ id: category.id, name: category.name, slug: category.slug, description: category.description || "", image: category.image_url || images.skin, isActive: category.is_active !== false }));
+      const { data: pageHome } = await supabaseClient.from("site_content").select("content").eq("key", "page_home").maybeSingle();
+      if (pageHome?.content) {
+        homeContent = { ...defaultHomeContent, ...pageHome.content };
+        localStorage.setItem(HOME_STORAGE_KEY, JSON.stringify(homeContent));
+      }
       if (currentUser) {
         const { data: customers } = await supabaseClient.from("customer_profiles").select("id,full_name,email,phone,house_number,street,sector,province,city,address_reference,shipping_address").order("created_at", { ascending: false });
         if (customers) state.customers = customers.map(customer => ({ id: customer.id, name: customer.full_name, email: customer.email, phone: customer.phone || "", houseNumber: customer.house_number || "", street: customer.street || "", sector: customer.sector || "", province: customer.province || "", city: customer.city || "", reference: customer.address_reference || "", address: customer.shipping_address || "" }));
@@ -1159,6 +1338,16 @@
     async function saveCategoryToSupabase(category) {
       if (!supabaseClient || !currentUser) return;
       const { error } = await supabaseClient.from("categories").upsert({ id: category.id, name: category.name, slug: category.slug || slugify(category.name), description: category.description || "", image_url: category.image || images.skin, is_active: true });
+      if (error) showToast(error.message);
+    }
+
+    async function saveHomeContentToSupabase() {
+      if (!supabaseClient || !currentUser) return;
+      const { error } = await supabaseClient.from("site_content").upsert({
+        key: "page_home",
+        content: homeContent,
+        updated_by: currentUser.id
+      });
       if (error) showToast(error.message);
     }
 
@@ -1233,11 +1422,39 @@
       if (printLabel) printShippingLabel(printLabel.dataset.id);
       const generateTracking = event.target.closest(".generate-tracking");
       if (generateTracking) generateTrackingForOrder(generateTracking.dataset.id);
+      const homeTab = event.target.closest(".editor-tab");
+      if (homeTab) switchHomePanel(homeTab.dataset.homeTab);
+      const orderSummary = event.target.closest(".order-summary-filter");
+      if (orderSummary) {
+        orderStatusFilter = orderStatusFilter === orderSummary.dataset.status ? "" : orderSummary.dataset.status;
+        const filter = document.getElementById("order-status-filter");
+        if (filter) filter.value = orderStatusFilter;
+        renderOrders();
+      }
     });
     document.addEventListener("change", event => {
       if (event.target.classList.contains("order-status")) updateOrder(event.target.dataset.id, "status", event.target.value);
       if (event.target.classList.contains("order-carrier")) updateOrder(event.target.dataset.id, "carrier", event.target.value);
       if (event.target.id === "customer-province") populateCitySelect("customer-province", "customer-city");
+      if (event.target.id === "order-status-filter") {
+        orderStatusFilter = event.target.value;
+        renderOrders();
+      }
+      if (event.target.id === "product-admin-category-filter") {
+        productAdminCategoryFilter = event.target.value;
+        renderProducts();
+      }
+    });
+    document.addEventListener("input", event => {
+      if (Object.values(homeFieldMap()).includes(event.target.id)) renderHomePreview();
+      if (event.target.id === "order-search") {
+        orderSearchTerm = event.target.value.trim();
+        renderOrders();
+      }
+      if (event.target.id === "product-admin-search") {
+        productAdminSearchTerm = event.target.value.trim();
+        renderProducts();
+      }
     });
 
     document.getElementById("product-form").addEventListener("submit", saveProduct);
@@ -1245,6 +1462,7 @@
     document.getElementById("customer-form").addEventListener("submit", saveCustomer);
     document.getElementById("home-save").addEventListener("click", collectHomeContent);
     document.getElementById("home-reset").addEventListener("click", resetHomeContent);
+    document.getElementById("home-preview-refresh").addEventListener("click", renderHomePreview);
     document.getElementById("auth-login").addEventListener("click", loginSupabase);
     document.getElementById("auth-signup").addEventListener("click", signupSupabase);
     document.getElementById("auth-logout").addEventListener("click", logoutSupabase);

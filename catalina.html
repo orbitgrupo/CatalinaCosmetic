@@ -1309,7 +1309,7 @@
 </div>
 
 <script>
-  (() => {
+  (async () => {
     const setupMobileScroller = () => {
       const rows = document.querySelectorAll('.mobile-category-row, .mobile-product-row');
 
@@ -1359,11 +1359,26 @@
     setupMobileScroller();
 
     const HOME_STORAGE_KEY = 'catalina-home-content-v1';
-    const saved = localStorage.getItem(HOME_STORAGE_KEY);
-    if (!saved) return;
-
-    let content;
-    try { content = JSON.parse(saved); } catch { return; }
+    let content = null;
+    const config = window.__CATALINA_CONFIG__ || {};
+    const url = window.CATALINA_SUPABASE_URL || config.supabaseUrl || "";
+    const key = window.CATALINA_SUPABASE_PUBLISHABLE_KEY || config.supabasePublishableKey || "";
+    if (url && key && window.supabase) {
+      try {
+        const client = window.supabase.createClient(url, key, {
+          auth: { storageKey: 'catalina-home-reader-v1', persistSession: true, autoRefreshToken: true }
+        });
+        const { data } = await client.from("site_content").select("content").eq("key", "page_home").maybeSingle();
+        if (data?.content) content = data.content;
+      } catch (error) {
+        console.warn("No se pudo cargar la home desde Supabase", error);
+      }
+    }
+    if (!content) {
+      const saved = localStorage.getItem(HOME_STORAGE_KEY);
+      if (!saved) return;
+      try { content = JSON.parse(saved); } catch { return; }
+    }
 
     const home = document.getElementById('page-home');
     if (!home) return;
