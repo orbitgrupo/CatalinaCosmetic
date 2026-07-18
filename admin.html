@@ -311,7 +311,15 @@
                 <input id="category-description" class="rounded-lg border-line text-sm" placeholder="Descripcion para la pagina de categoria" />
                 <button type="button" id="category-create" class="rounded-lg border border-line px-4 py-2 text-sm font-bold text-violet">Crear categoria</button>
               </div>
-              <input id="product-price" class="rounded-lg border-line" type="number" min="0" step="0.01" placeholder="Precio" required />
+              <div class="grid gap-3 md:grid-cols-2">
+                <input id="product-sku" class="rounded-lg border-line" placeholder="SKU / codigo interno" />
+                <input id="product-low-stock" class="rounded-lg border-line" type="number" min="0" step="1" placeholder="Aviso stock bajo" />
+              </div>
+              <div class="grid gap-3 md:grid-cols-3">
+                <input id="product-price" class="rounded-lg border-line" type="number" min="0" step="0.01" placeholder="Precio" required />
+                <input id="product-compare-price" class="rounded-lg border-line" type="number" min="0" step="0.01" placeholder="Precio antes" />
+                <input id="product-discount" class="rounded-lg border-line" type="number" min="0" max="100" step="1" placeholder="Descuento %" />
+              </div>
               <input id="product-stock" class="rounded-lg border-line" type="number" min="0" step="1" placeholder="Inventario" required />
               <div class="grid gap-3 rounded-xl border border-dashed border-line bg-shell p-4">
                 <div class="flex items-center justify-between gap-3">
@@ -323,8 +331,27 @@
                 </div>
                 <input id="product-image-file" class="rounded-lg border-line bg-white text-sm" type="file" accept="image/*" multiple />
                 <div id="product-image-preview" class="grid grid-cols-3 gap-2"></div>
+                <div>
+                  <p class="mb-2 text-xs font-extrabold uppercase tracking-widest text-muted">Galeria guardada</p>
+                  <div id="product-gallery-manager" class="grid gap-2"></div>
+                </div>
               </div>
               <input id="product-image" class="rounded-lg border-line" placeholder="URL de imagen principal" />
+              <div class="grid gap-3 rounded-xl border border-line bg-white p-4">
+                <div>
+                  <p class="text-xs font-extrabold uppercase tracking-widest text-muted">Variantes</p>
+                  <p class="text-xs text-muted">Ej: Tamano 30 ml, Aroma coco, Kit completo.</p>
+                </div>
+                <div class="grid gap-2 md:grid-cols-2">
+                  <input id="variant-name" class="rounded-lg border-line text-sm" placeholder="Tipo: Tamano" />
+                  <input id="variant-value" class="rounded-lg border-line text-sm" placeholder="Valor: 30 ml" />
+                  <input id="variant-sku" class="rounded-lg border-line text-sm" placeholder="SKU variante" />
+                  <input id="variant-price-delta" class="rounded-lg border-line text-sm" type="number" step="0.01" placeholder="Ajuste precio" />
+                  <input id="variant-stock" class="rounded-lg border-line text-sm" type="number" min="0" step="1" placeholder="Stock variante" />
+                  <button id="variant-add" class="rounded-lg bg-ink px-4 py-2 text-sm font-bold text-white" type="button">Agregar variante</button>
+                </div>
+                <div id="product-variants-builder" class="grid gap-2"></div>
+              </div>
               <textarea id="product-description" class="rounded-lg border-line" rows="4" placeholder="Descripcion"></textarea>
               <button class="rounded-lg bg-violet px-5 py-3 font-bold text-white">Guardar producto</button>
               <button type="button" id="product-reset" class="rounded-lg border border-line px-5 py-3 font-bold text-muted">Limpiar</button>
@@ -399,6 +426,7 @@
                 <a class="rounded-lg border border-line px-4 py-3 hover:text-violet" href="./supabase-seed.sql">supabase-seed.sql</a>
                 <a class="rounded-lg border border-line px-4 py-3 hover:text-violet" href="./supabase-site-content.sql">supabase-site-content.sql</a>
                 <a class="rounded-lg border border-line px-4 py-3 hover:text-violet" href="./supabase-product-images.sql">supabase-product-images.sql</a>
+                <a class="rounded-lg border border-line px-4 py-3 hover:text-violet" href="./supabase-product-management.sql">supabase-product-management.sql</a>
                 <a class="rounded-lg border border-line px-4 py-3 hover:text-violet" href="./supabase-realtime-sync.sql">supabase-realtime-sync.sql</a>
                 <a class="rounded-lg border border-line px-4 py-3 hover:text-violet" href="./SUPABASE_SETUP.md">SUPABASE_SETUP.md</a>
               </div>
@@ -529,6 +557,8 @@
     let productAdminSearchTerm = "";
     let productAdminCategoryFilter = "";
     let activeHomePanel = "hero";
+    let editingProductImages = [];
+    let editingProductVariants = [];
 
     function getAdminLastActivity() {
       const value = Number(localStorage.getItem(ADMIN_ACTIVITY_STORAGE_KEY) || 0);
@@ -583,6 +613,7 @@
       adminRealtimeChannel = supabaseClient.channel("catalina-admin-sync")
         .on("postgres_changes", { event: "*", schema: "public", table: "products" }, () => pullFromSupabase(false))
         .on("postgres_changes", { event: "*", schema: "public", table: "product_images" }, () => pullFromSupabase(false))
+        .on("postgres_changes", { event: "*", schema: "public", table: "product_variants" }, () => pullFromSupabase(false))
         .on("postgres_changes", { event: "*", schema: "public", table: "categories" }, () => pullFromSupabase(false))
         .on("postgres_changes", { event: "*", schema: "public", table: "customer_profiles" }, () => pullFromSupabase(false))
         .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => pullFromSupabase(false))
@@ -960,7 +991,7 @@
         const matchesCategory = !productAdminCategoryFilter || product.category === productAdminCategoryFilter;
         return matchesTerm && matchesCategory;
       });
-      const lowStock = state.products.filter(product => Number(product.stock || 0) <= 5).length;
+      const lowStock = state.products.filter(product => Number(product.stock || 0) <= Number(product.lowStockThreshold || 5)).length;
       const totalValue = state.products.reduce((sum, product) => sum + Number(product.price || 0) * Number(product.stock || 0), 0);
       const insight = document.getElementById("product-insights");
       if (insight) {
@@ -979,7 +1010,12 @@
       document.querySelectorAll("#product-form input, #product-form select, #product-form textarea, #product-form button").forEach(field => field.disabled = isCustomerSession);
       document.getElementById("admin-products").innerHTML = filtered.map(product => {
         const stock = Number(product.stock || 0);
-        const stockTone = stock <= 0 ? "bg-coral/10 text-coral" : stock <= 5 ? "bg-coral/10 text-coral" : "bg-green/10 text-green";
+        const threshold = Number(product.lowStockThreshold || 5);
+        const stockTone = stock <= 0 ? "bg-coral/10 text-coral" : stock <= threshold ? "bg-coral/10 text-coral" : "bg-green/10 text-green";
+        const galleryCount = Number(product.galleryItems?.length || product.gallery?.length || 0);
+        const variantCount = Number(product.variants?.length || 0);
+        const discount = Number(product.discountPercent || 0);
+        const compareAt = Number(product.compareAtPrice || 0);
         return `
         <div class="group rounded-xl border border-line bg-white p-4 transition-all hover:-translate-y-0.5 hover:shadow-soft">
           <div class="grid gap-4 md:grid-cols-[96px_1fr_auto] md:items-center">
@@ -988,12 +1024,17 @@
               <div class="flex flex-wrap items-center gap-2">
                 <span class="status-pill bg-violet/10 text-violet">${escapeHtml(product.category)}</span>
                 <span class="status-pill ${stockTone}">Stock ${stock}</span>
+                ${discount ? `<span class="status-pill bg-green/10 text-green">${discount}% off</span>` : ""}
+                ${galleryCount ? `<span class="status-pill bg-shell text-muted">${galleryCount} fotos</span>` : ""}
+                ${variantCount ? `<span class="status-pill bg-shell text-muted">${variantCount} variantes</span>` : ""}
               </div>
               <p class="mt-3 text-lg font-extrabold">${escapeHtml(product.name)}</p>
+              <p class="mt-1 text-xs font-bold uppercase tracking-widest text-muted">${escapeHtml(product.sku || "Sin SKU")} - Aviso stock ${threshold}</p>
               <p class="mt-1 line-clamp-2 text-sm text-muted">${escapeHtml(product.description || "Sin descripcion")}</p>
             </div>
             <div class="flex flex-col items-start gap-2 md:items-end">
               <p class="text-xl font-extrabold">${money(product.price)}</p>
+              ${compareAt > Number(product.price || 0) ? `<p class="text-xs font-bold text-muted line-through">${money(compareAt)}</p>` : ""}
               ${isCustomerSession ? "" : `<button class="edit-product rounded-full bg-ink px-4 py-2 text-xs font-extrabold uppercase tracking-widest text-white" data-id="${escapeHtml(product.id)}">Editar</button>`}
             </div>
           </div>
@@ -1150,6 +1191,122 @@
       preview.innerHTML = fileCards || urlCard || `<div class="col-span-3 rounded-lg border border-dashed border-line bg-white p-4 text-center text-xs font-bold uppercase tracking-widest text-muted">Sin imagen seleccionada</div>`;
     }
 
+    function renderProductGalleryManager() {
+      const list = document.getElementById("product-gallery-manager");
+      if (!list) return;
+      if (!editingProductImages.length) {
+        list.innerHTML = `<div class="rounded-lg border border-dashed border-line bg-white p-4 text-center text-xs font-bold uppercase tracking-widest text-muted">Sin fotos guardadas</div>`;
+        return;
+      }
+      list.innerHTML = editingProductImages.map((image, index) => `
+        <div class="grid grid-cols-[64px_1fr_auto] items-center gap-3 rounded-lg border border-line bg-white p-2">
+          <img class="h-16 w-16 rounded-lg object-cover bg-shell" src="${escapeHtml(image.imageUrl || image.image_url || image.url)}" alt="Foto ${index + 1}" />
+          <div>
+            <p class="text-sm font-bold">${index === 0 ? "Principal" : `Foto ${index + 1}`}</p>
+            <p class="truncate text-xs text-muted">${escapeHtml(image.altText || image.alt_text || image.storagePath || image.storage_path || "Imagen del producto")}</p>
+          </div>
+          <div class="flex gap-1">
+            <button class="gallery-move rounded-full border border-line p-2 text-muted" type="button" data-index="${index}" data-direction="-1" aria-label="Subir foto"><span class="material-symbols-outlined text-base">keyboard_arrow_up</span></button>
+            <button class="gallery-move rounded-full border border-line p-2 text-muted" type="button" data-index="${index}" data-direction="1" aria-label="Bajar foto"><span class="material-symbols-outlined text-base">keyboard_arrow_down</span></button>
+            <button class="gallery-delete rounded-full bg-coral/10 p-2 text-coral" type="button" data-index="${index}" aria-label="Borrar foto"><span class="material-symbols-outlined text-base">delete</span></button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function renderProductVariantsBuilder() {
+      const list = document.getElementById("product-variants-builder");
+      if (!list) return;
+      if (!editingProductVariants.length) {
+        list.innerHTML = `<div class="rounded-lg border border-dashed border-line bg-shell p-4 text-center text-xs font-bold uppercase tracking-widest text-muted">Sin variantes</div>`;
+        return;
+      }
+      list.innerHTML = editingProductVariants.map((variant, index) => `
+        <div class="grid gap-3 rounded-lg border border-line bg-shell p-3 md:grid-cols-[1fr_auto] md:items-center">
+          <div>
+            <p class="font-bold">${escapeHtml(variant.name || "Variante")}: ${escapeHtml(variant.value || "")}</p>
+            <p class="text-xs text-muted">SKU ${escapeHtml(variant.sku || "sin SKU")} - Stock ${Number(variant.stock || 0)} - Ajuste ${money(Number(variant.priceDelta || 0))}</p>
+          </div>
+          <button class="variant-delete rounded-full bg-coral/10 px-3 py-2 text-xs font-extrabold uppercase tracking-widest text-coral" type="button" data-index="${index}">Borrar</button>
+        </div>
+      `).join("");
+    }
+
+    async function persistProductImageOrder() {
+      const productId = document.getElementById("product-id")?.value;
+      if (!productId || !supabaseClient || !currentUser) return;
+      const updates = editingProductImages
+        .filter(image => image.id)
+        .map((image, index) => supabaseClient.from("product_images").update({ sort_order: index }).eq("id", image.id));
+      const results = await Promise.all(updates);
+      const failed = results.find(result => result.error);
+      if (failed) showToast(failed.error.message);
+      else {
+        const primaryUrl = editingProductImages[0]?.imageUrl || editingProductImages[0]?.image_url || "";
+        if (primaryUrl) {
+          await supabaseClient.from("products").update({ image_url: primaryUrl }).eq("id", productId);
+          const imageInput = document.getElementById("product-image");
+          if (imageInput) imageInput.value = primaryUrl;
+        }
+        await pullFromSupabase(false);
+      }
+    }
+
+    async function moveProductImage(index, direction) {
+      const nextIndex = index + direction;
+      if (nextIndex < 0 || nextIndex >= editingProductImages.length) return;
+      const next = [...editingProductImages];
+      [next[index], next[nextIndex]] = [next[nextIndex], next[index]];
+      editingProductImages = next;
+      renderProductGalleryManager();
+      await persistProductImageOrder();
+    }
+
+    async function deleteProductImage(index) {
+      const image = editingProductImages[index];
+      if (!image) return;
+      editingProductImages = editingProductImages.filter((_, itemIndex) => itemIndex !== index);
+      renderProductGalleryManager();
+      if (!supabaseClient || !currentUser || !image.id) return;
+      const { error } = await supabaseClient.from("product_images").delete().eq("id", image.id);
+      if (error) {
+        showToast(error.message);
+        await pullFromSupabase(false);
+        return;
+      }
+      const storagePath = image.storagePath || image.storage_path;
+      if (storagePath) await supabaseClient.storage.from(PRODUCT_IMAGE_BUCKET).remove([storagePath]);
+      await persistProductImageOrder();
+      showToast("Imagen borrada");
+    }
+
+    function addVariantFromForm() {
+      const name = document.getElementById("variant-name").value.trim();
+      const value = document.getElementById("variant-value").value.trim();
+      if (!name || !value) return showToast("Completa tipo y valor de variante");
+      editingProductVariants.push({
+        id: crypto.randomUUID(),
+        name,
+        value,
+        sku: document.getElementById("variant-sku").value.trim(),
+        priceDelta: Number(document.getElementById("variant-price-delta").value || 0),
+        stock: Number(document.getElementById("variant-stock").value || 0),
+        isActive: true
+      });
+      ["variant-name", "variant-value", "variant-sku", "variant-price-delta", "variant-stock"].forEach(id => document.getElementById(id).value = "");
+      renderProductVariantsBuilder();
+    }
+
+    function resetProductEditor() {
+      document.getElementById("product-form").reset();
+      document.getElementById("product-id").value = "";
+      editingProductImages = [];
+      editingProductVariants = [];
+      renderProductImagePreview([]);
+      renderProductGalleryManager();
+      renderProductVariantsBuilder();
+    }
+
     function storagePathForProduct(productId, file, index) {
       const extension = (file.name.split(".").pop() || "jpg").replace(/[^a-z0-9]/gi, "").toLowerCase() || "jpg";
       const cleanId = String(productId).replace(/[^a-z0-9-]/gi, "-");
@@ -1193,20 +1350,25 @@
         id,
         name: document.getElementById("product-name").value.trim(),
         category: createdCategory?.name || document.getElementById("product-category").value,
+        sku: document.getElementById("product-sku").value.trim(),
         price: Number(document.getElementById("product-price").value),
+        compareAtPrice: Number(document.getElementById("product-compare-price").value || 0),
+        discountPercent: Number(document.getElementById("product-discount").value || 0),
         stock: Number(document.getElementById("product-stock").value),
+        lowStockThreshold: Number(document.getElementById("product-low-stock").value || 5),
         image: imageUrl,
-        description: document.getElementById("product-description").value.trim()
+        description: document.getElementById("product-description").value.trim(),
+        galleryItems: editingProductImages,
+        gallery: editingProductImages.map(image => image.imageUrl || image.image_url || image.url).filter(Boolean),
+        variants: editingProductVariants
       };
       const index = state.products.findIndex(item => item.id === id);
       if (index >= 0) state.products[index] = product;
       else state.products.unshift(product);
       await saveProductToSupabase(product);
       if (uploadedImages.length) await saveProductImagesToSupabase(id, uploadedImages);
-      event.target.reset();
-      document.getElementById("product-id").value = "";
-      document.getElementById("category-description").value = "";
-      renderProductImagePreview([]);
+      await saveProductVariantsToSupabase(id, editingProductVariants);
+      resetProductEditor();
       persist();
       showToast(uploadedImages.length ? "Producto e imagenes guardados" : (createdCategory ? "Categoria y producto guardados" : "Producto guardado"));
     }
@@ -1252,12 +1414,38 @@
       document.getElementById("product-id").value = product.id;
       document.getElementById("product-name").value = product.name;
       document.getElementById("product-category").value = product.category;
+      document.getElementById("product-sku").value = product.sku || "";
       document.getElementById("product-price").value = product.price;
+      document.getElementById("product-compare-price").value = product.compareAtPrice || "";
+      document.getElementById("product-discount").value = product.discountPercent || "";
       document.getElementById("product-stock").value = product.stock;
+      document.getElementById("product-low-stock").value = product.lowStockThreshold || 5;
       document.getElementById("product-image").value = product.image;
       document.getElementById("product-description").value = product.description;
       document.getElementById("product-image-file").value = "";
+      editingProductImages = (product.galleryItems || []).map((image, index) => ({
+        id: image.id,
+        imageUrl: image.imageUrl || image.image_url || image.url,
+        storagePath: image.storagePath || image.storage_path || "",
+        altText: image.altText || image.alt_text || "",
+        sortOrder: Number(image.sortOrder ?? image.sort_order ?? index)
+      }));
+      if (!editingProductImages.length && product.image) {
+        editingProductImages = [{ id: "", imageUrl: product.image, storagePath: "", altText: product.name, sortOrder: 0 }];
+      }
+      editingProductVariants = (product.variants || []).map((variant, index) => ({
+        id: variant.id || crypto.randomUUID(),
+        name: variant.name || "",
+        value: variant.value || "",
+        sku: variant.sku || "",
+        priceDelta: Number(variant.priceDelta ?? variant.price_delta ?? 0),
+        stock: Number(variant.stock || 0),
+        isActive: variant.isActive ?? variant.is_active ?? true,
+        sortOrder: Number(variant.sortOrder ?? variant.sort_order ?? index)
+      }));
       renderProductImagePreview([]);
+      renderProductGalleryManager();
+      renderProductVariantsBuilder();
     }
 
     function fillCustomer(id) {
@@ -1376,8 +1564,15 @@
 
     async function pullFromSupabase(showMessage = true) {
       if (!supabaseClient) return;
-      const { data: products } = await supabaseClient.from("products").select("id,name,category,description,price,stock,image_url,is_active,product_images(image_url,sort_order)").eq("is_active", true).order("created_at", { ascending: false });
-      if (products) state.products = products.map(product => ({ id: product.id, name: product.name, category: product.category, description: product.description || "", price: Number(product.price), stock: Number(product.stock), image: product.image_url || product.product_images?.[0]?.image_url || images.skin, gallery: (product.product_images || []).sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0)).map(image => image.image_url) }));
+      let productResponse = await supabaseClient.from("products").select("id,name,category,description,sku,price,compare_at_price,discount_percent,stock,low_stock_threshold,image_url,is_active,product_images(id,image_url,storage_path,alt_text,sort_order),product_variants(id,name,value,sku,price_delta,stock,is_active,sort_order)").eq("is_active", true).order("created_at", { ascending: false });
+      if (productResponse.error) {
+        productResponse = await supabaseClient.from("products").select("id,name,category,description,price,stock,image_url,is_active,product_images(id,image_url,storage_path,alt_text,sort_order)").eq("is_active", true).order("created_at", { ascending: false });
+      }
+      if (productResponse.data) state.products = productResponse.data.map(product => {
+        const galleryItems = (product.product_images || []).slice().sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0)).map((image, index) => ({ id: image.id || "", imageUrl: image.image_url, storagePath: image.storage_path || "", altText: image.alt_text || "", sortOrder: Number(image.sort_order || index) }));
+        const variants = (product.product_variants || []).slice().sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0)).map((variant, index) => ({ id: variant.id, name: variant.name, value: variant.value, sku: variant.sku || "", priceDelta: Number(variant.price_delta || 0), stock: Number(variant.stock || 0), isActive: variant.is_active !== false, sortOrder: Number(variant.sort_order || index) }));
+        return { id: product.id, name: product.name, category: product.category, sku: product.sku || "", description: product.description || "", price: Number(product.price), compareAtPrice: Number(product.compare_at_price || 0), discountPercent: Number(product.discount_percent || 0), stock: Number(product.stock), lowStockThreshold: Number(product.low_stock_threshold || 5), image: product.image_url || galleryItems[0]?.imageUrl || images.skin, galleryItems, gallery: galleryItems.map(image => image.imageUrl), variants };
+      });
       const { data: categories } = await supabaseClient.from("categories").select("id,name,slug,description,image_url,is_active").eq("is_active", true).order("name", { ascending: true });
       if (categories) state.categories = categories.map(category => ({ id: category.id, name: category.name, slug: category.slug, description: category.description || "", image: category.image_url || images.skin, isActive: category.is_active !== false }));
       const { data: pageHome } = await supabaseClient.from("site_content").select("content").eq("key", "page_home").maybeSingle();
@@ -1397,19 +1592,48 @@
 
     async function saveProductToSupabase(product) {
       if (!supabaseClient || !currentUser) return;
-      const { error } = await supabaseClient.from("products").upsert({ id: product.id, name: product.name, category: product.category, description: product.description, price: product.price, stock: product.stock, image_url: product.image, is_active: true });
+      const payload = { id: product.id, name: product.name, category: product.category, description: product.description, sku: product.sku || null, price: product.price, compare_at_price: product.compareAtPrice || null, discount_percent: product.discountPercent || 0, stock: product.stock, low_stock_threshold: product.lowStockThreshold || 5, image_url: product.image, is_active: true };
+      let { error } = await supabaseClient.from("products").upsert(payload);
+      if (error) {
+        const fallback = { id: product.id, name: product.name, category: product.category, description: product.description, price: product.price, stock: product.stock, image_url: product.image, is_active: true };
+        const retry = await supabaseClient.from("products").upsert(fallback);
+        error = retry.error;
+      }
       if (error) showToast(error.message);
     }
 
     async function saveProductImagesToSupabase(productId, uploadedImages) {
       if (!supabaseClient || !currentUser || !uploadedImages.length) return;
+      const offset = editingProductImages.length;
       const rows = uploadedImages.map((image, index) => ({
         product_id: productId,
         image_url: image.url,
         storage_path: image.path,
-        sort_order: index
+        sort_order: offset + index
       }));
       const { error } = await supabaseClient.from("product_images").insert(rows);
+      if (error) showToast(error.message);
+    }
+
+    async function saveProductVariantsToSupabase(productId, variants) {
+      if (!supabaseClient || !currentUser) return;
+      const { error: deleteError } = await supabaseClient.from("product_variants").delete().eq("product_id", productId);
+      if (deleteError) {
+        showToast(deleteError.message);
+        return;
+      }
+      const rows = variants.map((variant, index) => ({
+        product_id: productId,
+        name: variant.name,
+        value: variant.value,
+        sku: variant.sku || null,
+        price_delta: Number(variant.priceDelta || 0),
+        stock: Number(variant.stock || 0),
+        is_active: variant.isActive !== false,
+        sort_order: index
+      }));
+      if (!rows.length) return;
+      const { error } = await supabaseClient.from("product_variants").insert(rows);
       if (error) showToast(error.message);
     }
 
@@ -1509,6 +1733,15 @@
         if (filter) filter.value = orderStatusFilter;
         renderOrders();
       }
+      const galleryMove = event.target.closest(".gallery-move");
+      if (galleryMove) moveProductImage(Number(galleryMove.dataset.index), Number(galleryMove.dataset.direction));
+      const galleryDelete = event.target.closest(".gallery-delete");
+      if (galleryDelete) deleteProductImage(Number(galleryDelete.dataset.index));
+      const variantDelete = event.target.closest(".variant-delete");
+      if (variantDelete) {
+        editingProductVariants = editingProductVariants.filter((_, index) => index !== Number(variantDelete.dataset.index));
+        renderProductVariantsBuilder();
+      }
     });
     document.addEventListener("change", event => {
       if (event.target.classList.contains("order-status")) updateOrder(event.target.dataset.id, "status", event.target.value);
@@ -1539,6 +1772,7 @@
 
     document.getElementById("product-form").addEventListener("submit", saveProduct);
     document.getElementById("category-create").addEventListener("click", createCategoryFromForm);
+    document.getElementById("variant-add").addEventListener("click", addVariantFromForm);
     document.getElementById("customer-form").addEventListener("submit", saveCustomer);
     document.getElementById("home-save").addEventListener("click", collectHomeContent);
     document.getElementById("home-reset").addEventListener("click", resetHomeContent);
@@ -1547,11 +1781,13 @@
     document.getElementById("auth-signup").addEventListener("click", signupSupabase);
     document.getElementById("auth-logout").addEventListener("click", logoutSupabase);
     document.getElementById("sync-pull").addEventListener("click", () => pullFromSupabase(true));
-    document.getElementById("product-reset").addEventListener("click", () => { document.getElementById("product-form").reset(); document.getElementById("product-id").value = ""; renderProductImagePreview([]); });
+    document.getElementById("product-reset").addEventListener("click", resetProductEditor);
     document.getElementById("customer-use-session").addEventListener("click", prepareOwnProfileForm);
     document.getElementById("customer-reset").addEventListener("click", () => { document.getElementById("customer-form").reset(); document.getElementById("customer-id").value = ""; document.getElementById("customer-auth-id").value = ""; setCustomerAddressForm({}); });
 
     populateProvinceSelect("customer-province", "customer-city");
+    renderProductGalleryManager();
+    renderProductVariantsBuilder();
     renderAll();
     initSupabase();
   </script>

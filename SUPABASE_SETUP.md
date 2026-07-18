@@ -6,15 +6,16 @@
 4. If the database was created before Stripe payments were added and checkout reports `Could not find the 'payment_status' column of 'orders' in the schema cache`, run `supabase-hotfix-payments.sql` once in the SQL editor.
 5. If the database already existed before the editable home studio was added, run `supabase-site-content.sql` once in the SQL editor.
 6. If the database already existed before product image uploads were added, run `supabase-product-images.sql` once in the SQL editor. It creates the `product-images` Storage bucket and `product_images` table.
-7. For immediate admin/storefront sync, run `supabase-realtime-sync.sql` once in the SQL editor. Without it, the site still refreshes from Supabase every 30 seconds.
-8. Create an admin user in Supabase Auth.
-9. Set the admin user's `app_metadata` to:
+7. If the database already existed before product variants, discounts, SKU and stock alerts were added, run `supabase-product-management.sql` once in the SQL editor.
+8. For immediate admin/storefront sync, run `supabase-realtime-sync.sql` once in the SQL editor. Without it, the site still refreshes from Supabase every 30 seconds.
+9. Create an admin user in Supabase Auth.
+10. Set the admin user's `app_metadata` to:
 
 ```json
 { "role": "admin" }
 ```
 
-10. Add these Sites environment variables:
+11. Add these Sites environment variables:
 
 ```text
 CATALINA_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
@@ -24,9 +25,9 @@ STRIPE_SECRET_KEY=sk_test_or_live_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 ```
 
-11. Mark `CATALINA_SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`, and `STRIPE_WEBHOOK_SECRET` as secrets in Sites. Never place them in `catalina.html`.
+12. Mark `CATALINA_SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`, and `STRIPE_WEBHOOK_SECRET` as secrets in Sites. Never place them in `catalina.html`.
 
-12. In Stripe, create a webhook endpoint pointing to:
+13. In Stripe, create a webhook endpoint pointing to:
 
 ```text
 https://YOUR_SITE_URL/api/stripe-webhook
@@ -34,7 +35,7 @@ https://YOUR_SITE_URL/api/stripe-webhook
 
 Subscribe it to `checkout.session.completed`, then copy the signing secret into `STRIPE_WEBHOOK_SECRET`.
 
-13. Redeploy the latest Sites version after setting the variables.
+14. Redeploy the latest Sites version after setting the variables.
 
 Customers can create accounts from the site with the `Crear` button. After signing in, they should use `Usar mi sesion` in the profile form, complete their shipping details, and save the profile before placing an order.
 

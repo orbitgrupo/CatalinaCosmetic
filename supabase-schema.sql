@@ -8,8 +8,12 @@ create table if not exists public.products (
   name text not null,
   category text not null,
   description text,
+  sku text,
   price numeric(10,2) not null check (price >= 0),
+  compare_at_price numeric(10,2) check (compare_at_price is null or compare_at_price >= 0),
+  discount_percent numeric(5,2) not null default 0 check (discount_percent >= 0 and discount_percent <= 100),
   stock integer not null default 0 check (stock >= 0),
+  low_stock_threshold integer not null default 5 check (low_stock_threshold >= 0),
   image_url text,
   is_active boolean not null default true,
   created_at timestamptz not null default now(),
@@ -17,6 +21,10 @@ create table if not exists public.products (
 );
 
 alter table public.products drop constraint if exists products_category_check;
+alter table public.products add column if not exists sku text;
+alter table public.products add column if not exists compare_at_price numeric(10,2) check (compare_at_price is null or compare_at_price >= 0);
+alter table public.products add column if not exists discount_percent numeric(5,2) not null default 0 check (discount_percent >= 0 and discount_percent <= 100);
+alter table public.products add column if not exists low_stock_threshold integer not null default 5 check (low_stock_threshold >= 0);
 
 create table if not exists public.product_images (
   id uuid primary key default gen_random_uuid(),
@@ -26,6 +34,20 @@ create table if not exists public.product_images (
   alt_text text,
   sort_order integer not null default 0,
   created_at timestamptz not null default now()
+);
+
+create table if not exists public.product_variants (
+  id uuid primary key default gen_random_uuid(),
+  product_id uuid not null references public.products(id) on delete cascade,
+  name text not null,
+  value text not null,
+  sku text,
+  price_delta numeric(10,2) not null default 0,
+  stock integer not null default 0 check (stock >= 0),
+  is_active boolean not null default true,
+  sort_order integer not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
 
 create table if not exists public.categories (
@@ -117,6 +139,7 @@ create table if not exists public.shipment_events (
 
 create index if not exists idx_products_active_category on public.products (is_active, category);
 create index if not exists idx_product_images_product_sort on public.product_images (product_id, sort_order);
+create index if not exists idx_product_variants_product_sort on public.product_variants (product_id, sort_order);
 create index if not exists idx_categories_active_name on public.categories (is_active, name);
 create index if not exists idx_orders_customer_created on public.orders (customer_id, created_at desc);
 create index if not exists idx_orders_payment_status on public.orders (payment_status, created_at desc);
@@ -144,6 +167,11 @@ create trigger set_categories_updated_at
 before update on public.categories
 for each row execute function public.set_updated_at();
 
+drop trigger if exists set_product_variants_updated_at on public.product_variants;
+create trigger set_product_variants_updated_at
+before update on public.product_variants
+for each row execute function public.set_updated_at();
+
 drop trigger if exists set_site_content_updated_at on public.site_content;
 create trigger set_site_content_updated_at
 before update on public.site_content
@@ -166,6 +194,7 @@ for each row execute function public.set_updated_at();
 
 alter table public.products enable row level security;
 alter table public.product_images enable row level security;
+alter table public.product_variants enable row level security;
 alter table public.categories enable row level security;
 alter table public.site_content enable row level security;
 alter table public.customer_profiles enable row level security;
@@ -204,6 +233,19 @@ using (true);
 drop policy if exists "Admins manage product images" on public.product_images;
 create policy "Admins manage product images"
 on public.product_images for all
+to authenticated
+using (public.is_admin())
+with check (public.is_admin());
+
+drop policy if exists "Anyone can read active product variants" on public.product_variants;
+create policy "Anyone can read active product variants"
+on public.product_variants for select
+to anon, authenticated
+using (is_active = true);
+
+drop policy if exists "Admins manage product variants" on public.product_variants;
+create policy "Admins manage product variants"
+on public.product_variants for all
 to authenticated
 using (public.is_admin())
 with check (public.is_admin());
@@ -342,6 +384,8 @@ grant select on public.products to anon;
 grant all on public.products to authenticated;
 grant select on public.product_images to anon;
 grant all on public.product_images to authenticated;
+grant select on public.product_variants to anon;
+grant all on public.product_variants to authenticated;
 grant all on public.customer_profiles to authenticated;
 grant all on public.orders to authenticated;
 grant all on public.order_items to authenticated;
@@ -359,6 +403,14 @@ end $$;
 do $$
 begin
   alter publication supabase_realtime add table public.product_images;
+exception
+  when duplicate_object then null;
+  when undefined_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.product_variants;
 exception
   when duplicate_object then null;
   when undefined_object then null;

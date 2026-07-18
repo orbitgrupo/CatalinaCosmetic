@@ -1273,6 +1273,7 @@
             <div>
               <p class="text-[10px] font-extrabold uppercase tracking-[0.2em] text-outline">Precio</p>
               <p id="detail-price" class="mt-1 text-4xl font-extrabold tracking-tight">$0.00</p>
+              <p id="detail-compare-price" class="mt-1 hidden text-sm font-bold text-on-surface-variant line-through">$0.00</p>
             </div>
             <div class="text-right">
               <p class="text-[10px] font-extrabold uppercase tracking-[0.2em] text-outline">Disponible</p>
@@ -1288,6 +1289,10 @@
               <h4 class="text-xs font-extrabold uppercase tracking-[0.18em] text-on-surface">Uso recomendado</h4>
               <p id="detail-usage" class="mt-3 text-sm leading-6 text-on-surface-variant"></p>
             </div>
+          </div>
+          <div id="detail-variants-wrap" class="mt-6 hidden">
+            <h4 class="text-xs font-extrabold uppercase tracking-[0.18em] text-on-surface">Opciones</h4>
+            <div id="detail-variants" class="mt-3 flex flex-wrap gap-2"></div>
           </div>
           <div class="mt-8 flex flex-col gap-3 sm:flex-row">
             <button id="detail-add-cart" class="flex flex-1 items-center justify-center gap-3 rounded-xl bg-primary px-6 py-4 text-sm font-extrabold uppercase tracking-widest text-on-primary transition-all hover:opacity-90" type="button">
@@ -1854,6 +1859,7 @@
     storefrontRealtimeChannel = client.channel('catalina-storefront-sync')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => loadProductsFromSupabase())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'product_images' }, () => loadProductsFromSupabase())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'product_variants' }, () => loadProductsFromSupabase())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, () => loadProductsFromSupabase())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => { if (currentCustomerUser) loadCustomerOrders(); })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'order_items' }, () => { if (currentCustomerUser) loadCustomerOrders(); })
@@ -2066,20 +2072,37 @@
       .filter(Boolean);
     const image = product.image_url || gallery[0] || product.image || "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=900&q=80";
     const stock = Number(product.stock || 0);
+    const variants = (product.product_variants || [])
+      .slice()
+      .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0))
+      .filter(variant => variant.is_active !== false)
+      .map(variant => ({
+        id: variant.id,
+        name: variant.name || "Opcion",
+        value: variant.value || "",
+        sku: variant.sku || "",
+        priceDelta: Number(variant.price_delta || 0),
+        stock: Number(variant.stock || 0)
+      }));
     return {
       id: product.id || createSlug(name),
       name,
+      sku: product.sku || "",
       formula: product.category || "Cuidado diario",
       category: product.category || "Productos",
       badge: product.category || "Catalina",
       price: Number(product.price || 0),
+      compareAtPrice: Number(product.compare_at_price || 0),
+      discountPercent: Number(product.discount_percent || 0),
       rating: Number(product.rating || 4.8),
       reviews: Number(product.reviews || 0),
+      rawStock: stock,
       stock: stock > 0 ? "En stock" : "Agotado",
       description: product.description || "Producto seleccionado del catalogo Catalina.",
       usage: product.usage || "Usar segun indicacion del producto o recomendacion profesional.",
       benefits: Array.isArray(product.benefits) && product.benefits.length ? product.benefits : ["Rutina diaria", "Cuidado especializado", "Formula seleccionada"],
-      images: gallery.length ? gallery : [image, image, image]
+      images: gallery.length ? gallery : [image, image, image],
+      variants
     };
   }
 
@@ -2147,18 +2170,24 @@
   function productCardTemplate(product, index) {
     const image = product.images?.[0] || "";
     const offsetClass = index % 3 === 1 ? " lg:mt-12" : "";
+    const compareAt = Number(product.compareAtPrice || 0);
+    const discount = Number(product.discountPercent || 0);
     return `
       <div class="product-card flex flex-col group${offsetClass}" data-product-id="${escapeHtml(product.id)}" role="button" tabindex="0">
         <div class="aspect-[4/5] bg-surface-container-low overflow-hidden mb-6 relative">
           <img class="w-full h-full object-cover mix-blend-multiply opacity-90 transition-transform duration-700 group-hover:scale-105" src="${escapeHtml(image)}" alt="${escapeHtml(product.name)}"/>
           <div class="absolute top-4 left-4"><span class="px-3 py-1 bg-white/80 backdrop-blur-md text-[10px] font-bold tracking-[0.2em] text-on-surface uppercase rounded-lg">${escapeHtml(product.badge)}</span></div>
+          ${discount ? `<div class="absolute right-4 top-4"><span class="rounded-lg bg-primary px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.16em] text-on-primary">${discount}% off</span></div>` : ""}
         </div>
         <div class="space-y-1">
           <span class="label-sm text-primary font-bold uppercase tracking-[0.1em]">${escapeHtml(product.formula)}</span>
           <h3 class="headline-sm font-extrabold text-on-surface group-hover:text-primary transition-colors">${escapeHtml(product.name)}</h3>
           <p class="body-md text-on-surface-variant leading-relaxed py-2">${escapeHtml(product.description)}</p>
           <div class="flex items-center justify-between gap-4 pt-4">
-            <span class="text-xl font-headline font-bold">$${Number(product.price).toFixed(2)}</span>
+            <span class="flex flex-col">
+              <span class="text-xl font-headline font-bold">$${Number(product.price).toFixed(2)}</span>
+              ${compareAt > Number(product.price || 0) ? `<span class="text-xs font-bold text-on-surface-variant line-through">$${compareAt.toFixed(2)}</span>` : ""}
+            </span>
             <button class="px-5 py-2 bg-primary text-on-primary text-xs font-bold uppercase tracking-widest rounded-lg hover:opacity-90 transition-opacity add-to-cart" data-id="${escapeHtml(product.id)}" data-name="${escapeHtml(product.name)}" data-price="${Number(product.price).toFixed(2)}" data-img="${escapeHtml(image)}">Agregar</button>
           </div>
         </div>
@@ -2194,14 +2223,21 @@
     const client = getStorefrontSupabaseClient();
     if (!client) return;
     try {
-      const { data, error } = await client
+      let productResponse = await client
         .from("products")
-        .select("id,name,category,description,price,stock,image_url,is_active,product_images(image_url,sort_order)")
+        .select("id,name,category,description,sku,price,compare_at_price,discount_percent,stock,image_url,is_active,product_images(image_url,sort_order),product_variants(id,name,value,sku,price_delta,stock,is_active,sort_order)")
         .eq("is_active", true)
         .order("created_at", { ascending: false });
-      if (error) throw error;
-      if (data) {
-        productCatalog = data.map(normalizeProductFromDatabase);
+      if (productResponse.error) {
+        productResponse = await client
+          .from("products")
+          .select("id,name,category,description,price,stock,image_url,is_active,product_images(image_url,sort_order)")
+          .eq("is_active", true)
+          .order("created_at", { ascending: false });
+      }
+      if (productResponse.error) throw productResponse.error;
+      if (productResponse.data) {
+        productCatalog = productResponse.data.map(normalizeProductFromDatabase);
         renderCategoryNavigation();
         renderCatalogProducts();
       }
@@ -2272,6 +2308,12 @@
     document.getElementById('detail-reviews').textContent = `(${product.reviews} valoraciones)`;
     document.getElementById('detail-description').textContent = product.description;
     document.getElementById('detail-price').textContent = `$${product.price.toFixed(2)}`;
+    const compareAt = Number(product.compareAtPrice || 0);
+    const compareEl = document.getElementById('detail-compare-price');
+    if (compareEl) {
+      compareEl.textContent = `$${compareAt.toFixed(2)}`;
+      compareEl.classList.toggle('hidden', !(compareAt > Number(product.price || 0)));
+    }
     document.getElementById('detail-stock').textContent = product.stock;
     document.getElementById('detail-usage').textContent = product.usage;
     document.getElementById('detail-benefits').innerHTML = product.benefits.map(benefit => `
@@ -2280,6 +2322,18 @@
         <span>${benefit}</span>
       </li>
     `).join('');
+    const variantsWrap = document.getElementById('detail-variants-wrap');
+    const variantsList = document.getElementById('detail-variants');
+    if (variantsWrap && variantsList) {
+      const variants = product.variants || [];
+      variantsWrap.classList.toggle('hidden', !variants.length);
+      variantsList.innerHTML = variants.map(variant => `
+        <button class="rounded-full border border-outline-variant/60 bg-surface px-4 py-2 text-sm font-bold text-on-surface transition-colors hover:border-primary hover:text-primary" type="button">
+          ${escapeHtml(variant.name)}: ${escapeHtml(variant.value)}
+          ${Number(variant.priceDelta || 0) ? `<span class="ml-1 text-xs text-on-surface-variant">${Number(variant.priceDelta) > 0 ? "+" : ""}$${Number(variant.priceDelta).toFixed(2)}</span>` : ""}
+        </button>
+      `).join('');
+    }
 
     const gallery = document.getElementById('detail-gallery');
     gallery.innerHTML = product.images.map((src, index) => `
