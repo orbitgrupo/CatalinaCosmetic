@@ -1853,6 +1853,7 @@
     if (storefrontRealtimeChannel || !client.channel) return;
     storefrontRealtimeChannel = client.channel('catalina-storefront-sync')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => loadProductsFromSupabase())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'product_images' }, () => loadProductsFromSupabase())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, () => loadProductsFromSupabase())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => { if (currentCustomerUser) loadCustomerOrders(); })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'order_items' }, () => { if (currentCustomerUser) loadCustomerOrders(); })
@@ -2058,7 +2059,12 @@
 
   function normalizeProductFromDatabase(product) {
     const name = product.name || "Producto Catalina";
-    const image = product.image_url || product.image || "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=900&q=80";
+    const gallery = (product.product_images || [])
+      .slice()
+      .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0))
+      .map(image => image.image_url)
+      .filter(Boolean);
+    const image = product.image_url || gallery[0] || product.image || "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=900&q=80";
     const stock = Number(product.stock || 0);
     return {
       id: product.id || createSlug(name),
@@ -2073,7 +2079,7 @@
       description: product.description || "Producto seleccionado del catalogo Catalina.",
       usage: product.usage || "Usar segun indicacion del producto o recomendacion profesional.",
       benefits: Array.isArray(product.benefits) && product.benefits.length ? product.benefits : ["Rutina diaria", "Cuidado especializado", "Formula seleccionada"],
-      images: [image, image, image]
+      images: gallery.length ? gallery : [image, image, image]
     };
   }
 
@@ -2190,7 +2196,7 @@
     try {
       const { data, error } = await client
         .from("products")
-        .select("id,name,category,description,price,stock,image_url,is_active")
+        .select("id,name,category,description,price,stock,image_url,is_active,product_images(image_url,sort_order)")
         .eq("is_active", true)
         .order("created_at", { ascending: false });
       if (error) throw error;

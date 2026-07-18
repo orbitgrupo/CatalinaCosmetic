@@ -18,6 +18,16 @@ create table if not exists public.products (
 
 alter table public.products drop constraint if exists products_category_check;
 
+create table if not exists public.product_images (
+  id uuid primary key default gen_random_uuid(),
+  product_id uuid not null references public.products(id) on delete cascade,
+  image_url text not null,
+  storage_path text,
+  alt_text text,
+  sort_order integer not null default 0,
+  created_at timestamptz not null default now()
+);
+
 create table if not exists public.categories (
   id uuid primary key default gen_random_uuid(),
   name text not null unique,
@@ -106,6 +116,7 @@ create table if not exists public.shipment_events (
 );
 
 create index if not exists idx_products_active_category on public.products (is_active, category);
+create index if not exists idx_product_images_product_sort on public.product_images (product_id, sort_order);
 create index if not exists idx_categories_active_name on public.categories (is_active, name);
 create index if not exists idx_orders_customer_created on public.orders (customer_id, created_at desc);
 create index if not exists idx_orders_payment_status on public.orders (payment_status, created_at desc);
@@ -154,6 +165,7 @@ before update on public.payments
 for each row execute function public.set_updated_at();
 
 alter table public.products enable row level security;
+alter table public.product_images enable row level security;
 alter table public.categories enable row level security;
 alter table public.site_content enable row level security;
 alter table public.customer_profiles enable row level security;
@@ -179,6 +191,19 @@ using (is_active = true);
 drop policy if exists "Admins manage products" on public.products;
 create policy "Admins manage products"
 on public.products for all
+to authenticated
+using (public.is_admin())
+with check (public.is_admin());
+
+drop policy if exists "Anyone can read product images" on public.product_images;
+create policy "Anyone can read product images"
+on public.product_images for select
+to anon, authenticated
+using (true);
+
+drop policy if exists "Admins manage product images" on public.product_images;
+create policy "Admins manage product images"
+on public.product_images for all
 to authenticated
 using (public.is_admin())
 with check (public.is_admin());
@@ -315,6 +340,8 @@ grant select on public.site_content to anon;
 grant all on public.site_content to authenticated;
 grant select on public.products to anon;
 grant all on public.products to authenticated;
+grant select on public.product_images to anon;
+grant all on public.product_images to authenticated;
 grant all on public.customer_profiles to authenticated;
 grant all on public.orders to authenticated;
 grant all on public.order_items to authenticated;
@@ -328,6 +355,43 @@ exception
   when duplicate_object then null;
   when undefined_object then null;
 end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.product_images;
+exception
+  when duplicate_object then null;
+  when undefined_object then null;
+end $$;
+
+insert into storage.buckets (id, name, public)
+values ('product-images', 'product-images', true)
+on conflict (id) do update set public = true;
+
+drop policy if exists "Anyone can read product image files" on storage.objects;
+create policy "Anyone can read product image files"
+on storage.objects for select
+to anon, authenticated
+using (bucket_id = 'product-images');
+
+drop policy if exists "Admins upload product image files" on storage.objects;
+create policy "Admins upload product image files"
+on storage.objects for insert
+to authenticated
+with check (bucket_id = 'product-images' and public.is_admin());
+
+drop policy if exists "Admins update product image files" on storage.objects;
+create policy "Admins update product image files"
+on storage.objects for update
+to authenticated
+using (bucket_id = 'product-images' and public.is_admin())
+with check (bucket_id = 'product-images' and public.is_admin());
+
+drop policy if exists "Admins delete product image files" on storage.objects;
+create policy "Admins delete product image files"
+on storage.objects for delete
+to authenticated
+using (bucket_id = 'product-images' and public.is_admin());
 
 do $$
 begin

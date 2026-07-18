@@ -313,7 +313,18 @@
               </div>
               <input id="product-price" class="rounded-lg border-line" type="number" min="0" step="0.01" placeholder="Precio" required />
               <input id="product-stock" class="rounded-lg border-line" type="number" min="0" step="1" placeholder="Inventario" required />
-              <input id="product-image" class="rounded-lg border-line" placeholder="URL de imagen" />
+              <div class="grid gap-3 rounded-xl border border-dashed border-line bg-shell p-4">
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <p class="text-xs font-extrabold uppercase tracking-widest text-muted">Imagenes del producto</p>
+                    <p class="text-xs text-muted">Bucket: <span class="font-bold text-ink">product-images</span></p>
+                  </div>
+                  <span class="material-symbols-outlined rounded-full bg-white p-2 text-violet">add_photo_alternate</span>
+                </div>
+                <input id="product-image-file" class="rounded-lg border-line bg-white text-sm" type="file" accept="image/*" multiple />
+                <div id="product-image-preview" class="grid grid-cols-3 gap-2"></div>
+              </div>
+              <input id="product-image" class="rounded-lg border-line" placeholder="URL de imagen principal" />
               <textarea id="product-description" class="rounded-lg border-line" rows="4" placeholder="Descripcion"></textarea>
               <button class="rounded-lg bg-violet px-5 py-3 font-bold text-white">Guardar producto</button>
               <button type="button" id="product-reset" class="rounded-lg border border-line px-5 py-3 font-bold text-muted">Limpiar</button>
@@ -387,6 +398,7 @@
                 <a class="rounded-lg border border-line px-4 py-3 hover:text-violet" href="./supabase-schema.sql">supabase-schema.sql</a>
                 <a class="rounded-lg border border-line px-4 py-3 hover:text-violet" href="./supabase-seed.sql">supabase-seed.sql</a>
                 <a class="rounded-lg border border-line px-4 py-3 hover:text-violet" href="./supabase-site-content.sql">supabase-site-content.sql</a>
+                <a class="rounded-lg border border-line px-4 py-3 hover:text-violet" href="./supabase-product-images.sql">supabase-product-images.sql</a>
                 <a class="rounded-lg border border-line px-4 py-3 hover:text-violet" href="./supabase-realtime-sync.sql">supabase-realtime-sync.sql</a>
                 <a class="rounded-lg border border-line px-4 py-3 hover:text-violet" href="./SUPABASE_SETUP.md">SUPABASE_SETUP.md</a>
               </div>
@@ -504,6 +516,7 @@
     const ADMIN_AUTH_STORAGE_KEY = "catalina-admin-auth-v1";
     const ADMIN_ACTIVITY_STORAGE_KEY = "catalina-admin-last-activity-v1";
     const ADMIN_SECURITY_TIMEOUT_MS = 8 * 60 * 60 * 1000;
+    const PRODUCT_IMAGE_BUCKET = "product-images";
     let supabaseClient = null;
     let currentUser = null;
     let adminSecurityTimer = null;
@@ -569,6 +582,7 @@
       if (adminRealtimeChannel || !supabaseClient.channel) return;
       adminRealtimeChannel = supabaseClient.channel("catalina-admin-sync")
         .on("postgres_changes", { event: "*", schema: "public", table: "products" }, () => pullFromSupabase(false))
+        .on("postgres_changes", { event: "*", schema: "public", table: "product_images" }, () => pullFromSupabase(false))
         .on("postgres_changes", { event: "*", schema: "public", table: "categories" }, () => pullFromSupabase(false))
         .on("postgres_changes", { event: "*", schema: "public", table: "customer_profiles" }, () => pullFromSupabase(false))
         .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => pullFromSupabase(false))
@@ -1120,6 +1134,47 @@
       document.getElementById("current-section").textContent = names[id] || "Dashboard";
     }
 
+    function selectedProductImageFiles() {
+      return [...(document.getElementById("product-image-file")?.files || [])].filter(file => file.type.startsWith("image/"));
+    }
+
+    function renderProductImagePreview(files = selectedProductImageFiles()) {
+      const preview = document.getElementById("product-image-preview");
+      if (!preview) return;
+      const currentUrl = document.getElementById("product-image")?.value || "";
+      const fileCards = files.slice(0, 6).map((file, index) => {
+        const url = URL.createObjectURL(file);
+        return `<div class="relative overflow-hidden rounded-lg bg-white"><img class="h-24 w-full object-cover" src="${url}" alt="${escapeHtml(file.name)}"/><span class="absolute left-2 top-2 rounded-full bg-ink/80 px-2 py-1 text-[10px] font-bold text-white">${index === 0 ? "Principal" : index + 1}</span></div>`;
+      }).join("");
+      const urlCard = currentUrl && !files.length ? `<div class="relative overflow-hidden rounded-lg bg-white"><img class="h-24 w-full object-cover" src="${escapeHtml(currentUrl)}" alt="Imagen actual"/><span class="absolute left-2 top-2 rounded-full bg-ink/80 px-2 py-1 text-[10px] font-bold text-white">Actual</span></div>` : "";
+      preview.innerHTML = fileCards || urlCard || `<div class="col-span-3 rounded-lg border border-dashed border-line bg-white p-4 text-center text-xs font-bold uppercase tracking-widest text-muted">Sin imagen seleccionada</div>`;
+    }
+
+    function storagePathForProduct(productId, file, index) {
+      const extension = (file.name.split(".").pop() || "jpg").replace(/[^a-z0-9]/gi, "").toLowerCase() || "jpg";
+      const cleanId = String(productId).replace(/[^a-z0-9-]/gi, "-");
+      return `${cleanId}/${Date.now()}-${index}.${extension}`;
+    }
+
+    async function uploadProductImages(productId) {
+      const files = selectedProductImageFiles();
+      if (!files.length) return [];
+      if (!supabaseClient || !currentUser) throw new Error("Inicia sesion admin para subir imagenes.");
+      const uploaded = [];
+      for (const [index, file] of files.entries()) {
+        const path = storagePathForProduct(productId, file, index);
+        const { error } = await supabaseClient.storage.from(PRODUCT_IMAGE_BUCKET).upload(path, file, {
+          cacheControl: "3600",
+          upsert: false,
+          contentType: file.type || "image/jpeg"
+        });
+        if (error) throw error;
+        const { data } = supabaseClient.storage.from(PRODUCT_IMAGE_BUCKET).getPublicUrl(path);
+        if (data?.publicUrl) uploaded.push({ url: data.publicUrl, path });
+      }
+      return uploaded;
+    }
+
     async function saveProduct(event) {
       event.preventDefault();
       const id = document.getElementById("product-id").value || crypto.randomUUID();
@@ -1127,24 +1182,33 @@
       const newCategoryDescription = document.getElementById("category-description").value.trim();
       const createdCategory = newCategoryName ? ensureCategory(newCategoryName, newCategoryDescription) : null;
       if (createdCategory) await saveCategoryToSupabase(createdCategory);
+      let uploadedImages = [];
+      try {
+        uploadedImages = await uploadProductImages(id);
+      } catch (error) {
+        return showToast(error.message || "No se pudo subir la imagen");
+      }
+      const imageUrl = uploadedImages[0]?.url || document.getElementById("product-image").value.trim() || images.skin;
       const product = {
         id,
         name: document.getElementById("product-name").value.trim(),
         category: createdCategory?.name || document.getElementById("product-category").value,
         price: Number(document.getElementById("product-price").value),
         stock: Number(document.getElementById("product-stock").value),
-        image: document.getElementById("product-image").value.trim() || images.skin,
+        image: imageUrl,
         description: document.getElementById("product-description").value.trim()
       };
       const index = state.products.findIndex(item => item.id === id);
       if (index >= 0) state.products[index] = product;
       else state.products.unshift(product);
       await saveProductToSupabase(product);
+      if (uploadedImages.length) await saveProductImagesToSupabase(id, uploadedImages);
       event.target.reset();
       document.getElementById("product-id").value = "";
       document.getElementById("category-description").value = "";
+      renderProductImagePreview([]);
       persist();
-      showToast(createdCategory ? "Categoria y producto guardados" : "Producto guardado");
+      showToast(uploadedImages.length ? "Producto e imagenes guardados" : (createdCategory ? "Categoria y producto guardados" : "Producto guardado"));
     }
 
     async function createCategoryFromForm() {
@@ -1192,6 +1256,8 @@
       document.getElementById("product-stock").value = product.stock;
       document.getElementById("product-image").value = product.image;
       document.getElementById("product-description").value = product.description;
+      document.getElementById("product-image-file").value = "";
+      renderProductImagePreview([]);
     }
 
     function fillCustomer(id) {
@@ -1310,8 +1376,8 @@
 
     async function pullFromSupabase(showMessage = true) {
       if (!supabaseClient) return;
-      const { data: products } = await supabaseClient.from("products").select("id,name,category,description,price,stock,image_url,is_active").eq("is_active", true).order("created_at", { ascending: false });
-      if (products) state.products = products.map(product => ({ id: product.id, name: product.name, category: product.category, description: product.description || "", price: Number(product.price), stock: Number(product.stock), image: product.image_url || images.skin }));
+      const { data: products } = await supabaseClient.from("products").select("id,name,category,description,price,stock,image_url,is_active,product_images(image_url,sort_order)").eq("is_active", true).order("created_at", { ascending: false });
+      if (products) state.products = products.map(product => ({ id: product.id, name: product.name, category: product.category, description: product.description || "", price: Number(product.price), stock: Number(product.stock), image: product.image_url || product.product_images?.[0]?.image_url || images.skin, gallery: (product.product_images || []).sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0)).map(image => image.image_url) }));
       const { data: categories } = await supabaseClient.from("categories").select("id,name,slug,description,image_url,is_active").eq("is_active", true).order("name", { ascending: true });
       if (categories) state.categories = categories.map(category => ({ id: category.id, name: category.name, slug: category.slug, description: category.description || "", image: category.image_url || images.skin, isActive: category.is_active !== false }));
       const { data: pageHome } = await supabaseClient.from("site_content").select("content").eq("key", "page_home").maybeSingle();
@@ -1332,6 +1398,18 @@
     async function saveProductToSupabase(product) {
       if (!supabaseClient || !currentUser) return;
       const { error } = await supabaseClient.from("products").upsert({ id: product.id, name: product.name, category: product.category, description: product.description, price: product.price, stock: product.stock, image_url: product.image, is_active: true });
+      if (error) showToast(error.message);
+    }
+
+    async function saveProductImagesToSupabase(productId, uploadedImages) {
+      if (!supabaseClient || !currentUser || !uploadedImages.length) return;
+      const rows = uploadedImages.map((image, index) => ({
+        product_id: productId,
+        image_url: image.url,
+        storage_path: image.path,
+        sort_order: index
+      }));
+      const { error } = await supabaseClient.from("product_images").insert(rows);
       if (error) showToast(error.message);
     }
 
@@ -1455,6 +1533,8 @@
         productAdminSearchTerm = event.target.value.trim();
         renderProducts();
       }
+      if (event.target.id === "product-image-file") renderProductImagePreview();
+      if (event.target.id === "product-image") renderProductImagePreview([]);
     });
 
     document.getElementById("product-form").addEventListener("submit", saveProduct);
@@ -1467,7 +1547,7 @@
     document.getElementById("auth-signup").addEventListener("click", signupSupabase);
     document.getElementById("auth-logout").addEventListener("click", logoutSupabase);
     document.getElementById("sync-pull").addEventListener("click", () => pullFromSupabase(true));
-    document.getElementById("product-reset").addEventListener("click", () => { document.getElementById("product-form").reset(); document.getElementById("product-id").value = ""; });
+    document.getElementById("product-reset").addEventListener("click", () => { document.getElementById("product-form").reset(); document.getElementById("product-id").value = ""; renderProductImagePreview([]); });
     document.getElementById("customer-use-session").addEventListener("click", prepareOwnProfileForm);
     document.getElementById("customer-reset").addEventListener("click", () => { document.getElementById("customer-form").reset(); document.getElementById("customer-id").value = ""; document.getElementById("customer-auth-id").value = ""; setCustomerAddressForm({}); });
 

@@ -5,6 +5,7 @@ const admin = fs.readFileSync(new URL("admin.html", root), "utf8");
 const schema = fs.readFileSync(new URL("supabase-schema.sql", root), "utf8");
 const seed = fs.readFileSync(new URL("supabase-seed.sql", root), "utf8");
 const siteContentSql = fs.readFileSync(new URL("supabase-site-content.sql", root), "utf8");
+const productImagesSql = fs.readFileSync(new URL("supabase-product-images.sql", root), "utf8");
 const realtimeSql = fs.readFileSync(new URL("supabase-realtime-sync.sql", root), "utf8");
 const setup = fs.readFileSync(new URL("SUPABASE_SETUP.md", root), "utf8");
 const distServer = new URL("dist/server/", root);
@@ -19,6 +20,7 @@ const admin = ${JSON.stringify(admin)};
 const schema = ${JSON.stringify(schema)};
 const seed = ${JSON.stringify(seed)};
 const siteContentSql = ${JSON.stringify(siteContentSql)};
+const productImagesSql = ${JSON.stringify(productImagesSql)};
 const realtimeSql = ${JSON.stringify(realtimeSql)};
 const setup = ${JSON.stringify(setup)};
 
@@ -376,6 +378,15 @@ export default {
 
     if (url.pathname === "/supabase-site-content.sql") {
       return new Response(siteContentSql, {
+        headers: {
+          "content-type": "text/plain; charset=utf-8",
+          "cache-control": "public, max-age=300"
+        }
+      });
+    }
+
+    if (url.pathname === "/supabase-product-images.sql") {
+      return new Response(productImagesSql, {
         headers: {
           "content-type": "text/plain; charset=utf-8",
           "cache-control": "public, max-age=300"
