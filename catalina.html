@@ -1784,6 +1784,7 @@
   let lastCustomerActivityWrite = 0;
   let storefrontRealtimeChannel = null;
   let storefrontSyncInterval = null;
+  let selectedTrackingOrderNumber = "";
 
   function getStorefrontSupabaseClient() {
     if (storefrontSupabaseClient) return storefrontSupabaseClient;
@@ -1899,7 +1900,7 @@
       const items = order.order_items || [];
       const total = Number(order.total || orderTotalFromRows(order));
       return `
-        <tr class="hover:bg-surface-container-high transition-colors cursor-pointer nav-link" data-page="tracking">
+        <tr class="hover:bg-surface-container-high transition-colors cursor-pointer nav-link" data-page="tracking" data-order-number="${escapeHtml(order.order_number || order.id)}">
           <td class="py-6 text-sm font-bold">#${escapeHtml(order.order_number || order.id)}</td>
           <td class="py-6 text-sm text-on-surface-variant">${new Date(order.created_at || Date.now()).toLocaleDateString()}</td>
           <td class="py-6 text-sm">
@@ -1920,6 +1921,189 @@
     }).join('');
   }
 
+  function trackingStatusIndex(status = "") {
+    const normalized = String(status || "Recibido").toLowerCase();
+    if (normalized.includes("entregado")) return 3;
+    if (normalized.includes("ruta") || normalized.includes("enviado")) return 2;
+    if (normalized.includes("prepar")) return 1;
+    return 0;
+  }
+
+  function formatTrackingDate(value, fallback = "Pendiente") {
+    if (!value) return fallback;
+    return new Date(value).toLocaleString("es-DO", {
+      month: "short",
+      day: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    }).replace(".", "").toUpperCase();
+  }
+
+  function getSelectedTrackingOrder() {
+    const params = new URLSearchParams(window.location.search);
+    const urlOrder = params.get("order") || "";
+    const target = selectedTrackingOrderNumber || urlOrder;
+    if (target) {
+      const found = customerOrders.find(order => [order.order_number, order.id].includes(target));
+      if (found) return found;
+    }
+    return customerOrders.find(order => order.payment_status === "Pagado") || customerOrders[0] || null;
+  }
+
+  function trackingProgressMarkup(order) {
+    const steps = [
+      { label: "Ordenado", icon: "check", status: "Recibido" },
+      { label: "Procesando", icon: "check", status: "Preparando" },
+      { label: "Enviado", icon: "local_shipping", status: "Enviado" },
+      { label: "Entregado", icon: "home", status: "Entregado" }
+    ];
+    const activeIndex = trackingStatusIndex(order?.status);
+    const width = `${Math.max(0, activeIndex) / (steps.length - 1) * 100}%`;
+    return `
+      <div class="relative flex justify-between items-center mb-4">
+        <div class="absolute top-1/2 left-0 w-full h-[2px] bg-surface-container-highest -translate-y-1/2 z-0"></div>
+        <div class="absolute top-1/2 left-0 h-[2px] bg-primary -translate-y-1/2 z-0" style="width:${width}"></div>
+        ${steps.map((step, index) => {
+          const done = index <= activeIndex;
+          const current = index === activeIndex;
+          return `
+            <div class="relative z-10 flex flex-col items-center text-center">
+              <div class="w-10 h-10 rounded-full ${done ? "bg-primary text-on-primary" : "bg-surface-container-highest text-on-surface-variant"} flex items-center justify-center border-4 border-surface-container-lowest">
+                <span class="material-symbols-outlined text-sm" ${done ? `style="font-variation-settings:'FILL' 1;"` : ""}>${step.icon}</span>
+              </div>
+              <span class="mt-3 text-[10px] tracking-widest font-bold uppercase ${current ? "text-primary" : done ? "text-on-surface" : "text-on-surface-variant"}">${step.label}</span>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `;
+  }
+
+  function trackingEventsMarkup(order) {
+    const events = (order?.shipment_events || []).slice().sort((a, b) => new Date(b.event_at || b.created_at || 0) - new Date(a.event_at || a.created_at || 0));
+    const fallback = [{
+      status: order?.status || "Recibido",
+      note: order?.tracking_code ? `Etiqueta creada. Codigo de rastreo ${order.tracking_code}.` : "Pedido registrado. Esperando actualizacion de envio.",
+      event_at: order?.created_at
+    }];
+    const rows = events.length ? events : fallback;
+    return rows.map((event, index) => `
+      <div class="flex gap-6 relative">
+        ${index < rows.length - 1 ? `<div class="absolute left-[7px] top-6 bottom-[-24px] w-[1px] bg-outline-variant/30"></div>` : ""}
+        <div class="w-4 h-4 rounded-full ${index === 0 ? "bg-primary ring-4 ring-primary-container" : "bg-outline-variant"} mt-1.5 relative z-10"></div>
+        <div class="flex-1">
+          <p class="font-bold text-on-surface">${escapeHtml(event.status || "Actualizacion")}</p>
+          <p class="text-sm text-on-surface-variant">${escapeHtml(event.note || "Movimiento registrado para este pedido.")}</p>
+          <span class="text-[11px] text-outline font-medium mt-1 inline-block">${formatTrackingDate(event.event_at || event.created_at)}</span>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  function orderItemsMarkup(order) {
+    const items = order?.order_items || [];
+    if (!items.length) return `<p class="text-sm text-on-surface-variant">Sin productos registrados.</p>`;
+    return items.map(item => {
+      const qty = Number(item.quantity || 1);
+      const price = Number(item.unit_price || 0);
+      return `
+        <div class="flex gap-4">
+          <div class="w-20 h-24 bg-white rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
+            <span class="text-2xl font-extrabold text-primary">${escapeHtml((item.product_name || "P").slice(0, 1).toUpperCase())}</span>
+          </div>
+          <div class="flex flex-1 flex-col justify-between py-1">
+            <div><h4 class="font-bold text-sm leading-tight">${escapeHtml(item.product_name || "Producto")}</h4><p class="text-xs text-on-surface-variant mt-1">Pedido #${escapeHtml(order.order_number || order.id)}</p></div>
+            <div class="flex justify-between items-center gap-3">
+              <span class="px-2 py-0.5 bg-secondary-container text-on-secondary-container text-[10px] font-bold rounded-full uppercase">Qty: ${qty}</span>
+              <span class="font-bold text-sm text-primary">$${(price * qty).toFixed(2)}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function renderTrackingPage() {
+    const main = document.querySelector("#page-tracking main");
+    if (!main) return;
+    const order = getSelectedTrackingOrder();
+    if (!currentCustomerUser) {
+      main.innerHTML = `<div class="pt-16 rounded-xl bg-surface-container-lowest p-10 text-center"><h1 class="text-3xl font-extrabold">Inicia sesion para ver tus pedidos</h1><p class="mt-3 text-on-surface-variant">El rastreo se muestra con la informacion real guardada en tu cuenta.</p></div>`;
+      return;
+    }
+    if (!order) {
+      main.innerHTML = `<div class="pt-16 rounded-xl bg-surface-container-lowest p-10 text-center"><h1 class="text-3xl font-extrabold">Todavia no tienes pedidos</h1><p class="mt-3 text-on-surface-variant">Cuando completes un pago, aqui veras el numero de pedido, invoice y rastreo.</p></div>`;
+      return;
+    }
+    selectedTrackingOrderNumber = order.order_number || order.id || "";
+    const profile = loadCustomerProfile();
+    const subtotal = Number(order.subtotal || orderTotalFromRows(order));
+    const shipping = Number(order.shipping_amount || 0);
+    const total = Number(order.total || subtotal + shipping);
+    const invoiceNumber = `INV-${String(order.order_number || order.id || "").replace(/[^A-Z0-9]/gi, "").toUpperCase()}`;
+    const trackingCode = order.tracking_code || "Pendiente";
+    const address = profile.address || "Direccion pendiente";
+    main.innerHTML = `
+      <header class="mb-12">
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div>
+            <span class="font-label text-[10px] tracking-[0.2em] uppercase text-primary font-bold">Catalina Logistics</span>
+            <h1 class="text-4xl md:text-5xl font-extrabold tracking-tighter mt-2 text-on-surface">Pedido #${escapeHtml(order.order_number || order.id)}</h1>
+            <p class="text-on-surface-variant mt-2 font-medium">Entrega estimada: <span class="text-on-surface">${escapeHtml(order.estimated_delivery || "Pendiente")}</span></p>
+            <p class="text-on-surface-variant mt-1 font-medium">Tracking: <span class="text-primary font-extrabold">${escapeHtml(trackingCode)}</span></p>
+          </div>
+          <div class="flex gap-3">
+            <button class="px-6 py-3 bg-surface-container-high text-on-surface-variant font-semibold rounded-lg hover:bg-surface-container-highest transition-colors" type="button">Soporte</button>
+            <button class="px-6 py-3 bg-primary text-on-primary font-semibold rounded-lg shadow-sm hover:opacity-90 transition-opacity" type="button">${escapeHtml(invoiceNumber)}</button>
+          </div>
+        </div>
+      </header>
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <section class="lg:col-span-8 space-y-8">
+          <div class="bg-surface-container-lowest p-10 rounded-xl shadow-sm">${trackingProgressMarkup(order)}</div>
+          <div class="bg-surface-container-lowest p-10 rounded-xl shadow-sm">
+            <h3 class="text-[10px] tracking-[0.2em] uppercase text-primary font-bold mb-8">Historial de rastreo</h3>
+            <div class="space-y-8">${trackingEventsMarkup(order)}</div>
+          </div>
+          <div class="h-64 rounded-xl overflow-hidden shadow-sm relative bg-surface-container-low">
+            <div class="absolute inset-0 flex items-center justify-center text-center p-8">
+              <div>
+                <span class="material-symbols-outlined text-5xl text-primary">location_on</span>
+                <p class="mt-3 font-bold text-on-surface">Ubicacion actual</p>
+                <p class="text-sm text-on-surface-variant">${escapeHtml(order.carrier || "Catalina Express")} - ${escapeHtml(order.status || "Recibido")}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+        <aside class="lg:col-span-4 space-y-8">
+          <div class="bg-surface-container-low p-8 rounded-xl">
+            <h3 class="text-[10px] tracking-[0.2em] uppercase text-on-surface font-bold mb-6">Composicion del pedido</h3>
+            <div class="space-y-6">${orderItemsMarkup(order)}</div>
+            <div class="mt-8 pt-8 border-t border-outline-variant/20 space-y-3">
+              <div class="flex justify-between text-sm"><span class="text-on-surface-variant">Subtotal</span><span class="font-medium">$${subtotal.toFixed(2)}</span></div>
+              <div class="flex justify-between text-sm"><span class="text-on-surface-variant">Envio</span><span class="font-medium text-primary">${shipping ? `$${shipping.toFixed(2)}` : "Gratis"}</span></div>
+              <div class="flex justify-between text-lg font-extrabold pt-2"><span>Total</span><span>$${total.toFixed(2)}</span></div>
+            </div>
+          </div>
+          <div class="bg-surface-container-lowest p-8 rounded-xl shadow-sm">
+            <h3 class="text-[10px] tracking-[0.2em] uppercase text-on-surface font-bold mb-6">Detalles de despacho</h3>
+            <div class="space-y-6">
+              <div>
+                <p class="text-[10px] uppercase tracking-widest text-outline font-bold mb-1">Direccion de envio</p>
+                <p class="text-sm font-medium leading-relaxed">${escapeHtml(profile.name || currentCustomerUser?.email || "Cliente")}<br/>${escapeHtml(address)}</p>
+              </div>
+              <div>
+                <p class="text-[10px] uppercase tracking-widest text-outline font-bold mb-1">Transportista</p>
+                <div class="flex items-center gap-2"><span class="material-symbols-outlined text-sm text-primary">local_shipping</span><p class="text-sm font-medium">${escapeHtml(order.carrier || "Catalina Express")}</p></div>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    `;
+  }
+
   async function loadCustomerOrders() {
     const client = getStorefrontSupabaseClient();
     if (!client || !currentCustomerUser) {
@@ -1938,6 +2122,7 @@
     }
     customerOrders = data || [];
     renderCustomerOrders();
+    if (document.getElementById('page-tracking')?.classList.contains('active')) renderTrackingPage();
   }
 
   async function initCustomerAuth() {
@@ -2628,9 +2813,11 @@
       });
       const result = await response.json();
       if (response.ok && result.paid) {
+        selectedTrackingOrderNumber = result.orderNumber || selectedTrackingOrderNumber;
         cart = [];
         renderCart();
         if (currentCustomerUser) await loadCustomerOrders();
+        renderTrackingPage();
         showToast(result.trackingCode ? `Pago confirmado. Tracking ${result.trackingCode}` : 'Pago confirmado');
       } else if (result.error) {
         showToast(result.error);
@@ -2694,6 +2881,7 @@
     const target = document.getElementById('page-' + id);
     if (target) {
       target.classList.add('active');
+      if (id === 'tracking') renderTrackingPage();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
@@ -2708,6 +2896,7 @@
     if (link) {
       const page = link.dataset.page;
       if (page) {
+        if (page === 'tracking' && link.dataset.orderNumber) selectedTrackingOrderNumber = link.dataset.orderNumber;
         closeProductDetail();
         showPage(page);
       }
