@@ -412,11 +412,12 @@
               <div class="mt-5 grid gap-3">
                 <input id="auth-email" class="rounded-lg border-line" type="email" placeholder="Email" />
                 <input id="auth-password" class="rounded-lg border-line" type="password" placeholder="Password" />
-                <div class="grid grid-cols-3 gap-2">
+                <div class="grid gap-2 sm:grid-cols-3">
                   <button id="auth-login" class="rounded-lg bg-navy px-4 py-3 text-sm font-bold text-white">Entrar</button>
-                  <button id="auth-signup" class="rounded-lg bg-violet px-4 py-3 text-sm font-bold text-white">Crear</button>
+                  <button id="auth-signup" class="rounded-lg bg-violet px-4 py-3 text-sm font-bold text-white">Crear cuenta normal</button>
                   <button id="auth-logout" class="rounded-lg border border-line px-4 py-3 text-sm font-bold">Salir</button>
                 </div>
+                <p id="auth-message" class="hidden rounded-lg bg-shell px-4 py-3 text-sm font-semibold text-muted"></p>
               </div>
             </div>
             <div class="rounded-sm bg-white p-5 shadow-soft">
@@ -732,6 +733,19 @@
       toast.textContent = message;
       toast.classList.remove("opacity-0", "translate-y-3");
       setTimeout(() => toast.classList.add("opacity-0", "translate-y-3"), 2300);
+    }
+
+    function setAuthMessage(message, isError = false) {
+      const node = document.getElementById("auth-message");
+      if (!node) return;
+      if (!message) {
+        node.classList.add("hidden");
+        node.textContent = "";
+        return;
+      }
+      node.textContent = message;
+      node.classList.remove("hidden", "text-muted", "text-coral", "bg-shell", "bg-coral/10");
+      node.classList.add(isError ? "text-coral" : "text-muted", isError ? "bg-coral/10" : "bg-shell");
     }
 
     function orderTotal(order) {
@@ -1576,29 +1590,66 @@
     }
 
     function renderAuthState() {
-      document.getElementById("auth-state").textContent = currentUser ? `Sesion activa: ${currentUser.email}` : "Sin sesion activa.";
+      const role = currentUser?.app_metadata?.role || "";
+      document.getElementById("auth-state").textContent = currentUser ? `Sesion activa: ${currentUser.email}${role ? ` (${role})` : ""}` : "Sin sesion activa.";
       document.getElementById("sync-status").textContent = supabaseClient ? "Supabase configurado" : "Modo local";
+      if (!supabaseClient) {
+        setAuthMessage("Supabase no esta configurado en este despliegue. Revisa las variables de entorno en Sites.", true);
+      } else if (currentUser && !isCurrentAdmin()) {
+        setAuthMessage("Entraste, pero esta cuenta no tiene permisos admin. En Supabase Auth, el usuario debe tener app_metadata.role = admin.", true);
+      } else if (currentUser && isCurrentAdmin()) {
+        setAuthMessage("Sesion admin activa. Ya puedes administrar productos, clientes, pedidos y envios.");
+      } else {
+        setAuthMessage("Entra con una cuenta admin para sincronizar pedidos, clientes y productos.");
+      }
     }
 
     async function loginSupabase() {
-      if (!supabaseClient) return showToast("Configura Supabase en Sites");
+      if (!supabaseClient) {
+        setAuthMessage("Configura Supabase en Sites antes de entrar.", true);
+        return showToast("Configura Supabase en Sites");
+      }
       const email = document.getElementById("auth-email").value.trim();
       const password = document.getElementById("auth-password").value;
+      if (!email || !password) return setAuthMessage("Escribe email y contrasena.", true);
+      const button = document.getElementById("auth-login");
+      const originalText = button.textContent;
+      button.disabled = true;
+      button.textContent = "Entrando...";
+      setAuthMessage("Validando sesion...");
       const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-      if (error) return showToast(error.message);
+      button.disabled = false;
+      button.textContent = originalText;
+      if (error) {
+        setAuthMessage(error.message, true);
+        return showToast(error.message);
+      }
       currentUser = data.user;
       bindAdminSecurityActivity();
       noteAdminActivity(true);
       await pullFromSupabase(false);
-      showToast("Sesion iniciada");
+      if (isCurrentAdmin()) {
+        setAuthMessage("Sesion admin activa. Ya puedes administrar productos, clientes, pedidos y envios.");
+        showToast("Sesion iniciada");
+      } else {
+        setAuthMessage("Sesion iniciada, pero esta cuenta no es admin. Agrega app_metadata.role = admin en Supabase.", true);
+        showToast("Cuenta sin permisos admin");
+      }
     }
 
     async function signupSupabase() {
-      if (!supabaseClient) return showToast("Configura Supabase en Sites");
+      if (!supabaseClient) {
+        setAuthMessage("Configura Supabase en Sites antes de crear cuentas.", true);
+        return showToast("Configura Supabase en Sites");
+      }
       const email = document.getElementById("auth-email").value.trim();
       const password = document.getElementById("auth-password").value;
+      if (!email || !password) return setAuthMessage("Escribe email y contrasena.", true);
       const { data, error } = await supabaseClient.auth.signUp({ email, password });
-      if (error) return showToast(error.message);
+      if (error) {
+        setAuthMessage(error.message, true);
+        return showToast(error.message);
+      }
       currentUser = data.user || null;
       if (currentUser) {
         bindAdminSecurityActivity();
@@ -1606,6 +1657,7 @@
       }
       renderAll();
       prepareOwnProfileForm();
+      setAuthMessage(currentUser ? "Cuenta normal creada. Para administrar, usa Crear administrador desde una sesion admin." : "Cuenta creada. Revisa tu email para confirmar.");
       showToast(currentUser ? "Cuenta creada" : "Revisa tu email");
     }
 
