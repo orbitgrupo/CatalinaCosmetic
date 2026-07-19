@@ -15,6 +15,8 @@
 { "role": "admin" }
 ```
 
+After that first admin can sign in at `/admin.html` and use `Supabase > Crear administrador` to create more admin users. That action runs on the server with `CATALINA_SUPABASE_SERVICE_ROLE_KEY`; the service role key must never be pasted into any public HTML file.
+
 11. Add these Sites environment variables:
 
 ```text

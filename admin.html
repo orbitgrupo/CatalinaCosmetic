@@ -420,6 +420,17 @@
               </div>
             </div>
             <div class="rounded-sm bg-white p-5 shadow-soft">
+              <h2 class="text-xl font-extrabold">Crear administrador</h2>
+              <p class="mt-2 text-sm leading-6 text-muted">Solo una sesion admin activa puede crear otro usuario con permisos para productos, clientes, pedidos y envios.</p>
+              <div class="mt-5 grid gap-3">
+                <input id="new-admin-name" class="rounded-lg border-line" type="text" placeholder="Nombre del administrador" />
+                <input id="new-admin-email" class="rounded-lg border-line" type="email" placeholder="admin@email.com" />
+                <input id="new-admin-password" class="rounded-lg border-line" type="password" minlength="8" placeholder="Contrasena temporal" />
+                <button id="new-admin-create" class="rounded-lg bg-navy px-4 py-3 text-sm font-bold text-white" type="button">Crear usuario admin</button>
+                <p id="new-admin-message" class="hidden rounded-lg bg-shell px-4 py-3 text-sm font-semibold text-muted"></p>
+              </div>
+            </div>
+            <div class="rounded-sm bg-white p-5 shadow-soft">
               <h2 class="text-xl font-extrabold">Archivos</h2>
               <div class="mt-5 grid gap-3 text-sm font-semibold text-muted">
                 <a class="rounded-lg border border-line px-4 py-3 hover:text-violet" href="./supabase-schema.sql">supabase-schema.sql</a>
@@ -1598,6 +1609,54 @@
       showToast(currentUser ? "Cuenta creada" : "Revisa tu email");
     }
 
+    function setNewAdminMessage(message, isError = false) {
+      const node = document.getElementById("new-admin-message");
+      if (!node) return;
+      node.textContent = message;
+      node.classList.remove("hidden", "text-muted", "text-coral", "bg-shell", "bg-coral/10");
+      node.classList.add(isError ? "text-coral" : "text-muted", isError ? "bg-coral/10" : "bg-shell");
+    }
+
+    async function createAdminUser() {
+      if (!supabaseClient) return showToast("Configura Supabase en Sites");
+      if (!currentUser || !isCurrentAdmin()) return setNewAdminMessage("Entra primero con una cuenta admin.", true);
+      const fullName = document.getElementById("new-admin-name").value.trim();
+      const email = document.getElementById("new-admin-email").value.trim();
+      const password = document.getElementById("new-admin-password").value;
+      if (!email || !email.includes("@")) return setNewAdminMessage("Escribe un email valido.", true);
+      if (password.length < 8) return setNewAdminMessage("La contrasena debe tener minimo 8 caracteres.", true);
+
+      const button = document.getElementById("new-admin-create");
+      const originalText = button.textContent;
+      button.disabled = true;
+      button.textContent = "Creando...";
+      try {
+        const { data: sessionData } = await supabaseClient.auth.getSession();
+        const accessToken = sessionData.session?.access_token;
+        if (!accessToken) throw new Error("La sesion admin expiro. Entra de nuevo.");
+        const response = await fetch("/api/admin/create-user", {
+          method: "POST",
+          headers: {
+            "authorization": `Bearer ${accessToken}`,
+            "content-type": "application/json"
+          },
+          body: JSON.stringify({ fullName, email, password })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || "No se pudo crear el usuario.");
+        document.getElementById("new-admin-name").value = "";
+        document.getElementById("new-admin-email").value = "";
+        document.getElementById("new-admin-password").value = "";
+        setNewAdminMessage(`Usuario admin creado: ${data.email || email}`);
+        showToast("Administrador creado");
+      } catch (error) {
+        setNewAdminMessage(error.message || "No se pudo crear el administrador.", true);
+      } finally {
+        button.disabled = false;
+        button.textContent = originalText;
+      }
+    }
+
     async function logoutSupabase(options = {}) {
       if (!supabaseClient) return;
       await supabaseClient.auth.signOut();
@@ -1886,6 +1945,7 @@
     document.getElementById("auth-login").addEventListener("click", loginSupabase);
     document.getElementById("auth-signup").addEventListener("click", signupSupabase);
     document.getElementById("auth-logout").addEventListener("click", logoutSupabase);
+    document.getElementById("new-admin-create").addEventListener("click", createAdminUser);
     document.getElementById("sync-pull").addEventListener("click", () => pullFromSupabase(true));
     document.getElementById("production-refresh").addEventListener("click", async () => {
       if (supabaseClient) await pullFromSupabase(true);

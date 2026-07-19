@@ -175,6 +175,58 @@ async function getAdminSnapshot(request, env) {
   return { customers: customers || [], orders: orders || [] };
 }
 
+function cleanAdminAccountPayload(payload = {}) {
+  const email = String(payload.email || "").trim().toLowerCase();
+  const password = String(payload.password || "");
+  const fullName = String(payload.fullName || "").trim().slice(0, 160);
+  if (!email || !email.includes("@")) throw new Error("Escribe un email valido.");
+  if (password.length < 8) throw new Error("La contrasena debe tener minimo 8 caracteres.");
+  return { email, password, fullName };
+}
+
+async function createAdminAccount(request, env) {
+  try {
+    await requireAdminUser(request, env);
+    let payload;
+    try {
+      payload = await request.json();
+    } catch {
+      return jsonResponse({ error: "Solicitud invalida." }, 400);
+    }
+    const account = cleanAdminAccountPayload(payload);
+    const url = env.CATALINA_SUPABASE_URL || env.SUPABASE_URL || "";
+    const serviceKey = env.CATALINA_SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_ROLE_KEY || "";
+    if (!url || !serviceKey) return jsonResponse({ error: "Supabase service role no esta configurado en Sites." }, 503);
+
+    const response = await fetch(\`\${url}/auth/v1/admin/users\`, {
+      method: "POST",
+      headers: {
+        "apikey": serviceKey,
+        "authorization": \`Bearer \${serviceKey}\`,
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({
+        email: account.email,
+        password: account.password,
+        email_confirm: true,
+        app_metadata: { role: "admin" },
+        user_metadata: account.fullName ? { full_name: account.fullName } : {}
+      })
+    });
+    const text = await response.text();
+    const data = text ? JSON.parse(text) : {};
+    if (!response.ok) return jsonResponse({ error: data?.msg || data?.message || data?.error_description || "Supabase no pudo crear el usuario." }, response.status);
+    return jsonResponse({
+      id: data.id || "",
+      email: data.email || account.email,
+      role: data.app_metadata?.role || "admin"
+    }, 201);
+  } catch (error) {
+    const status = /admin|permisos|sesion/i.test(error.message || "") ? 403 : 500;
+    return jsonResponse({ error: error.message || "No se pudo crear el administrador." }, status);
+  }
+}
+
 function buildServerCheckoutItems(requestedItems, products) {
   const byId = new Map(products.map(product => [product.id, product]));
   const byName = new Map(products.map(product => [product.name, product]));
@@ -469,6 +521,10 @@ export default {
       } catch (error) {
         return jsonResponse({ error: error.message || "No se pudo cargar el admin." }, 403);
       }
+    }
+
+    if (url.pathname === "/api/admin/create-user" && request.method === "POST") {
+      return createAdminAccount(request, env || {});
     }
 
     if (url.pathname === "/supabase-schema.sql") {
