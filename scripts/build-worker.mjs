@@ -141,6 +141,26 @@ async function getActiveProducts(env) {
   return supabaseRest(env, "products?select=id,name,price,stock,image_url,is_active&is_active=eq.true", { method: "GET" });
 }
 
+async function getCatalog(env) {
+  let products;
+  try {
+    products = await supabaseRest(env, "products?select=id,name,category,description,sku,price,compare_at_price,discount_percent,stock,low_stock_threshold,image_url,is_active,product_images(id,image_url,storage_path,alt_text,sort_order),product_variants(id,name,value,sku,price_delta,stock,is_active,sort_order)&is_active=eq.true&order=created_at.desc", { method: "GET" });
+  } catch {
+    try {
+      products = await supabaseRest(env, "products?select=id,name,category,description,price,stock,image_url,is_active,product_images(id,image_url,storage_path,alt_text,sort_order)&is_active=eq.true&order=created_at.desc", { method: "GET" });
+    } catch {
+      products = await supabaseRest(env, "products?select=id,name,category,description,price,stock,image_url,is_active&is_active=eq.true&order=created_at.desc", { method: "GET" });
+    }
+  }
+  let categories = [];
+  try {
+    categories = await supabaseRest(env, "categories?select=id,name,slug,description,image_url,is_active&is_active=eq.true&order=name.asc", { method: "GET" });
+  } catch {
+    categories = [];
+  }
+  return { products: products || [], categories: categories || [] };
+}
+
 function buildServerCheckoutItems(requestedItems, products) {
   const byId = new Map(products.map(product => [product.id, product]));
   const byName = new Map(products.map(product => [product.name, product]));
@@ -383,6 +403,14 @@ export default {
 
     if (url.pathname === "/api/stripe-webhook" && request.method === "POST") {
       return handleStripeWebhook(request, env || {});
+    }
+
+    if (url.pathname === "/api/catalog" && request.method === "GET") {
+      try {
+        return jsonResponse(await getCatalog(env || {}));
+      } catch (error) {
+        return jsonResponse({ error: error.message || "No se pudo cargar el catalogo." }, 500);
+      }
     }
 
     if (url.pathname === "/supabase-schema.sql") {

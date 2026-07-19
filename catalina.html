@@ -2221,8 +2221,23 @@
 
   async function loadProductsFromSupabase() {
     const client = getStorefrontSupabaseClient();
-    if (!client) return;
     try {
+      if (window.location.protocol !== 'file:') {
+        const catalogResponse = await fetch('/api/catalog', { cache: 'no-store' });
+        if (catalogResponse.ok) {
+          const catalog = await catalogResponse.json();
+          if (Array.isArray(catalog.products)) {
+            productCatalog = catalog.products.map(normalizeProductFromDatabase);
+            if (Array.isArray(catalog.categories)) {
+              categoryCatalog = catalog.categories.map(category => ({ name: category.name, slug: category.slug || slugifyCategory(category.name), description: category.description || "", image: category.image_url || "" }));
+            }
+            renderCategoryNavigation();
+            renderCatalogProducts();
+            return;
+          }
+        }
+      }
+      if (!client) return;
       let productResponse = await client
         .from("products")
         .select("id,name,category,description,sku,price,compare_at_price,discount_percent,stock,image_url,is_active,product_images(image_url,sort_order),product_variants(id,name,value,sku,price_delta,stock,is_active,sort_order)")

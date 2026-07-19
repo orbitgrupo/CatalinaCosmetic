@@ -1608,17 +1608,48 @@
       showToast(options.security ? "Sesion cerrada por seguridad. Vuelve a entrar para continuar." : "Sesion cerrada");
     }
 
+    function mapDatabaseProduct(product) {
+      const galleryItems = (product.product_images || []).slice().sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0)).map((image, index) => ({ id: image.id || "", imageUrl: image.image_url, storagePath: image.storage_path || "", altText: image.alt_text || "", sortOrder: Number(image.sort_order || index) }));
+      const variants = (product.product_variants || []).slice().sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0)).map((variant, index) => ({ id: variant.id, name: variant.name, value: variant.value, sku: variant.sku || "", priceDelta: Number(variant.price_delta || 0), stock: Number(variant.stock || 0), isActive: variant.is_active !== false, sortOrder: Number(variant.sort_order || index) }));
+      return { id: product.id, name: product.name, category: product.category, sku: product.sku || "", description: product.description || "", price: Number(product.price), compareAtPrice: Number(product.compare_at_price || 0), discountPercent: Number(product.discount_percent || 0), stock: Number(product.stock), lowStockThreshold: Number(product.low_stock_threshold || 5), image: product.image_url || galleryItems[0]?.imageUrl || images.skin, galleryItems, gallery: galleryItems.map(image => image.imageUrl), variants };
+    }
+
+    async function pullCatalogFromServer() {
+      if (window.location.protocol === "file:") return false;
+      try {
+        const response = await fetch("/api/catalog", { cache: "no-store" });
+        if (!response.ok) return false;
+        const catalog = await response.json();
+        if (!Array.isArray(catalog.products)) return false;
+        state.products = catalog.products.map(mapDatabaseProduct);
+        if (Array.isArray(catalog.categories)) {
+          state.categories = catalog.categories.map(category => ({ id: category.id, name: category.name, slug: category.slug, description: category.description || "", image: category.image_url || images.skin, isActive: category.is_active !== false }));
+        }
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
     async function pullFromSupabase(showMessage = true) {
       if (!supabaseClient) return;
+      const usedServerCatalog = await pullCatalogFromServer();
+      if (usedServerCatalog) {
+        if (currentUser) {
+          const { data: customers } = await supabaseClient.from("customer_profiles").select("id,full_name,email,phone,house_number,street,sector,province,city,address_reference,shipping_address").order("created_at", { ascending: false });
+          if (customers) state.customers = customers.map(customer => ({ id: customer.id, name: customer.full_name, email: customer.email, phone: customer.phone || "", houseNumber: customer.house_number || "", street: customer.street || "", sector: customer.sector || "", province: customer.province || "", city: customer.city || "", reference: customer.address_reference || "", address: customer.shipping_address || "" }));
+          const { data: orders } = await supabaseClient.from("orders").select("id,order_number,customer_id,status,payment_status,carrier,tracking_code,estimated_delivery,created_at,order_items(product_id,product_name,unit_price,quantity),shipment_events(status,note,event_at)").order("created_at", { ascending: false });
+          if (orders) state.orders = orders.map(order => ({ id: order.order_number, remoteId: order.id, customerId: order.customer_id, status: order.status, paymentStatus: order.payment_status || "Pendiente", carrier: order.carrier || "Catalina Express", trackingCode: order.tracking_code || "", createdAt: order.created_at, eta: order.estimated_delivery || "", items: (order.order_items || []).map(item => ({ productId: item.product_id, name: item.product_name, price: Number(item.unit_price), qty: Number(item.quantity) })), history: (order.shipment_events || []).map(event => ({ status: event.status, note: event.note || statusNote(event.status), at: event.event_at })) }));
+        }
+        persist();
+        if (showMessage) showToast("Catalogo sincronizado");
+        return;
+      }
       let productResponse = await supabaseClient.from("products").select("id,name,category,description,sku,price,compare_at_price,discount_percent,stock,low_stock_threshold,image_url,is_active,product_images(id,image_url,storage_path,alt_text,sort_order),product_variants(id,name,value,sku,price_delta,stock,is_active,sort_order)").eq("is_active", true).order("created_at", { ascending: false });
       if (productResponse.error) {
         productResponse = await supabaseClient.from("products").select("id,name,category,description,price,stock,image_url,is_active,product_images(id,image_url,storage_path,alt_text,sort_order)").eq("is_active", true).order("created_at", { ascending: false });
       }
-      if (productResponse.data) state.products = productResponse.data.map(product => {
-        const galleryItems = (product.product_images || []).slice().sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0)).map((image, index) => ({ id: image.id || "", imageUrl: image.image_url, storagePath: image.storage_path || "", altText: image.alt_text || "", sortOrder: Number(image.sort_order || index) }));
-        const variants = (product.product_variants || []).slice().sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0)).map((variant, index) => ({ id: variant.id, name: variant.name, value: variant.value, sku: variant.sku || "", priceDelta: Number(variant.price_delta || 0), stock: Number(variant.stock || 0), isActive: variant.is_active !== false, sortOrder: Number(variant.sort_order || index) }));
-        return { id: product.id, name: product.name, category: product.category, sku: product.sku || "", description: product.description || "", price: Number(product.price), compareAtPrice: Number(product.compare_at_price || 0), discountPercent: Number(product.discount_percent || 0), stock: Number(product.stock), lowStockThreshold: Number(product.low_stock_threshold || 5), image: product.image_url || galleryItems[0]?.imageUrl || images.skin, galleryItems, gallery: galleryItems.map(image => image.imageUrl), variants };
-      });
+      if (productResponse.data) state.products = productResponse.data.map(mapDatabaseProduct);
       const { data: categories } = await supabaseClient.from("categories").select("id,name,slug,description,image_url,is_active").eq("is_active", true).order("name", { ascending: true });
       if (categories) state.categories = categories.map(category => ({ id: category.id, name: category.name, slug: category.slug, description: category.description || "", image: category.image_url || images.skin, isActive: category.is_active !== false }));
       const { data: pageHome } = await supabaseClient.from("site_content").select("content").eq("key", "page_home").maybeSingle();
