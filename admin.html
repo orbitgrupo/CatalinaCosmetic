@@ -417,7 +417,17 @@
                   <button id="auth-signup" class="rounded-lg bg-violet px-4 py-3 text-sm font-bold text-white">Crear cuenta normal</button>
                   <button id="auth-logout" class="rounded-lg border border-line px-4 py-3 text-sm font-bold">Salir</button>
                 </div>
+                <button id="auth-forgot" class="text-left text-sm font-bold text-violet" type="button">Recuperar contrasena</button>
                 <p id="auth-message" class="hidden rounded-lg bg-shell px-4 py-3 text-sm font-semibold text-muted"></p>
+                <div id="password-recovery-panel" class="hidden rounded-xl border border-line bg-shell p-4">
+                  <h3 class="text-sm font-extrabold uppercase tracking-widest text-ink">Nueva contrasena</h3>
+                  <p class="mt-2 text-sm leading-6 text-muted">Escribe la nueva contrasena despues de abrir el enlace enviado por Supabase.</p>
+                  <div class="mt-4 grid gap-3">
+                    <input id="recovery-password" class="rounded-lg border-line" type="password" minlength="8" placeholder="Nueva contrasena" />
+                    <input id="recovery-password-confirm" class="rounded-lg border-line" type="password" minlength="8" placeholder="Confirmar contrasena" />
+                    <button id="recovery-password-save" class="rounded-lg bg-navy px-4 py-3 text-sm font-bold text-white" type="button">Guardar nueva contrasena</button>
+                  </div>
+                </div>
               </div>
             </div>
             <div class="rounded-sm bg-white p-5 shadow-soft">
@@ -574,6 +584,7 @@
     let lastAdminActivityWrite = 0;
     let adminRealtimeChannel = null;
     let adminSyncInterval = null;
+    let adminPasswordRecoveryMode = false;
     let orderSearchTerm = "";
     let orderStatusFilter = "";
     let productAdminSearchTerm = "";
@@ -746,6 +757,18 @@
       node.textContent = message;
       node.classList.remove("hidden", "text-muted", "text-coral", "bg-shell", "bg-coral/10");
       node.classList.add(isError ? "text-coral" : "text-muted", isError ? "bg-coral/10" : "bg-shell");
+    }
+
+    function isPasswordRecoveryReturn() {
+      const query = new URLSearchParams(window.location.search);
+      const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+      return query.get("recover") === "1" || query.get("type") === "recovery" || hash.get("type") === "recovery";
+    }
+
+    function setPasswordRecoveryMode(enabled) {
+      adminPasswordRecoveryMode = Boolean(enabled);
+      const panel = document.getElementById("password-recovery-panel");
+      if (panel) panel.classList.toggle("hidden", !adminPasswordRecoveryMode);
     }
 
     function orderTotal(order) {
@@ -1559,6 +1582,11 @@
         startAdminDataSync();
         const { data } = await supabaseClient.auth.getSession();
         currentUser = data.session?.user || null;
+        if (currentUser && isPasswordRecoveryReturn()) {
+          setPasswordRecoveryMode(true);
+          switchView("settings");
+          setAuthMessage("Enlace de recuperacion validado. Escribe tu nueva contrasena.");
+        }
         if (currentUser) {
           bindAdminSecurityActivity();
           if (!getAdminLastActivity()) noteAdminActivity(true);
@@ -1570,6 +1598,11 @@
         }
         supabaseClient.auth.onAuthStateChange(async (event, session) => {
           currentUser = session?.user || null;
+          if (event === "PASSWORD_RECOVERY") {
+            setPasswordRecoveryMode(true);
+            switchView("settings");
+            setAuthMessage("Enlace de recuperacion validado. Escribe tu nueva contrasena.");
+          }
           if (currentUser) {
             bindAdminSecurityActivity();
             if (event === "SIGNED_IN" || !getAdminLastActivity()) noteAdminActivity(true);
@@ -1593,6 +1626,11 @@
       const role = currentUser?.app_metadata?.role || "";
       document.getElementById("auth-state").textContent = currentUser ? `Sesion activa: ${currentUser.email}${role ? ` (${role})` : ""}` : "Sin sesion activa.";
       document.getElementById("sync-status").textContent = supabaseClient ? "Supabase configurado" : "Modo local";
+      setPasswordRecoveryMode(adminPasswordRecoveryMode);
+      if (adminPasswordRecoveryMode) {
+        setAuthMessage("Enlace de recuperacion validado. Escribe tu nueva contrasena.");
+        return;
+      }
       if (!supabaseClient) {
         setAuthMessage("Supabase no esta configurado en este despliegue. Revisa las variables de entorno en Sites.", true);
       } else if (currentUser && !isCurrentAdmin()) {
@@ -1659,6 +1697,53 @@
       prepareOwnProfileForm();
       setAuthMessage(currentUser ? "Cuenta normal creada. Para administrar, usa Crear administrador desde una sesion admin." : "Cuenta creada. Revisa tu email para confirmar.");
       showToast(currentUser ? "Cuenta creada" : "Revisa tu email");
+    }
+
+    async function requestPasswordRecovery() {
+      if (!supabaseClient) {
+        setAuthMessage("Configura Supabase en Sites antes de recuperar contrasena.", true);
+        return showToast("Configura Supabase en Sites");
+      }
+      const email = document.getElementById("auth-email").value.trim();
+      if (!email || !email.includes("@")) return setAuthMessage("Escribe tu email y vuelve a pulsar Recuperar contrasena.", true);
+      const redirectTo = window.location.protocol === "file:" ? undefined : `${window.location.origin}${window.location.pathname}?recover=1`;
+      const options = redirectTo ? { redirectTo } : undefined;
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, options);
+      if (error) {
+        setAuthMessage(error.message, true);
+        return showToast(error.message);
+      }
+      setAuthMessage("Supabase envio el enlace de recuperacion. Abre tu correo y vuelve desde ese enlace.");
+      showToast("Correo enviado");
+    }
+
+    async function saveRecoveredPassword() {
+      if (!supabaseClient) return setAuthMessage("Configura Supabase en Sites.", true);
+      const password = document.getElementById("recovery-password").value;
+      const confirm = document.getElementById("recovery-password-confirm").value;
+      if (password.length < 8) return setAuthMessage("La nueva contrasena debe tener minimo 8 caracteres.", true);
+      if (password !== confirm) return setAuthMessage("Las contrasenas no coinciden.", true);
+      const button = document.getElementById("recovery-password-save");
+      const originalText = button.textContent;
+      button.disabled = true;
+      button.textContent = "Guardando...";
+      const { error } = await supabaseClient.auth.updateUser({ password });
+      button.disabled = false;
+      button.textContent = originalText;
+      if (error) {
+        setAuthMessage(error.message, true);
+        return showToast(error.message);
+      }
+      document.getElementById("recovery-password").value = "";
+      document.getElementById("recovery-password-confirm").value = "";
+      setPasswordRecoveryMode(false);
+      showToast("Contrasena actualizada");
+      await supabaseClient.auth.signOut();
+      clearTimeout(adminSecurityTimer);
+      localStorage.removeItem(ADMIN_ACTIVITY_STORAGE_KEY);
+      currentUser = null;
+      renderAll();
+      setAuthMessage("Contrasena actualizada. Entra de nuevo con tu nueva contrasena.");
     }
 
     function setNewAdminMessage(message, isError = false) {
@@ -1997,6 +2082,8 @@
     document.getElementById("auth-login").addEventListener("click", loginSupabase);
     document.getElementById("auth-signup").addEventListener("click", signupSupabase);
     document.getElementById("auth-logout").addEventListener("click", logoutSupabase);
+    document.getElementById("auth-forgot").addEventListener("click", requestPasswordRecovery);
+    document.getElementById("recovery-password-save").addEventListener("click", saveRecoveredPassword);
     document.getElementById("new-admin-create").addEventListener("click", createAdminUser);
     document.getElementById("sync-pull").addEventListener("click", () => pullFromSupabase(true));
     document.getElementById("production-refresh").addEventListener("click", async () => {

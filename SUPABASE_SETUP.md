@@ -39,6 +39,16 @@ Subscribe it to `checkout.session.completed`, then copy the signing secret into 
 
 14. Redeploy the latest Sites version after setting the variables.
 
+Password recovery for admins:
+
+- In Supabase Dashboard, add the production admin URL to Auth redirect URLs:
+
+```text
+https://YOUR_SITE_URL/admin.html
+```
+
+- Admins can click `Recuperar contrasena` in `/admin.html`. Supabase sends the email, redirects back to `/admin.html?recover=1`, and the admin panel shows the new password form.
+
 Customers can create accounts from the site with the `Crear` button. After signing in, they should use `Usar mi sesion` in the profile form, complete their shipping details, and save the profile before placing an order.
 
 Checkout security:
