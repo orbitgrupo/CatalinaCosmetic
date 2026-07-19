@@ -431,6 +431,16 @@
                 <a class="rounded-lg border border-line px-4 py-3 hover:text-violet" href="./SUPABASE_SETUP.md">SUPABASE_SETUP.md</a>
               </div>
             </div>
+            <div class="rounded-sm bg-white p-5 shadow-soft xl:col-span-2">
+              <div class="flex flex-col justify-between gap-3 md:flex-row md:items-start">
+                <div>
+                  <h2 class="text-xl font-extrabold">Estado de produccion</h2>
+                  <p class="mt-2 text-sm leading-6 text-muted">Requisitos principales para que admin, tienda, checkout y pedidos trabajen con Supabase.</p>
+                </div>
+                <button id="production-refresh" class="rounded-lg border border-line px-4 py-2 text-sm font-bold text-violet" type="button">Revisar</button>
+              </div>
+              <div id="production-checklist" class="mt-5 grid gap-3 md:grid-cols-2"></div>
+            </div>
           </div>
         </section>
       </main>
@@ -830,6 +840,42 @@
       renderCustomers();
       renderOrders();
       renderAuthState();
+      renderProductionChecklist();
+    }
+
+    function productionItem(label, ready, detail) {
+      const tone = ready ? "bg-green/10 text-green" : "bg-coral/10 text-coral";
+      const icon = ready ? "check_circle" : "error";
+      return `
+        <div class="rounded-xl border border-line bg-shell p-4">
+          <div class="flex items-start gap-3">
+            <span class="material-symbols-outlined ${tone} rounded-full p-2 text-lg">${icon}</span>
+            <div>
+              <p class="font-extrabold">${label}</p>
+              <p class="mt-1 text-sm leading-5 text-muted">${detail}</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderProductionChecklist() {
+      const node = document.getElementById("production-checklist");
+      if (!node) return;
+      const config = window.__CATALINA_CONFIG__ || {};
+      const hasSupabasePublic = Boolean(window.CATALINA_SUPABASE_URL || config.supabaseUrl) && Boolean(window.CATALINA_SUPABASE_PUBLISHABLE_KEY || config.supabasePublishableKey);
+      const hasProducts = state.products.length > 0;
+      const hasCategories = categoryNames().length > 0;
+      node.innerHTML = [
+        productionItem("Supabase publico", hasSupabasePublic, hasSupabasePublic ? "La tienda y el admin pueden leer productos, categorias y perfiles." : "Faltan CATALINA_SUPABASE_URL o CATALINA_SUPABASE_PUBLISHABLE_KEY en Sites."),
+        productionItem("Supabase servidor", Boolean(config.supabaseServiceConfigured), config.supabaseServiceConfigured ? "El checkout puede crear pedidos y confirmar pagos con service role protegida." : "Falta CATALINA_SUPABASE_SERVICE_ROLE_KEY como secret en Sites."),
+        productionItem("Stripe Checkout", Boolean(config.stripeConfigured), config.stripeConfigured ? "El servidor puede crear sesiones de pago con Stripe." : "Falta STRIPE_SECRET_KEY como secret en Sites."),
+        productionItem("Webhook Stripe", Boolean(config.stripeWebhookConfigured), config.stripeWebhookConfigured ? "Stripe puede confirmar pagos y activar tracking/stock." : "Falta STRIPE_WEBHOOK_SECRET como secret en Sites."),
+        productionItem("Catalogo sincronizado", Boolean(supabaseClient && hasProducts), supabaseClient && hasProducts ? `${state.products.length} productos cargados desde Supabase o cache sincronizada.` : "Entra como admin y pulsa Sincronizar. Si sigue vacio, revisa products y RLS."),
+        productionItem("Categorias activas", hasCategories, hasCategories ? `${categoryNames().length} categorias disponibles para tienda y admin.` : "Crea categorias o corre supabase-seed.sql."),
+        productionItem("SQL de imagenes", true, "Debe estar corrido supabase-product-images.sql para subir y leer galerias."),
+        productionItem("SQL de variantes", true, "Debe estar corrido supabase-product-management.sql para SKU, descuentos, stock bajo y variantes.")
+      ].join("");
     }
 
     function renderMetrics() {
@@ -1781,6 +1827,10 @@
     document.getElementById("auth-signup").addEventListener("click", signupSupabase);
     document.getElementById("auth-logout").addEventListener("click", logoutSupabase);
     document.getElementById("sync-pull").addEventListener("click", () => pullFromSupabase(true));
+    document.getElementById("production-refresh").addEventListener("click", async () => {
+      if (supabaseClient) await pullFromSupabase(true);
+      renderProductionChecklist();
+    });
     document.getElementById("product-reset").addEventListener("click", resetProductEditor);
     document.getElementById("customer-use-session").addEventListener("click", prepareOwnProfileForm);
     document.getElementById("customer-reset").addEventListener("click", () => { document.getElementById("customer-form").reset(); document.getElementById("customer-id").value = ""; document.getElementById("customer-auth-id").value = ""; setCustomerAddressForm({}); });

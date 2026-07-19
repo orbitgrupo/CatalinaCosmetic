@@ -30,7 +30,9 @@ function withRuntimeConfig(body, env) {
   const config = {
     supabaseUrl: env.CATALINA_SUPABASE_URL || env.SUPABASE_URL || "",
     supabasePublishableKey: env.CATALINA_SUPABASE_PUBLISHABLE_KEY || env.SUPABASE_PUBLISHABLE_KEY || "",
-    stripeConfigured: Boolean(env.STRIPE_SECRET_KEY)
+    stripeConfigured: Boolean(env.STRIPE_SECRET_KEY),
+    stripeWebhookConfigured: Boolean(env.STRIPE_WEBHOOK_SECRET),
+    supabaseServiceConfigured: Boolean(env.CATALINA_SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_ROLE_KEY)
   };
   const script = \`<script>window.__CATALINA_CONFIG__=\${JSON.stringify(config)};</script>\`;
   return body.replace("</head>", \`\${script}</head>\`);
@@ -136,7 +138,7 @@ async function supabaseRest(env, path, options = {}) {
 }
 
 async function getActiveProducts(env) {
-  return supabaseRest(env, "products?select=id,name,price,image_url,is_active&is_active=eq.true", { method: "GET" });
+  return supabaseRest(env, "products?select=id,name,price,stock,image_url,is_active&is_active=eq.true", { method: "GET" });
 }
 
 function buildServerCheckoutItems(requestedItems, products) {
@@ -145,6 +147,9 @@ function buildServerCheckoutItems(requestedItems, products) {
   return requestedItems.map(item => {
     const product = byId.get(item.productId) || byName.get(item.name);
     if (!product) throw new Error(\`Producto no disponible: \${item.name || item.productId}\`);
+    const stock = Number(product.stock || 0);
+    if (stock <= 0) throw new Error(\`Producto agotado: \${product.name}\`);
+    if (item.quantity > stock) throw new Error(\`Solo quedan \${stock} unidades de \${product.name}\`);
     return {
       productId: product.id,
       name: product.name,
@@ -222,10 +227,29 @@ async function createPendingOrder(env, user, customer, items) {
   return order;
 }
 
+async function decrementStockForPaidOrder(env, orderId) {
+  if (!orderId) return;
+  const items = await supabaseRest(env, \`order_items?select=product_id,quantity&order_id=eq.\${encodeURIComponent(orderId)}\`, { method: "GET" });
+  for (const item of items || []) {
+    if (!item.product_id) continue;
+    const products = await supabaseRest(env, \`products?select=id,stock&id=eq.\${encodeURIComponent(item.product_id)}\`, { method: "GET" });
+    const product = products?.[0];
+    if (!product) continue;
+    const nextStock = Math.max(0, Number(product.stock || 0) - Number(item.quantity || 0));
+    await supabaseRest(env, \`products?id=eq.\${encodeURIComponent(item.product_id)}\`, {
+      method: "PATCH",
+      headers: { "prefer": "return=minimal" },
+      body: JSON.stringify({ stock: nextStock })
+    });
+  }
+}
+
 async function markStripeCheckoutPaid(event, env) {
   const session = event.data?.object || {};
   const orderNumber = session.metadata?.order_number || "";
   if (!orderNumber) return;
+  const existingOrders = await supabaseRest(env, \`orders?select=id,payment_status&order_number=eq.\${encodeURIComponent(orderNumber)}\`, { method: "GET" });
+  const wasAlreadyPaid = (existingOrders?.[0]?.payment_status || "") === "Pagado";
   const updatedOrders = await supabaseRest(env, \`orders?order_number=eq.\${encodeURIComponent(orderNumber)}\`, {
     method: "PATCH",
     headers: { "prefer": "return=representation" },
@@ -238,6 +262,7 @@ async function markStripeCheckoutPaid(event, env) {
   });
   const order = updatedOrders?.[0];
   if (!order?.id) return;
+  if (!wasAlreadyPaid) await decrementStockForPaidOrder(env, order.id);
   await supabaseRest(env, "payments?on_conflict=provider_session_id", {
     method: "POST",
     headers: { "prefer": "resolution=merge-duplicates,return=minimal" },
