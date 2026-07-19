@@ -2616,6 +2616,30 @@
     }
   }
 
+  async function confirmCheckoutReturn() {
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get('session_id') || "";
+    if (!sessionId) return;
+    try {
+      const response = await fetch('/api/confirm-checkout-session', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ sessionId })
+      });
+      const result = await response.json();
+      if (response.ok && result.paid) {
+        cart = [];
+        renderCart();
+        if (currentCustomerUser) await loadCustomerOrders();
+        showToast(result.trackingCode ? `Pago confirmado. Tracking ${result.trackingCode}` : 'Pago confirmado');
+      } else if (result.error) {
+        showToast(result.error);
+      }
+    } catch {
+      showToast('Pago recibido. La confirmacion puede tardar unos minutos.');
+    }
+  }
+
   function renderCart() {
     const container = document.getElementById('cart-items');
     const empty = document.getElementById('cart-empty');
@@ -2709,6 +2733,7 @@
   if (checkoutResult === 'success') {
     showPage('tracking');
     showToast('Pago recibido');
+    confirmCheckoutReturn();
   }
   if (checkoutResult === 'cancel') {
     showPage('cart');

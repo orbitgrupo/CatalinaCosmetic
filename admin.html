@@ -1614,6 +1614,14 @@
       return { id: product.id, name: product.name, category: product.category, sku: product.sku || "", description: product.description || "", price: Number(product.price), compareAtPrice: Number(product.compare_at_price || 0), discountPercent: Number(product.discount_percent || 0), stock: Number(product.stock), lowStockThreshold: Number(product.low_stock_threshold || 5), image: product.image_url || galleryItems[0]?.imageUrl || images.skin, galleryItems, gallery: galleryItems.map(image => image.imageUrl), variants };
     }
 
+    function mapDatabaseCustomer(customer) {
+      return { id: customer.id, name: customer.full_name, email: customer.email, phone: customer.phone || "", houseNumber: customer.house_number || "", street: customer.street || "", sector: customer.sector || "", province: customer.province || "", city: customer.city || "", reference: customer.address_reference || "", address: customer.shipping_address || "" };
+    }
+
+    function mapDatabaseOrder(order) {
+      return { id: order.order_number, remoteId: order.id, customerId: order.customer_id, status: order.status, paymentStatus: order.payment_status || "Pendiente", carrier: order.carrier || "Catalina Express", trackingCode: order.tracking_code || "", createdAt: order.created_at, eta: order.estimated_delivery || "", items: (order.order_items || []).map(item => ({ productId: item.product_id, name: item.product_name, price: Number(item.unit_price), qty: Number(item.quantity) })), history: (order.shipment_events || []).map(event => ({ status: event.status, note: event.note || statusNote(event.status), at: event.event_at })) };
+    }
+
     async function pullCatalogFromServer() {
       if (window.location.protocol === "file:") return false;
       try {
@@ -1631,18 +1639,39 @@
       }
     }
 
+    async function pullAdminSnapshotFromServer() {
+      if (window.location.protocol === "file:" || !supabaseClient || !currentUser || !isCurrentAdmin()) return false;
+      const { data: sessionData } = await supabaseClient.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) return false;
+      try {
+        const response = await fetch("/api/admin/snapshot", {
+          cache: "no-store",
+          headers: { "authorization": `Bearer ${accessToken}` }
+        });
+        if (!response.ok) return false;
+        const snapshot = await response.json();
+        if (Array.isArray(snapshot.customers)) state.customers = snapshot.customers.map(mapDatabaseCustomer);
+        if (Array.isArray(snapshot.orders)) state.orders = snapshot.orders.map(mapDatabaseOrder);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
     async function pullFromSupabase(showMessage = true) {
       if (!supabaseClient) return;
       const usedServerCatalog = await pullCatalogFromServer();
+      const usedAdminSnapshot = await pullAdminSnapshotFromServer();
       if (usedServerCatalog) {
-        if (currentUser) {
+        if (currentUser && !usedAdminSnapshot) {
           const { data: customers } = await supabaseClient.from("customer_profiles").select("id,full_name,email,phone,house_number,street,sector,province,city,address_reference,shipping_address").order("created_at", { ascending: false });
-          if (customers) state.customers = customers.map(customer => ({ id: customer.id, name: customer.full_name, email: customer.email, phone: customer.phone || "", houseNumber: customer.house_number || "", street: customer.street || "", sector: customer.sector || "", province: customer.province || "", city: customer.city || "", reference: customer.address_reference || "", address: customer.shipping_address || "" }));
+          if (customers) state.customers = customers.map(mapDatabaseCustomer);
           const { data: orders } = await supabaseClient.from("orders").select("id,order_number,customer_id,status,payment_status,carrier,tracking_code,estimated_delivery,created_at,order_items(product_id,product_name,unit_price,quantity),shipment_events(status,note,event_at)").order("created_at", { ascending: false });
-          if (orders) state.orders = orders.map(order => ({ id: order.order_number, remoteId: order.id, customerId: order.customer_id, status: order.status, paymentStatus: order.payment_status || "Pendiente", carrier: order.carrier || "Catalina Express", trackingCode: order.tracking_code || "", createdAt: order.created_at, eta: order.estimated_delivery || "", items: (order.order_items || []).map(item => ({ productId: item.product_id, name: item.product_name, price: Number(item.unit_price), qty: Number(item.quantity) })), history: (order.shipment_events || []).map(event => ({ status: event.status, note: event.note || statusNote(event.status), at: event.event_at })) }));
+          if (orders) state.orders = orders.map(mapDatabaseOrder);
         }
         persist();
-        if (showMessage) showToast("Catalogo sincronizado");
+        if (showMessage) showToast(usedAdminSnapshot ? "Admin sincronizado" : "Catalogo sincronizado");
         return;
       }
       let productResponse = await supabaseClient.from("products").select("id,name,category,description,sku,price,compare_at_price,discount_percent,stock,low_stock_threshold,image_url,is_active,product_images(id,image_url,storage_path,alt_text,sort_order),product_variants(id,name,value,sku,price_delta,stock,is_active,sort_order)").eq("is_active", true).order("created_at", { ascending: false });
@@ -1659,9 +1688,9 @@
       }
       if (currentUser) {
         const { data: customers } = await supabaseClient.from("customer_profiles").select("id,full_name,email,phone,house_number,street,sector,province,city,address_reference,shipping_address").order("created_at", { ascending: false });
-        if (customers) state.customers = customers.map(customer => ({ id: customer.id, name: customer.full_name, email: customer.email, phone: customer.phone || "", houseNumber: customer.house_number || "", street: customer.street || "", sector: customer.sector || "", province: customer.province || "", city: customer.city || "", reference: customer.address_reference || "", address: customer.shipping_address || "" }));
+        if (customers) state.customers = customers.map(mapDatabaseCustomer);
         const { data: orders } = await supabaseClient.from("orders").select("id,order_number,customer_id,status,payment_status,carrier,tracking_code,estimated_delivery,created_at,order_items(product_id,product_name,unit_price,quantity),shipment_events(status,note,event_at)").order("created_at", { ascending: false });
-        if (orders) state.orders = orders.map(order => ({ id: order.order_number, remoteId: order.id, customerId: order.customer_id, status: order.status, paymentStatus: order.payment_status || "Pendiente", carrier: order.carrier || "Catalina Express", trackingCode: order.tracking_code || "", createdAt: order.created_at, eta: order.estimated_delivery || "", items: (order.order_items || []).map(item => ({ productId: item.product_id, name: item.product_name, price: Number(item.unit_price), qty: Number(item.quantity) })), history: (order.shipment_events || []).map(event => ({ status: event.status, note: event.note || statusNote(event.status), at: event.event_at })) }));
+        if (orders) state.orders = orders.map(mapDatabaseOrder);
       }
       persist();
       if (showMessage) showToast("Datos sincronizados");

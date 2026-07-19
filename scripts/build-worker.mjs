@@ -94,6 +94,13 @@ async function getSupabaseUser(request, env) {
   return response.json();
 }
 
+async function requireAdminUser(request, env) {
+  const user = await getSupabaseUser(request, env);
+  if (!user?.id) throw new Error("Inicia sesion admin.");
+  if (user.app_metadata?.role !== "admin") throw new Error("Esta cuenta no tiene permisos de administrador.");
+  return user;
+}
+
 function bytesToHex(buffer) {
   return [...new Uint8Array(buffer)].map(byte => byte.toString(16).padStart(2, "0")).join("");
 }
@@ -159,6 +166,13 @@ async function getCatalog(env) {
     categories = [];
   }
   return { products: products || [], categories: categories || [] };
+}
+
+async function getAdminSnapshot(request, env) {
+  await requireAdminUser(request, env);
+  const customers = await supabaseRest(env, "customer_profiles?select=id,full_name,email,phone,house_number,street,sector,province,city,address_reference,shipping_address,created_at&order=created_at.desc", { method: "GET" });
+  const orders = await supabaseRest(env, "orders?select=id,order_number,customer_id,status,payment_status,carrier,tracking_code,estimated_delivery,created_at,subtotal,shipping_amount,total,order_items(product_id,product_name,unit_price,quantity),shipment_events(status,note,event_at)&order=created_at.desc", { method: "GET" });
+  return { customers: customers || [], orders: orders || [] };
 }
 
 function buildServerCheckoutItems(requestedItems, products) {
@@ -296,15 +310,47 @@ async function markStripeCheckoutPaid(event, env) {
       raw_event: event
     })
   });
-  await supabaseRest(env, "shipment_events", {
-    method: "POST",
-    headers: { "prefer": "return=minimal" },
-    body: JSON.stringify({
-      order_id: order.id,
-      status: "Preparando",
-      note: "Pago confirmado por Stripe. Pedido enviado a preparacion."
-    })
+  if (!wasAlreadyPaid) {
+    await supabaseRest(env, "shipment_events", {
+      method: "POST",
+      headers: { "prefer": "return=minimal" },
+      body: JSON.stringify({
+        order_id: order.id,
+        status: "Preparando",
+        note: "Pago confirmado por Stripe. Pedido enviado a preparacion."
+      })
+    });
+  }
+}
+
+async function retrieveStripeCheckoutSession(sessionId, env) {
+  const secretKey = env.STRIPE_SECRET_KEY || "";
+  if (!secretKey) throw new Error("Stripe no esta configurado.");
+  const response = await fetch(\`https://api.stripe.com/v1/checkout/sessions/\${encodeURIComponent(sessionId)}\`, {
+    headers: { "authorization": \`Bearer \${secretKey}\` }
   });
+  const session = await response.json();
+  if (!response.ok) throw new Error(session.error?.message || "Stripe no pudo verificar la sesion.");
+  return session;
+}
+
+async function confirmStripeCheckoutSession(request, env) {
+  try {
+    let payload;
+    try {
+      payload = await request.json();
+    } catch {
+      return jsonResponse({ error: "Solicitud invalida." }, 400);
+    }
+    const sessionId = String(payload.sessionId || "").trim();
+    if (!sessionId.startsWith("cs_")) return jsonResponse({ error: "Sesion de Stripe invalida." }, 400);
+    const session = await retrieveStripeCheckoutSession(sessionId, env);
+    if (session.payment_status !== "paid") return jsonResponse({ paid: false, status: session.payment_status || "pending" });
+    await markStripeCheckoutPaid({ type: "checkout.session.completed", data: { object: session } }, env);
+    return jsonResponse({ paid: true, orderNumber: session.metadata?.order_number || "", trackingCode: createTrackingCode(session.metadata?.order_number || "") });
+  } catch (error) {
+    return jsonResponse({ error: error.message || "No se pudo confirmar el pago." }, 500);
+  }
 }
 
 async function handleStripeWebhook(request, env) {
@@ -405,11 +451,23 @@ export default {
       return handleStripeWebhook(request, env || {});
     }
 
+    if (url.pathname === "/api/confirm-checkout-session" && request.method === "POST") {
+      return confirmStripeCheckoutSession(request, env || {});
+    }
+
     if (url.pathname === "/api/catalog" && request.method === "GET") {
       try {
         return jsonResponse(await getCatalog(env || {}));
       } catch (error) {
         return jsonResponse({ error: error.message || "No se pudo cargar el catalogo." }, 500);
+      }
+    }
+
+    if (url.pathname === "/api/admin/snapshot" && request.method === "GET") {
+      try {
+        return jsonResponse(await getAdminSnapshot(request, env || {}));
+      } catch (error) {
+        return jsonResponse({ error: error.message || "No se pudo cargar el admin." }, 403);
       }
     }
 
