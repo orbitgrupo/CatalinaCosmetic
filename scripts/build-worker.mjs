@@ -329,19 +329,25 @@ async function saveAdminProduct(request, env) {
       });
     }
 
+    let imagesSkipped = false;
     const uploadedImages = Array.isArray(payload.uploadedImages) ? payload.uploadedImages : [];
     if (uploadedImages.length) {
       const offset = Math.max(0, Number(payload.imageOffset || 0));
-      await supabaseRest(env, "product_images", {
-        method: "POST",
-        headers: { "prefer": "return=minimal" },
-        body: JSON.stringify(uploadedImages.slice(0, 25).map((image, index) => ({
-          product_id: product.id,
-          image_url: String(image.url || "").slice(0, 1200),
-          storage_path: String(image.path || "").slice(0, 800),
-          sort_order: offset + index
-        })).filter(image => image.image_url))
-      });
+      try {
+        await supabaseRest(env, "product_images", {
+          method: "POST",
+          headers: { "prefer": "return=minimal" },
+          body: JSON.stringify(uploadedImages.slice(0, 25).map((image, index) => ({
+            product_id: product.id,
+            image_url: String(image.url || "").slice(0, 1200),
+            storage_path: String(image.path || "").slice(0, 800),
+            sort_order: offset + index
+          })).filter(image => image.image_url))
+        });
+      } catch (error) {
+        if (!isMissingSupabaseRelation(error)) throw error;
+        imagesSkipped = true;
+      }
     }
 
     let variantsSkipped = false;
@@ -374,7 +380,7 @@ async function saveAdminProduct(request, env) {
       }
     }
 
-    return jsonResponse({ product: savedProducts?.[0] || product, variantsSkipped });
+    return jsonResponse({ product: savedProducts?.[0] || product, imagesSkipped, variantsSkipped });
   } catch (error) {
     const status = /admin|permisos|sesion/i.test(error.message || "") ? 403 : 500;
     return jsonResponse({ error: error.message || "No se pudo guardar el producto." }, status);
