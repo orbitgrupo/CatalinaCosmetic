@@ -227,6 +227,34 @@ async function createAdminAccount(request, env) {
   }
 }
 
+async function ensureProductImagesBucket(request, env) {
+  try {
+    await requireAdminUser(request, env);
+    const url = env.CATALINA_SUPABASE_URL || env.SUPABASE_URL || "";
+    const serviceKey = env.CATALINA_SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_ROLE_KEY || "";
+    if (!url || !serviceKey) return jsonResponse({ error: "Supabase service role no esta configurado en Sites." }, 503);
+    const bucketId = "product-images";
+    const headers = {
+      "apikey": serviceKey,
+      "authorization": \`Bearer \${serviceKey}\`,
+      "content-type": "application/json"
+    };
+    const existing = await fetch(\`\${url}/storage/v1/bucket/\${bucketId}\`, { headers });
+    if (existing.ok) return jsonResponse({ bucket: bucketId, created: false });
+    const created = await fetch(\`\${url}/storage/v1/bucket\`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ id: bucketId, name: bucketId, public: true })
+    });
+    if (created.ok || created.status === 409) return jsonResponse({ bucket: bucketId, created: created.ok });
+    const data = await created.json().catch(() => ({}));
+    return jsonResponse({ error: data?.message || "No se pudo crear el bucket product-images." }, created.status);
+  } catch (error) {
+    const status = /admin|permisos|sesion/i.test(error.message || "") ? 403 : 500;
+    return jsonResponse({ error: error.message || "No se pudo preparar Storage." }, status);
+  }
+}
+
 function buildServerCheckoutItems(requestedItems, products) {
   const byId = new Map(products.map(product => [product.id, product]));
   const byName = new Map(products.map(product => [product.name, product]));
@@ -525,6 +553,10 @@ export default {
 
     if (url.pathname === "/api/admin/create-user" && request.method === "POST") {
       return createAdminAccount(request, env || {});
+    }
+
+    if (url.pathname === "/api/admin/ensure-product-images-bucket" && request.method === "POST") {
+      return ensureProductImagesBucket(request, env || {});
     }
 
     if (url.pathname === "/supabase-schema.sql") {

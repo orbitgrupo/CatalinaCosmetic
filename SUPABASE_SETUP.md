@@ -49,6 +49,12 @@ https://YOUR_SITE_URL/admin.html
 
 - Admins can click `Recuperar contrasena` in `/admin.html`. Supabase sends the email, redirects back to `/admin.html?recover=1`, and the admin panel shows the new password form.
 
+Product image uploads:
+
+- The admin uploads files to Supabase Storage bucket `product-images`.
+- The server endpoint `/api/admin/ensure-product-images-bucket` can create that bucket automatically for an authenticated admin when `CATALINA_SUPABASE_SERVICE_ROLE_KEY` is configured in Sites.
+- If Supabase still shows `bucket not found`, run `supabase-product-images.sql` in Supabase SQL Editor and confirm the Storage bucket is named exactly `product-images`.
+
 Customers can create accounts from the site with the `Crear` button. After signing in, they should use `Usar mi sesion` in the profile form, complete their shipping details, and save the profile before placing an order.
 
 Checkout security:

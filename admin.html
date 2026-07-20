@@ -1537,10 +1537,24 @@
       return `${cleanId}/${Date.now()}-${index}.${extension}`;
     }
 
+    async function ensureProductImageBucket() {
+      if (window.location.protocol === "file:" || !supabaseClient || !currentUser || !isCurrentAdmin()) return;
+      const { data: sessionData } = await supabaseClient.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) throw new Error("La sesion admin expiro. Entra de nuevo.");
+      const response = await fetch("/api/admin/ensure-product-images-bucket", {
+        method: "POST",
+        headers: { "authorization": `Bearer ${accessToken}` }
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "No se pudo preparar el bucket product-images.");
+    }
+
     async function uploadProductImages(productId) {
       const files = selectedProductImageFiles();
       if (!files.length) return [];
       if (!supabaseClient || !currentUser) throw new Error("Inicia sesion admin para subir imagenes.");
+      await ensureProductImageBucket();
       const uploaded = [];
       for (const [index, file] of files.entries()) {
         const path = storagePathForProduct(productId, file, index);
@@ -1549,7 +1563,12 @@
           upsert: false,
           contentType: file.type || "image/jpeg"
         });
-        if (error) throw error;
+        if (error) {
+          if (/bucket.*not.*found|not found/i.test(error.message || "")) {
+            throw new Error("No existe el bucket product-images en Supabase Storage. Ya agregue reparacion automatica por servidor; si sigue saliendo, revisa que CATALINA_SUPABASE_SERVICE_ROLE_KEY este configurada en Sites y corre supabase-product-images.sql.");
+          }
+          throw error;
+        }
         const { data } = supabaseClient.storage.from(PRODUCT_IMAGE_BUCKET).getPublicUrl(path);
         if (data?.publicUrl) uploaded.push({ url: data.publicUrl, path });
       }
