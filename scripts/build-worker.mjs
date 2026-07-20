@@ -379,7 +379,7 @@ async function uploadAdminProductImage(request, env) {
     const serviceKey = env.CATALINA_SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_ROLE_KEY || "";
     const form = await request.formData();
     const file = form.get("file");
-    const path = String(form.get("path") || "").replace(/^\/+/, "");
+    const path = String(form.get("path") || "").replace(/^\\/+/, "");
     if (!file || typeof file.arrayBuffer !== "function") return jsonResponse({ error: "Archivo invalido." }, 400);
     if (!path || path.includes("..")) return jsonResponse({ error: "Ruta de imagen invalida." }, 400);
     const objectPath = path.split("/").map(segment => encodeURIComponent(segment)).join("/");
