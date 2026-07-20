@@ -72,3 +72,4 @@ to authenticated
 using (bucket_id = 'product-images' and public.is_admin());
 
 select pg_notify('pgrst', 'reload schema');
+notify pgrst, 'reload schema';

@@ -341,7 +341,7 @@
                 <div class="flex items-center justify-between gap-3">
                   <div>
                     <p class="text-xs font-extrabold uppercase tracking-widest text-muted">Imagenes del producto</p>
-                    <p class="text-xs text-muted">Bucket: <span class="font-bold text-ink">product-images</span></p>
+                    <p class="text-xs text-muted">Selecciona varias imagenes. La primera sera la principal.</p>
                   </div>
                   <span class="material-symbols-outlined rounded-full bg-white p-2 text-violet">add_photo_alternate</span>
                 </div>
@@ -1598,7 +1598,18 @@
       } catch (error) {
         return showToast(error.message || "No se pudo subir la imagen");
       }
-      const imageUrl = uploadedImages[0]?.url || document.getElementById("product-image").value.trim() || images.skin;
+      const nextGalleryItems = [
+        ...editingProductImages,
+        ...uploadedImages.map((image, index) => ({
+          imageUrl: image.url,
+          image_url: image.url,
+          storagePath: image.path,
+          storage_path: image.path,
+          altText: `Foto ${editingProductImages.length + index + 1}`,
+          sortOrder: editingProductImages.length + index
+        }))
+      ];
+      const imageUrl = nextGalleryItems[0]?.imageUrl || nextGalleryItems[0]?.image_url || uploadedImages[0]?.url || document.getElementById("product-image").value.trim() || images.skin;
       const product = {
         id,
         name: document.getElementById("product-name").value.trim(),
@@ -1611,8 +1622,8 @@
         lowStockThreshold: Number(document.getElementById("product-low-stock").value || 5),
         image: imageUrl,
         description: document.getElementById("product-description").value.trim(),
-        galleryItems: editingProductImages,
-        gallery: editingProductImages.map(image => image.imageUrl || image.image_url || image.url).filter(Boolean),
+        galleryItems: nextGalleryItems,
+        gallery: nextGalleryItems.map(image => image.imageUrl || image.image_url || image.url).filter(Boolean),
         variants: editingProductVariants
       };
       const index = state.products.findIndex(item => item.id === id);
