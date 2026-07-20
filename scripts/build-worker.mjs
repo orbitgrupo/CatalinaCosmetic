@@ -277,6 +277,10 @@ function cleanProductPayload(product = {}) {
   };
 }
 
+function isMissingSupabaseRelation(error) {
+  return /schema cache|Could not find the table|relation .* does not exist|PGRST205/i.test(error?.message || "");
+}
+
 async function saveAdminProduct(request, env) {
   try {
     await requireAdminUser(request, env);
@@ -340,31 +344,37 @@ async function saveAdminProduct(request, env) {
       });
     }
 
+    let variantsSkipped = false;
     if (Array.isArray(payload.variants)) {
-      await supabaseRest(env, \`product_variants?product_id=eq.\${encodeURIComponent(product.id)}\`, {
-        method: "DELETE",
-        headers: { "prefer": "return=minimal" }
-      });
-      const variants = payload.variants.slice(0, 50).map((variant, index) => ({
-        product_id: product.id,
-        name: String(variant.name || "").trim().slice(0, 80),
-        value: String(variant.value || "").trim().slice(0, 120),
-        sku: String(variant.sku || "").trim().slice(0, 120) || null,
-        price_delta: Number(variant.priceDelta || 0),
-        stock: Math.max(0, Math.round(Number(variant.stock || 0))),
-        is_active: variant.isActive !== false,
-        sort_order: index
-      })).filter(variant => variant.name && variant.value);
-      if (variants.length) {
-        await supabaseRest(env, "product_variants", {
-          method: "POST",
-          headers: { "prefer": "return=minimal" },
-          body: JSON.stringify(variants)
+      try {
+        await supabaseRest(env, \`product_variants?product_id=eq.\${encodeURIComponent(product.id)}\`, {
+          method: "DELETE",
+          headers: { "prefer": "return=minimal" }
         });
+        const variants = payload.variants.slice(0, 50).map((variant, index) => ({
+          product_id: product.id,
+          name: String(variant.name || "").trim().slice(0, 80),
+          value: String(variant.value || "").trim().slice(0, 120),
+          sku: String(variant.sku || "").trim().slice(0, 120) || null,
+          price_delta: Number(variant.priceDelta || 0),
+          stock: Math.max(0, Math.round(Number(variant.stock || 0))),
+          is_active: variant.isActive !== false,
+          sort_order: index
+        })).filter(variant => variant.name && variant.value);
+        if (variants.length) {
+          await supabaseRest(env, "product_variants", {
+            method: "POST",
+            headers: { "prefer": "return=minimal" },
+            body: JSON.stringify(variants)
+          });
+        }
+      } catch (error) {
+        if (!isMissingSupabaseRelation(error)) throw error;
+        variantsSkipped = true;
       }
     }
 
-    return jsonResponse({ product: savedProducts?.[0] || product });
+    return jsonResponse({ product: savedProducts?.[0] || product, variantsSkipped });
   } catch (error) {
     const status = /admin|permisos|sesion/i.test(error.message || "") ? 403 : 500;
     return jsonResponse({ error: error.message || "No se pudo guardar el producto." }, status);

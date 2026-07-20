@@ -1616,14 +1616,15 @@
       const index = state.products.findIndex(item => item.id === id);
       if (index >= 0) state.products[index] = product;
       else state.products.unshift(product);
+      let saveResult = {};
       try {
-        await saveProductToSupabase(product, { category: createdCategory, uploadedImages, imageOffset: editingProductImages.length, variants: editingProductVariants });
+        saveResult = await saveProductToSupabase(product, { category: createdCategory, uploadedImages, imageOffset: editingProductImages.length, variants: editingProductVariants });
       } catch (error) {
         return showToast(error.message || "No se pudo guardar el producto");
       }
       resetProductEditor();
       persist();
-      showToast(uploadedImages.length ? "Producto e imagenes guardados" : (createdCategory ? "Categoria y producto guardados" : "Producto guardado"));
+      showToast(saveResult.variantsSkipped ? "Producto guardado. Corre supabase-product-management.sql para activar variantes." : (uploadedImages.length ? "Producto e imagenes guardados" : (createdCategory ? "Categoria y producto guardados" : "Producto guardado")));
     }
 
     async function createCategoryFromForm() {
@@ -2086,7 +2087,7 @@
 
     async function saveProductToSupabase(product, options = {}) {
       if (!supabaseClient || !currentUser) return;
-      await adminApiFetch("/api/admin/save-product", {
+      return adminApiFetch("/api/admin/save-product", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({

@@ -6,7 +6,7 @@
 4. If the database was created before Stripe payments were added and checkout reports `Could not find the 'payment_status' column of 'orders' in the schema cache`, run `supabase-hotfix-payments.sql` once in the SQL editor.
 5. If the database already existed before the editable home studio was added, run `supabase-site-content.sql` once in the SQL editor.
 6. If the database already existed before product image uploads were added, run `supabase-product-images.sql` once in the SQL editor. It creates the `product-images` Storage bucket and `product_images` table.
-7. If the database already existed before product variants, discounts, SKU and stock alerts were added, run `supabase-product-management.sql` once in the SQL editor.
+7. If the database already existed before product variants, discounts, SKU and stock alerts were added, run `supabase-product-management.sql` once in the SQL editor. If Supabase shows `Could not find the table 'public.product_variants' in the schema cache`, run this file and wait a few seconds for PostgREST cache reload.
 8. For immediate admin/storefront sync, run `supabase-realtime-sync.sql` once in the SQL editor. Without it, the site still refreshes from Supabase every 30 seconds.
 9. Create an admin user in Supabase Auth.
 10. Set the admin user's `app_metadata` to:
