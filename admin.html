@@ -1550,27 +1550,36 @@
       if (!response.ok) throw new Error(data.error || "No se pudo preparar el bucket product-images.");
     }
 
+    async function adminApiFetch(path, options = {}) {
+      if (window.location.protocol === "file:") throw new Error("Esta accion necesita abrir el admin desde el servidor.");
+      if (!supabaseClient || !currentUser || !isCurrentAdmin()) throw new Error("Entra con una cuenta admin.");
+      const { data: sessionData } = await supabaseClient.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) throw new Error("La sesion admin expiro. Entra de nuevo.");
+      const response = await fetch(path, {
+        ...options,
+        headers: {
+          "authorization": `Bearer ${accessToken}`,
+          ...(options.headers || {})
+        }
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "El servidor no pudo completar la accion.");
+      return data;
+    }
+
     async function uploadProductImages(productId) {
       const files = selectedProductImageFiles();
       if (!files.length) return [];
       if (!supabaseClient || !currentUser) throw new Error("Inicia sesion admin para subir imagenes.");
-      await ensureProductImageBucket();
       const uploaded = [];
       for (const [index, file] of files.entries()) {
         const path = storagePathForProduct(productId, file, index);
-        const { error } = await supabaseClient.storage.from(PRODUCT_IMAGE_BUCKET).upload(path, file, {
-          cacheControl: "3600",
-          upsert: false,
-          contentType: file.type || "image/jpeg"
-        });
-        if (error) {
-          if (/bucket.*not.*found|not found/i.test(error.message || "")) {
-            throw new Error("No existe el bucket product-images en Supabase Storage. Ya agregue reparacion automatica por servidor; si sigue saliendo, revisa que CATALINA_SUPABASE_SERVICE_ROLE_KEY este configurada en Sites y corre supabase-product-images.sql.");
-          }
-          throw error;
-        }
-        const { data } = supabaseClient.storage.from(PRODUCT_IMAGE_BUCKET).getPublicUrl(path);
-        if (data?.publicUrl) uploaded.push({ url: data.publicUrl, path });
+        const form = new FormData();
+        form.append("file", file);
+        form.append("path", path);
+        const data = await adminApiFetch("/api/admin/upload-product-image", { method: "POST", body: form });
+        if (data?.url) uploaded.push({ url: data.url, path: data.path || path });
       }
       return uploaded;
     }
@@ -1581,7 +1590,6 @@
       const newCategoryName = document.getElementById("category-name").value.trim();
       const newCategoryDescription = document.getElementById("category-description").value.trim();
       const createdCategory = newCategoryName ? ensureCategory(newCategoryName, newCategoryDescription) : null;
-      if (createdCategory) await saveCategoryToSupabase(createdCategory);
       let uploadedImages = [];
       try {
         uploadedImages = await uploadProductImages(id);
@@ -1608,9 +1616,11 @@
       const index = state.products.findIndex(item => item.id === id);
       if (index >= 0) state.products[index] = product;
       else state.products.unshift(product);
-      await saveProductToSupabase(product);
-      if (uploadedImages.length) await saveProductImagesToSupabase(id, uploadedImages);
-      await saveProductVariantsToSupabase(id, editingProductVariants);
+      try {
+        await saveProductToSupabase(product, { category: createdCategory, uploadedImages, imageOffset: editingProductImages.length, variants: editingProductVariants });
+      } catch (error) {
+        return showToast(error.message || "No se pudo guardar el producto");
+      }
       resetProductEditor();
       persist();
       showToast(uploadedImages.length ? "Producto e imagenes guardados" : (createdCategory ? "Categoria y producto guardados" : "Producto guardado"));
@@ -2074,16 +2084,19 @@
       }
     }
 
-    async function saveProductToSupabase(product) {
+    async function saveProductToSupabase(product, options = {}) {
       if (!supabaseClient || !currentUser) return;
-      const payload = { id: product.id, name: product.name, category: product.category, description: product.description, sku: product.sku || null, price: product.price, compare_at_price: product.compareAtPrice || null, discount_percent: product.discountPercent || 0, stock: product.stock, low_stock_threshold: product.lowStockThreshold || 5, image_url: product.image, is_active: true };
-      let { error } = await supabaseClient.from("products").upsert(payload);
-      if (error) {
-        const fallback = { id: product.id, name: product.name, category: product.category, description: product.description, price: product.price, stock: product.stock, image_url: product.image, is_active: true };
-        const retry = await supabaseClient.from("products").upsert(fallback);
-        error = retry.error;
-      }
-      if (error) showToast(error.message);
+      await adminApiFetch("/api/admin/save-product", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          product,
+          category: options.category || null,
+          uploadedImages: options.uploadedImages || [],
+          imageOffset: options.imageOffset || 0,
+          variants: options.variants || []
+        })
+      });
     }
 
     async function saveProductImagesToSupabase(productId, uploadedImages) {

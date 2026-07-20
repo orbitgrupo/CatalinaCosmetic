@@ -230,9 +230,18 @@ async function createAdminAccount(request, env) {
 async function ensureProductImagesBucket(request, env) {
   try {
     await requireAdminUser(request, env);
+    await ensureProductImagesBucketForEnv(env);
+    return jsonResponse({ bucket: "product-images", ready: true });
+  } catch (error) {
+    const status = /admin|permisos|sesion/i.test(error.message || "") ? 403 : 500;
+    return jsonResponse({ error: error.message || "No se pudo preparar Storage." }, status);
+  }
+}
+
+async function ensureProductImagesBucketForEnv(env) {
     const url = env.CATALINA_SUPABASE_URL || env.SUPABASE_URL || "";
     const serviceKey = env.CATALINA_SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_ROLE_KEY || "";
-    if (!url || !serviceKey) return jsonResponse({ error: "Supabase service role no esta configurado en Sites." }, 503);
+    if (!url || !serviceKey) throw new Error("Supabase service role no esta configurado en Sites.");
     const bucketId = "product-images";
     const headers = {
       "apikey": serviceKey,
@@ -240,18 +249,160 @@ async function ensureProductImagesBucket(request, env) {
       "content-type": "application/json"
     };
     const existing = await fetch(\`\${url}/storage/v1/bucket/\${bucketId}\`, { headers });
-    if (existing.ok) return jsonResponse({ bucket: bucketId, created: false });
+    if (existing.ok) return;
     const created = await fetch(\`\${url}/storage/v1/bucket\`, {
       method: "POST",
       headers,
       body: JSON.stringify({ id: bucketId, name: bucketId, public: true })
     });
-    if (created.ok || created.status === 409) return jsonResponse({ bucket: bucketId, created: created.ok });
+    if (created.ok || created.status === 409) return;
     const data = await created.json().catch(() => ({}));
-    return jsonResponse({ error: data?.message || "No se pudo crear el bucket product-images." }, created.status);
+    throw new Error(data?.message || "No se pudo crear el bucket product-images.");
+}
+
+function cleanProductPayload(product = {}) {
+  return {
+    id: String(product.id || crypto.randomUUID()),
+    name: String(product.name || "").trim().slice(0, 180),
+    category: String(product.category || "").trim().slice(0, 120),
+    description: String(product.description || "").trim().slice(0, 2000),
+    sku: String(product.sku || "").trim().slice(0, 120) || null,
+    price: Math.max(0, Number(product.price || 0)),
+    compare_at_price: Number(product.compareAtPrice || 0) > 0 ? Number(product.compareAtPrice || 0) : null,
+    discount_percent: Math.max(0, Math.min(100, Number(product.discountPercent || 0))),
+    stock: Math.max(0, Math.round(Number(product.stock || 0))),
+    low_stock_threshold: Math.max(0, Math.round(Number(product.lowStockThreshold || 5))),
+    image_url: String(product.image || "").trim().slice(0, 1200),
+    is_active: true
+  };
+}
+
+async function saveAdminProduct(request, env) {
+  try {
+    await requireAdminUser(request, env);
+    const payload = await request.json().catch(() => null);
+    if (!payload?.product) return jsonResponse({ error: "Producto invalido." }, 400);
+    const product = cleanProductPayload(payload.product);
+    if (!product.name || !product.category) return jsonResponse({ error: "Completa nombre y categoria." }, 400);
+
+    if (payload.category?.name) {
+      await supabaseRest(env, "categories?on_conflict=name", {
+        method: "POST",
+        headers: { "prefer": "resolution=merge-duplicates,return=minimal" },
+        body: JSON.stringify({
+          id: payload.category.id || crypto.randomUUID(),
+          name: String(payload.category.name || "").trim().slice(0, 120),
+          slug: String(payload.category.slug || payload.category.name || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""),
+          description: String(payload.category.description || "").trim().slice(0, 600),
+          image_url: String(payload.category.image || product.image_url || "").trim().slice(0, 1200),
+          is_active: true
+        })
+      });
+    }
+
+    let savedProducts;
+    try {
+      savedProducts = await supabaseRest(env, "products?on_conflict=id", {
+        method: "POST",
+        headers: { "prefer": "resolution=merge-duplicates,return=representation" },
+        body: JSON.stringify(product)
+      });
+    } catch {
+      const fallback = {
+        id: product.id,
+        name: product.name,
+        category: product.category,
+        description: product.description,
+        price: product.price,
+        stock: product.stock,
+        image_url: product.image_url,
+        is_active: true
+      };
+      savedProducts = await supabaseRest(env, "products?on_conflict=id", {
+        method: "POST",
+        headers: { "prefer": "resolution=merge-duplicates,return=representation" },
+        body: JSON.stringify(fallback)
+      });
+    }
+
+    const uploadedImages = Array.isArray(payload.uploadedImages) ? payload.uploadedImages : [];
+    if (uploadedImages.length) {
+      const offset = Math.max(0, Number(payload.imageOffset || 0));
+      await supabaseRest(env, "product_images", {
+        method: "POST",
+        headers: { "prefer": "return=minimal" },
+        body: JSON.stringify(uploadedImages.slice(0, 25).map((image, index) => ({
+          product_id: product.id,
+          image_url: String(image.url || "").slice(0, 1200),
+          storage_path: String(image.path || "").slice(0, 800),
+          sort_order: offset + index
+        })).filter(image => image.image_url))
+      });
+    }
+
+    if (Array.isArray(payload.variants)) {
+      await supabaseRest(env, \`product_variants?product_id=eq.\${encodeURIComponent(product.id)}\`, {
+        method: "DELETE",
+        headers: { "prefer": "return=minimal" }
+      });
+      const variants = payload.variants.slice(0, 50).map((variant, index) => ({
+        product_id: product.id,
+        name: String(variant.name || "").trim().slice(0, 80),
+        value: String(variant.value || "").trim().slice(0, 120),
+        sku: String(variant.sku || "").trim().slice(0, 120) || null,
+        price_delta: Number(variant.priceDelta || 0),
+        stock: Math.max(0, Math.round(Number(variant.stock || 0))),
+        is_active: variant.isActive !== false,
+        sort_order: index
+      })).filter(variant => variant.name && variant.value);
+      if (variants.length) {
+        await supabaseRest(env, "product_variants", {
+          method: "POST",
+          headers: { "prefer": "return=minimal" },
+          body: JSON.stringify(variants)
+        });
+      }
+    }
+
+    return jsonResponse({ product: savedProducts?.[0] || product });
   } catch (error) {
     const status = /admin|permisos|sesion/i.test(error.message || "") ? 403 : 500;
-    return jsonResponse({ error: error.message || "No se pudo preparar Storage." }, status);
+    return jsonResponse({ error: error.message || "No se pudo guardar el producto." }, status);
+  }
+}
+
+async function uploadAdminProductImage(request, env) {
+  try {
+    await requireAdminUser(request, env);
+    await ensureProductImagesBucketForEnv(env);
+    const url = env.CATALINA_SUPABASE_URL || env.SUPABASE_URL || "";
+    const serviceKey = env.CATALINA_SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_ROLE_KEY || "";
+    const form = await request.formData();
+    const file = form.get("file");
+    const path = String(form.get("path") || "").replace(/^\/+/, "");
+    if (!file || typeof file.arrayBuffer !== "function") return jsonResponse({ error: "Archivo invalido." }, 400);
+    if (!path || path.includes("..")) return jsonResponse({ error: "Ruta de imagen invalida." }, 400);
+    const objectPath = path.split("/").map(segment => encodeURIComponent(segment)).join("/");
+    const response = await fetch(\`\${url}/storage/v1/object/product-images/\${objectPath}\`, {
+      method: "POST",
+      headers: {
+        "apikey": serviceKey,
+        "authorization": \`Bearer \${serviceKey}\`,
+        "content-type": file.type || "image/jpeg",
+        "cache-control": "3600",
+        "x-upsert": "false"
+      },
+      body: await file.arrayBuffer()
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) return jsonResponse({ error: data?.message || "No se pudo subir la imagen." }, response.status);
+    return jsonResponse({
+      path,
+      url: \`\${url}/storage/v1/object/public/product-images/\${objectPath}\`
+    });
+  } catch (error) {
+    const status = /admin|permisos|sesion/i.test(error.message || "") ? 403 : 500;
+    return jsonResponse({ error: error.message || "No se pudo subir la imagen." }, status);
   }
 }
 
@@ -557,6 +708,14 @@ export default {
 
     if (url.pathname === "/api/admin/ensure-product-images-bucket" && request.method === "POST") {
       return ensureProductImagesBucket(request, env || {});
+    }
+
+    if (url.pathname === "/api/admin/save-product" && request.method === "POST") {
+      return saveAdminProduct(request, env || {});
+    }
+
+    if (url.pathname === "/api/admin/upload-product-image" && request.method === "POST") {
+      return uploadAdminProductImage(request, env || {});
     }
 
     if (url.pathname === "/supabase-schema.sql") {
