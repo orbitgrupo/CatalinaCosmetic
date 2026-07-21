@@ -7,9 +7,10 @@
 5. If the database already existed before the editable home studio was added, run `supabase-site-content.sql` once in the SQL editor.
 6. If the database already existed before product image uploads were added, run `supabase-product-images.sql` once in the SQL editor. It creates the `product-images` Storage bucket and `product_images` table.
 7. If the database already existed before product variants, discounts, SKU and stock alerts were added, run `supabase-product-management.sql` once in the SQL editor. If Supabase shows `Could not find the table 'public.product_variants' in the schema cache`, run this file and wait a few seconds for PostgREST cache reload.
-8. For immediate admin/storefront sync, run `supabase-realtime-sync.sql` once in the SQL editor. Without it, the site still refreshes from Supabase every 30 seconds.
-9. Create an admin user in Supabase Auth.
-10. Set the admin user's `app_metadata` to:
+8. Run `supabase-customer-engagement.sql` once in the SQL editor to activate product favorites and customer reviews. It creates `product_favorites` and `product_reviews` with RLS policies.
+9. For immediate admin/storefront sync, run `supabase-realtime-sync.sql` once in the SQL editor. Without it, the site still refreshes from Supabase every 30 seconds.
+10. Create an admin user in Supabase Auth.
+11. Set the admin user's `app_metadata` to:
 
 ```json
 { "role": "admin" }
@@ -17,7 +18,7 @@
 
 After that first admin can sign in at `/admin.html` and use `Supabase > Crear administrador` to create more admin users. That action runs on the server with `CATALINA_SUPABASE_SERVICE_ROLE_KEY`; the service role key must never be pasted into any public HTML file.
 
-11. Add these Sites environment variables:
+12. Add these Sites environment variables:
 
 ```text
 CATALINA_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
@@ -27,9 +28,9 @@ STRIPE_SECRET_KEY=sk_test_or_live_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 ```
 
-12. Mark `CATALINA_SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`, and `STRIPE_WEBHOOK_SECRET` as secrets in Sites. Never place them in `catalina.html`.
+13. Mark `CATALINA_SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`, and `STRIPE_WEBHOOK_SECRET` as secrets in Sites. Never place them in `catalina.html`.
 
-13. In Stripe, create a webhook endpoint pointing to:
+14. In Stripe, create a webhook endpoint pointing to:
 
 ```text
 https://YOUR_SITE_URL/api/stripe-webhook
@@ -37,7 +38,7 @@ https://YOUR_SITE_URL/api/stripe-webhook
 
 Subscribe it to `checkout.session.completed`, then copy the signing secret into `STRIPE_WEBHOOK_SECRET`.
 
-14. Redeploy the latest Sites version after setting the variables.
+15. Redeploy the latest Sites version after setting the variables.
 
 Password recovery for admins:
 

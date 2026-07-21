@@ -7,6 +7,7 @@ const seed = fs.readFileSync(new URL("supabase-seed.sql", root), "utf8");
 const siteContentSql = fs.readFileSync(new URL("supabase-site-content.sql", root), "utf8");
 const productImagesSql = fs.readFileSync(new URL("supabase-product-images.sql", root), "utf8");
 const productManagementSql = fs.readFileSync(new URL("supabase-product-management.sql", root), "utf8");
+const customerEngagementSql = fs.readFileSync(new URL("supabase-customer-engagement.sql", root), "utf8");
 const realtimeSql = fs.readFileSync(new URL("supabase-realtime-sync.sql", root), "utf8");
 const setup = fs.readFileSync(new URL("SUPABASE_SETUP.md", root), "utf8");
 const distServer = new URL("dist/server/", root);
@@ -23,6 +24,7 @@ const seed = ${JSON.stringify(seed)};
 const siteContentSql = ${JSON.stringify(siteContentSql)};
 const productImagesSql = ${JSON.stringify(productImagesSql)};
 const productManagementSql = ${JSON.stringify(productManagementSql)};
+const customerEngagementSql = ${JSON.stringify(customerEngagementSql)};
 const realtimeSql = ${JSON.stringify(realtimeSql)};
 const setup = ${JSON.stringify(setup)};
 
@@ -172,7 +174,13 @@ async function getAdminSnapshot(request, env) {
   await requireAdminUser(request, env);
   const customers = await supabaseRest(env, "customer_profiles?select=id,full_name,email,phone,house_number,street,sector,province,city,address_reference,shipping_address,created_at&order=created_at.desc", { method: "GET" });
   const orders = await supabaseRest(env, "orders?select=id,order_number,customer_id,status,payment_status,carrier,tracking_code,estimated_delivery,created_at,subtotal,shipping_amount,total,order_items(product_id,product_name,unit_price,quantity),shipment_events(status,note,event_at)&order=created_at.desc", { method: "GET" });
-  return { customers: customers || [], orders: orders || [] };
+  let reviews = [];
+  try {
+    reviews = await supabaseRest(env, "product_reviews?select=id,product_id,user_id,rating,title,comment,status,created_at&order=created_at.desc", { method: "GET" });
+  } catch {
+    reviews = [];
+  }
+  return { customers: customers || [], orders: orders || [], reviews: reviews || [] };
 }
 
 function cleanAdminAccountPayload(payload = {}) {
@@ -772,6 +780,15 @@ export default {
 
     if (url.pathname === "/supabase-product-management.sql") {
       return new Response(productManagementSql, {
+        headers: {
+          "content-type": "text/plain; charset=utf-8",
+          "cache-control": "public, max-age=300"
+        }
+      });
+    }
+
+    if (url.pathname === "/supabase-customer-engagement.sql") {
+      return new Response(customerEngagementSql, {
         headers: {
           "content-type": "text/plain; charset=utf-8",
           "cache-control": "public, max-age=300"

@@ -825,50 +825,38 @@
   <main class="pt-32 pb-24 px-8 max-w-7xl mx-auto">
     <header class="mb-16 flex flex-col md:flex-row md:items-end md:justify-between gap-8">
       <div class="space-y-4">
-        <div class="inline-block py-1 px-3 bg-secondary-container text-on-secondary-container rounded-full text-[10px] font-bold tracking-[0.1em] uppercase">Profile Dashboard</div>
+        <div class="inline-block py-1 px-3 bg-secondary-container text-on-secondary-container rounded-full text-[10px] font-bold tracking-[0.1em] uppercase">Mi Catalina</div>
         <h1 id="profile-display-name" class="text-4xl md:text-5xl font-extrabold tracking-tighter text-on-surface">Crear perfil</h1>
-        <p id="profile-display-summary" class="text-on-surface-variant max-w-lg leading-relaxed">Guarda tus datos y direccion de Republica Dominicana para acelerar tus pedidos.</p>
+        <p id="profile-display-summary" class="text-on-surface-variant max-w-lg leading-relaxed">Administra tu cuenta, direcciones, pedidos, favoritos y resenas desde un solo lugar.</p>
       </div>
       <div class="flex gap-4">
-        <button class="bg-surface-container-high px-6 py-3 rounded-lg font-medium text-sm transition-all hover:bg-surface-container-highest">Edit Profile</button>
-        <button class="bg-primary text-on-primary px-6 py-3 rounded-lg font-medium text-sm transition-all hover:opacity-90">Consult Lab</button>
+        <button class="nav-link bg-surface-container-high px-6 py-3 rounded-lg font-medium text-sm transition-all hover:bg-surface-container-highest" data-page="catalog">Comprar</button>
+        <button class="nav-link bg-primary text-on-primary px-6 py-3 rounded-lg font-medium text-sm transition-all hover:opacity-90" data-page="tracking">Rastrear pedido</button>
       </div>
     </header>
     <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
-      <!-- Skin Routine -->
+      <!-- Account Summary -->
       <section class="md:col-span-8 bg-surface-container-lowest p-8 rounded-lg shadow-sm">
-        <div class="flex justify-between items-center mb-8">
+        <div class="flex flex-col gap-6 mb-8 md:flex-row md:items-center md:justify-between">
           <div class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-primary">science</span>
-            <h2 class="text-xl font-bold tracking-tight">Skin Routine</h2>
+            <span class="material-symbols-outlined text-primary">dashboard</span>
+            <div>
+              <h2 class="text-xl font-bold tracking-tight">Resumen de cuenta</h2>
+              <p class="text-sm text-on-surface-variant">Tus compras, productos guardados y actividad reciente.</p>
+            </div>
           </div>
-          <span class="text-xs font-bold tracking-[0.1em] text-outline uppercase">Active Regimen v2.1</span>
+          <span class="text-xs font-bold tracking-[0.1em] text-primary uppercase">Estilo marketplace</span>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <div class="group cursor-pointer">
-            <div class="aspect-[4/5] bg-surface-container-low mb-4 rounded-lg overflow-hidden flex items-center justify-center p-4">
-              <img class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAw5OXuH9MTLBbzgeQYvqzGGPG4DFEiM2-GcUdH-A1-Gh_5efDFpUGF6hLKUYnWt1Om4GxjXVha3EfufJBIxX1FDNvuKgZjgHSjN7kp8_NAjA6PXF7TwWcJuGacfpgZKLyG4BVGAVW8eXdChjxB9flgNpmatUwqedf62rPLZZ3TFrRxmWtm6dq2hcPXPzWNH-MVW_pN5-4hkbFIpTAl1bighHahHEdl00KrmjjsEOF2hBjrARgCdKsK52bV_bzjsFzta2b-2e6fMZg" alt="Serum"/>
+        <div id="profile-metrics" class="grid grid-cols-2 gap-3 md:grid-cols-4"></div>
+        <div class="mt-8 rounded-xl border border-outline-variant/20 bg-surface-container-low p-5">
+          <div class="mb-4 flex items-center justify-between gap-4">
+            <div>
+              <h3 class="font-extrabold text-on-surface">Sugerencias para ti</h3>
+              <p class="text-sm text-on-surface-variant">Productos activos del catalogo segun tu cuenta.</p>
             </div>
-            <div class="text-[10px] font-bold tracking-widest text-primary uppercase mb-1">AM / PM</div>
-            <h3 class="font-bold text-sm mb-1">Hyaluronic Complex</h3>
-            <p class="text-xs text-on-surface-variant">2% Pure Acid + B5</p>
+            <button class="nav-link rounded-full bg-white px-4 py-2 text-xs font-extrabold uppercase tracking-widest text-primary" data-page="catalog" type="button">Ver todo</button>
           </div>
-          <div class="group cursor-pointer">
-            <div class="aspect-[4/5] bg-surface-container-low mb-4 rounded-lg overflow-hidden flex items-center justify-center p-4">
-              <img class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCwac05Of9pQNOlCeW8jGk-tE3LiiADcNVgbbIYCkRidjaRv4MbUdpG6XyCRbpnYLsMG4VdEev_I3eVhXAX2yLhzGoZ_3ne7UsjWcBNJyEAUZ9S6AToCDo2E3vRq5gn5HnVIfPn2CCYynpRA8U2COyu7RnfPtfMk3jT-yd9drtjYrIMzQtX9maaU1C118D7Z7XsXuhtYKMMoULL2TvCDOs49kHoATFCwda2Sj3tC3-szuRsctKcsopXQQEDEiZ2mxqz-2NeVc04Efo" alt="Brightener"/>
-            </div>
-            <div class="text-[10px] font-bold tracking-widest text-primary uppercase mb-1">AM Focus</div>
-            <h3 class="font-bold text-sm mb-1">C-Lab Brightener</h3>
-            <p class="text-xs text-on-surface-variant">Stabilized Vitamin C</p>
-          </div>
-          <div class="group cursor-pointer">
-            <div class="aspect-[4/5] bg-surface-container-low mb-4 rounded-lg overflow-hidden flex items-center justify-center p-4">
-              <img class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAsuxsImag7icYrAOe3I7NwzEdpmdIKWtqMZrOn1P36m0xuJj2fNVRERf9sr8mp30qyi13cm9GUO0xCKwT3bN3swYRXmg48epD4IYs6VCf41LEJ_IEfpBHPEFVE8RM0Z_rkFjqyVZmpGE8I2CD-tzIYiflAlj-4OAC-51wIzw0OeldWHl0a9istSTwllmfITad_f0Ev_y9lMqMH-WmJqlTR2gY_st9ULS1h2E_9KsfZhHTTThuUSBJzp6iGsK_YHPLwUHFme9c4RM0" alt="Niacinamide"/>
-            </div>
-            <div class="text-[10px] font-bold tracking-widest text-primary uppercase mb-1">PM Recovery</div>
-            <h3 class="font-bold text-sm mb-1">Niacinamide Flux</h3>
-            <p class="text-xs text-on-surface-variant">Pore Refining Formula</p>
-          </div>
+          <div id="profile-suggestions" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"></div>
         </div>
       </section>
       <!-- Profile and Address -->
@@ -918,6 +906,28 @@
           <p id="profile-address-preview" class="rounded-lg bg-surface-container-lowest p-4 text-xs leading-5 text-on-surface-variant">Sin direccion registrada.</p>
         </form>
       </section>
+      <section class="md:col-span-6 bg-surface-container-lowest p-8 rounded-lg shadow-sm">
+        <div class="mb-6 flex items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-primary">favorite</span>
+            <h2 class="text-xl font-bold tracking-tight">Favoritos</h2>
+          </div>
+          <span id="profile-favorites-count" class="rounded-full bg-primary-container px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-on-primary-container">0</span>
+        </div>
+        <div id="profile-favorites" class="grid gap-4"></div>
+      </section>
+
+      <section class="md:col-span-6 bg-surface-container-lowest p-8 rounded-lg shadow-sm">
+        <div class="mb-6 flex items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-primary">rate_review</span>
+            <h2 class="text-xl font-bold tracking-tight">Mis resenas</h2>
+          </div>
+          <span id="profile-reviews-count" class="rounded-full bg-secondary-container px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-on-secondary-container">0</span>
+        </div>
+        <div id="profile-reviews" class="grid gap-4"></div>
+      </section>
+
       <!-- Order Archives -->
       <section class="md:col-span-12 bg-surface-container-low p-8 rounded-lg overflow-hidden">
         <div class="flex justify-between items-center mb-8">
@@ -1299,8 +1309,36 @@
               <span id="detail-add-cart-label">Agregar al carrito</span>
               <span id="detail-product-count" class="hidden rounded-full bg-white/20 px-3 py-1 text-[10px] tracking-normal">0 en carrito</span>
             </button>
+            <button id="detail-favorite" class="flex items-center justify-center gap-2 rounded-xl border border-outline-variant/40 bg-surface px-6 py-4 text-sm font-extrabold uppercase tracking-widest text-on-surface transition-colors hover:border-primary hover:text-primary" type="button">
+              <span class="material-symbols-outlined text-lg">favorite</span>
+              <span>Favorito</span>
+            </button>
             <button class="nav-link rounded-xl bg-surface-container-high px-6 py-4 text-sm font-extrabold uppercase tracking-widest text-on-surface transition-colors hover:bg-surface-container-highest" data-page="cart" type="button">Ver carrito</button>
           </div>
+          <section class="mt-8 rounded-2xl border border-outline-variant/30 bg-surface-container-lowest p-5">
+            <div class="mb-4 flex items-center justify-between gap-4">
+              <div>
+                <h4 class="text-sm font-extrabold uppercase tracking-[0.16em] text-on-surface">Resenas del producto</h4>
+                <p id="detail-review-help" class="mt-1 text-xs leading-5 text-on-surface-variant">Inicia sesion para dejar tu comentario.</p>
+              </div>
+              <span class="material-symbols-outlined rounded-full bg-primary-container p-2 text-primary">reviews</span>
+            </div>
+            <form id="detail-review-form" class="grid gap-3 rounded-xl bg-surface-container-low p-4">
+              <div class="grid gap-3 md:grid-cols-[120px_1fr]">
+                <select id="detail-review-rating" class="rounded-lg border-none bg-white px-3 py-3 text-sm font-bold focus:ring-1 focus:ring-primary">
+                  <option value="5">5 estrellas</option>
+                  <option value="4">4 estrellas</option>
+                  <option value="3">3 estrellas</option>
+                  <option value="2">2 estrellas</option>
+                  <option value="1">1 estrella</option>
+                </select>
+                <input id="detail-review-title" class="rounded-lg border-none bg-white px-4 py-3 text-sm focus:ring-1 focus:ring-primary" placeholder="Titulo corto de tu resena" />
+              </div>
+              <textarea id="detail-review-comment" class="rounded-lg border-none bg-white px-4 py-3 text-sm focus:ring-1 focus:ring-primary" rows="3" placeholder="Cuenta que te parecio el producto" required></textarea>
+              <button class="rounded-lg bg-on-surface px-5 py-3 text-xs font-extrabold uppercase tracking-widest text-white" type="submit">Guardar resena</button>
+            </form>
+            <div id="detail-review-list" class="mt-5 grid gap-3"></div>
+          </section>
         </div>
       </div>
     </section>
@@ -1779,6 +1817,9 @@
   let storefrontSupabaseClient = null;
   let currentCustomerUser = null;
   let customerOrders = [];
+  let customerFavorites = [];
+  let customerReviews = [];
+  let detailProductReviews = [];
   let customerSecurityTimer = null;
   let customerSecurityActivityBound = false;
   let lastCustomerActivityWrite = 0;
@@ -1866,6 +1907,11 @@
       .on('postgres_changes', { event: '*', schema: 'public', table: 'order_items' }, () => { if (currentCustomerUser) loadCustomerOrders(); })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'shipment_events' }, () => { if (currentCustomerUser) loadCustomerOrders(); })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'payments' }, () => { if (currentCustomerUser) loadCustomerOrders(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'product_favorites' }, () => { if (currentCustomerUser) loadCustomerFavorites(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'product_reviews' }, () => {
+        if (currentCustomerUser) loadCustomerReviews();
+        if (selectedDetailProduct) loadProductReviews(selectedDetailProduct.id);
+      })
       .subscribe();
   }
 
@@ -1919,6 +1965,176 @@
         </tr>
       `;
     }).join('');
+  }
+
+  function isCustomerEngagementMissing(error) {
+    return /product_favorites|product_reviews|schema cache|could not find the table/i.test(error?.message || "");
+  }
+
+  function isFavoriteProduct(productId) {
+    return customerFavorites.some(row => row.product_id === productId);
+  }
+
+  function profileProductMiniCard(product, context = "suggestion") {
+    const image = product?.images?.[0] || "";
+    const favorite = isFavoriteProduct(product.id);
+    return `
+      <article class="rounded-xl border border-outline-variant/20 bg-white p-3">
+        <div class="product-card block w-full text-left" data-product-id="${escapeHtml(product.id)}" role="button" tabindex="0">
+          <div class="aspect-square overflow-hidden rounded-lg bg-surface-container-low">
+            <img class="h-full w-full object-cover" src="${escapeHtml(image)}" alt="${escapeHtml(product.name)}"/>
+          </div>
+          <p class="mt-3 text-[10px] font-extrabold uppercase tracking-widest text-primary">${escapeHtml(product.category || "Producto")}</p>
+          <h4 class="mt-1 line-clamp-2 text-sm font-extrabold text-on-surface">${escapeHtml(product.name)}</h4>
+          <p class="mt-1 text-sm font-bold">$${Number(product.price || 0).toFixed(2)}</p>
+        </div>
+        <button class="favorite-toggle mt-3 flex w-full items-center justify-center gap-2 rounded-lg ${favorite ? "bg-primary text-on-primary" : "bg-surface-container-low text-on-surface"} px-3 py-2 text-xs font-extrabold uppercase tracking-widest" data-product-id="${escapeHtml(product.id)}" type="button">
+          <span class="material-symbols-outlined text-base" ${favorite ? `style="font-variation-settings:'FILL' 1;"` : ""}>favorite</span>
+          ${favorite ? "Guardado" : context === "favorite" ? "Quitar" : "Guardar"}
+        </button>
+      </article>
+    `;
+  }
+
+  function recommendedProfileProducts() {
+    const favoriteIds = new Set(customerFavorites.map(row => row.product_id));
+    const fromOrders = new Set((customerOrders || []).flatMap(order => (order.order_items || []).map(item => item.product_id).filter(Boolean)));
+    const sorted = productCatalog.slice().sort((a, b) => {
+      const aScore = (favoriteIds.has(a.id) ? -2 : 0) + (fromOrders.has(a.id) ? -1 : 0);
+      const bScore = (favoriteIds.has(b.id) ? -2 : 0) + (fromOrders.has(b.id) ? -1 : 0);
+      return aScore - bScore || Number(b.rating || 0) - Number(a.rating || 0);
+    });
+    return sorted.slice(0, 4);
+  }
+
+  function renderProfileCommerce() {
+    const metrics = document.getElementById('profile-metrics');
+    if (metrics) {
+      const openOrders = customerOrders.filter(order => order.status !== "Entregado").length;
+      metrics.innerHTML = [
+        { icon: "receipt_long", label: "Pedidos", value: customerOrders.length },
+        { icon: "local_shipping", label: "En proceso", value: openOrders },
+        { icon: "favorite", label: "Favoritos", value: customerFavorites.length },
+        { icon: "rate_review", label: "Resenas", value: customerReviews.length }
+      ].map(item => `
+        <div class="rounded-xl border border-outline-variant/20 bg-surface p-4">
+          <span class="material-symbols-outlined text-primary">${item.icon}</span>
+          <p class="mt-3 text-2xl font-extrabold">${item.value}</p>
+          <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">${item.label}</p>
+        </div>
+      `).join('');
+    }
+
+    const suggestions = document.getElementById('profile-suggestions');
+    if (suggestions) {
+      const products = recommendedProfileProducts();
+      suggestions.innerHTML = products.length
+        ? products.map(product => profileProductMiniCard(product)).join('')
+        : `<div class="col-span-full rounded-xl border border-dashed border-outline-variant/40 bg-white p-6 text-center text-sm font-bold text-on-surface-variant">Sin productos para sugerir todavia.</div>`;
+    }
+
+    const favorites = document.getElementById('profile-favorites');
+    const favoritesCount = document.getElementById('profile-favorites-count');
+    if (favoritesCount) favoritesCount.textContent = String(customerFavorites.length);
+    if (favorites) {
+      const products = customerFavorites.map(row => getProductById(row.product_id)).filter(Boolean);
+      favorites.innerHTML = !currentCustomerUser
+        ? `<div class="rounded-xl bg-surface-container-low p-6 text-sm font-bold text-on-surface-variant">Inicia sesion para guardar favoritos.</div>`
+        : products.length
+          ? products.map(product => profileProductMiniCard(product, "favorite")).join('')
+          : `<div class="rounded-xl bg-surface-container-low p-6 text-sm font-bold text-on-surface-variant">Aun no tienes favoritos. Pulsa el corazon en cualquier producto.</div>`;
+    }
+
+    const reviews = document.getElementById('profile-reviews');
+    const reviewsCount = document.getElementById('profile-reviews-count');
+    if (reviewsCount) reviewsCount.textContent = String(customerReviews.length);
+    if (reviews) {
+      reviews.innerHTML = !currentCustomerUser
+        ? `<div class="rounded-xl bg-surface-container-low p-6 text-sm font-bold text-on-surface-variant">Inicia sesion para ver tus resenas.</div>`
+        : customerReviews.length
+          ? customerReviews.map(review => {
+              const product = getProductById(review.product_id);
+              return `
+                <article class="rounded-xl border border-outline-variant/20 bg-surface p-4">
+                  <div class="flex items-start justify-between gap-3">
+                    <div>
+                      <p class="text-xs font-extrabold uppercase tracking-widest text-primary">${escapeHtml(product?.name || "Producto")}</p>
+                      <h4 class="mt-1 font-extrabold">${escapeHtml(review.title || "Resena")}</h4>
+                    </div>
+                    <span class="rounded-full bg-primary-container px-3 py-1 text-xs font-extrabold text-on-primary-container">${Number(review.rating || 0)} / 5</span>
+                  </div>
+                  <p class="mt-3 text-sm leading-6 text-on-surface-variant">${escapeHtml(review.comment || "")}</p>
+                </article>
+              `;
+            }).join('')
+          : `<div class="rounded-xl bg-surface-container-low p-6 text-sm font-bold text-on-surface-variant">Cuando comentes un producto, aparecera aqui.</div>`;
+    }
+
+    document.querySelectorAll('.favorite-toggle').forEach(button => {
+      const active = isFavoriteProduct(button.dataset.productId);
+      button.classList.toggle('bg-primary', active);
+      button.classList.toggle('text-on-primary', active);
+    });
+  }
+
+  async function loadCustomerFavorites() {
+    const client = getStorefrontSupabaseClient();
+    if (!client || !currentCustomerUser) {
+      customerFavorites = [];
+      renderProfileCommerce();
+      return;
+    }
+    const { data, error } = await client
+      .from('product_favorites')
+      .select('product_id,created_at')
+      .eq('user_id', currentCustomerUser.id)
+      .order('created_at', { ascending: false });
+    if (error) {
+      if (!isCustomerEngagementMissing(error)) showToast(error.message);
+      customerFavorites = [];
+    } else {
+      customerFavorites = data || [];
+    }
+    renderProfileCommerce();
+    updateDetailFavoriteButton();
+    renderCatalogProducts();
+  }
+
+  async function loadCustomerReviews() {
+    const client = getStorefrontSupabaseClient();
+    if (!client || !currentCustomerUser) {
+      customerReviews = [];
+      renderProfileCommerce();
+      return;
+    }
+    const { data, error } = await client
+      .from('product_reviews')
+      .select('id,product_id,rating,title,comment,status,created_at')
+      .eq('user_id', currentCustomerUser.id)
+      .order('created_at', { ascending: false });
+    if (error) {
+      if (!isCustomerEngagementMissing(error)) showToast(error.message);
+      customerReviews = [];
+    } else {
+      customerReviews = data || [];
+    }
+    renderProfileCommerce();
+  }
+
+  async function toggleFavorite(productId) {
+    const client = getStorefrontSupabaseClient();
+    if (!client || !currentCustomerUser) return showToast('Inicia sesion para guardar favoritos.');
+    const alreadyFavorite = isFavoriteProduct(productId);
+    const request = alreadyFavorite
+      ? client.from('product_favorites').delete().eq('user_id', currentCustomerUser.id).eq('product_id', productId)
+      : client.from('product_favorites').insert({ user_id: currentCustomerUser.id, product_id: productId });
+    const { error } = await request;
+    if (error) {
+      if (isCustomerEngagementMissing(error)) return showToast('Corre supabase-customer-engagement.sql para activar favoritos.');
+      return showToast(error.message);
+    }
+    await loadCustomerFavorites();
+    showToast(alreadyFavorite ? 'Favorito eliminado' : 'Producto guardado');
   }
 
   function trackingStatusIndex(status = "") {
@@ -2146,8 +2362,13 @@
     if (currentCustomerUser) {
       await loadCustomerProfileFromSupabase();
       await loadCustomerOrders();
+      await loadCustomerFavorites();
+      await loadCustomerReviews();
     } else {
+      customerFavorites = [];
+      customerReviews = [];
       renderCustomerOrders();
+      renderProfileCommerce();
     }
     client.auth.onAuthStateChange(async (event, session) => {
       currentCustomerUser = session?.user || null;
@@ -2166,9 +2387,14 @@
       if (currentCustomerUser) {
         await loadCustomerProfileFromSupabase();
         await loadCustomerOrders();
+        await loadCustomerFavorites();
+        await loadCustomerReviews();
       } else {
         customerOrders = [];
+        customerFavorites = [];
+        customerReviews = [];
         renderCustomerOrders();
+        renderProfileCommerce();
       }
     });
   }
@@ -2213,6 +2439,8 @@
     renderCustomerAuthState();
     await loadCustomerProfileFromSupabase();
     await loadCustomerOrders();
+    await loadCustomerFavorites();
+    await loadCustomerReviews();
     showToast('Sesion iniciada');
   }
 
@@ -2224,7 +2452,10 @@
     localStorage.removeItem(CUSTOMER_ACTIVITY_STORAGE_KEY);
     currentCustomerUser = null;
     customerOrders = [];
+    customerFavorites = [];
+    customerReviews = [];
     renderCustomerOrders();
+    renderProfileCommerce();
     renderCustomerAuthState();
     showToast(options.security ? 'Sesion cerrada por seguridad. Vuelve a entrar para continuar.' : 'Sesion cerrada');
   }
@@ -2363,6 +2594,9 @@
           <img class="w-full h-full object-cover mix-blend-multiply opacity-90 transition-transform duration-700 group-hover:scale-105" src="${escapeHtml(image)}" alt="${escapeHtml(product.name)}"/>
           <div class="absolute top-4 left-4"><span class="px-3 py-1 bg-white/80 backdrop-blur-md text-[10px] font-bold tracking-[0.2em] text-on-surface uppercase rounded-lg">${escapeHtml(product.badge)}</span></div>
           ${discount ? `<div class="absolute right-4 top-4"><span class="rounded-lg bg-primary px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.16em] text-on-primary">${discount}% off</span></div>` : ""}
+          <button class="favorite-toggle absolute bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-primary shadow-sm backdrop-blur-md transition-transform hover:scale-105" data-product-id="${escapeHtml(product.id)}" type="button" aria-label="Guardar favorito">
+            <span class="material-symbols-outlined text-xl" ${isFavoriteProduct(product.id) ? `style="font-variation-settings:'FILL' 1;"` : ""}>favorite</span>
+          </button>
         </div>
         <div class="space-y-1">
           <span class="label-sm text-primary font-bold uppercase tracking-[0.1em]">${escapeHtml(product.formula)}</span>
@@ -2418,6 +2652,7 @@
             }
             renderCategoryNavigation();
             renderCatalogProducts();
+            renderProfileCommerce();
             return;
           }
         }
@@ -2440,6 +2675,7 @@
         productCatalog = productResponse.data.map(normalizeProductFromDatabase);
         renderCategoryNavigation();
         renderCatalogProducts();
+        renderProfileCommerce();
       }
       const { data: categories, error: categoriesError } = await client
         .from("categories")
@@ -2450,6 +2686,7 @@
         categoryCatalog = categories.map(category => ({ name: category.name, slug: category.slug || slugifyCategory(category.name), description: category.description || "", image: category.image_url || "" }));
         renderCategoryNavigation();
         renderCatalogProducts();
+        renderProfileCommerce();
       }
     } catch (error) {
       console.warn("No se pudo cargar productos desde Supabase", error);
@@ -2492,6 +2729,96 @@
     document.querySelectorAll('.product-gallery-thumb').forEach(button => {
       button.classList.toggle('active', button.dataset.src === src);
     });
+  }
+
+  function updateDetailFavoriteButton() {
+    const button = document.getElementById('detail-favorite');
+    if (!button || !selectedDetailProduct) return;
+    const active = isFavoriteProduct(selectedDetailProduct.id);
+    button.classList.toggle('bg-primary', active);
+    button.classList.toggle('text-on-primary', active);
+    button.classList.toggle('border-primary', active);
+    button.innerHTML = `
+      <span class="material-symbols-outlined text-lg" ${active ? `style="font-variation-settings:'FILL' 1;"` : ""}>favorite</span>
+      <span>${active ? "Guardado" : "Favorito"}</span>
+    `;
+  }
+
+  function renderDetailReviews() {
+    const list = document.getElementById('detail-review-list');
+    const help = document.getElementById('detail-review-help');
+    if (!list || !selectedDetailProduct) return;
+    if (help) help.textContent = currentCustomerUser ? "Tu resena se guarda en tu perfil y en Supabase." : "Inicia sesion para dejar tu comentario.";
+    const reviews = detailProductReviews.length ? detailProductReviews : [];
+    if (reviews.length) {
+      const average = reviews.reduce((sum, review) => sum + Number(review.rating || 0), 0) / reviews.length;
+      document.getElementById('detail-rating').textContent = average.toFixed(1);
+      document.getElementById('detail-reviews').textContent = `(${reviews.length} valoraciones)`;
+    }
+    list.innerHTML = reviews.length
+      ? reviews.map(review => `
+          <article class="rounded-xl border border-outline-variant/20 bg-surface p-4">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <p class="font-extrabold text-on-surface">${escapeHtml(review.title || "Resena del cliente")}</p>
+                <p class="mt-1 text-xs font-bold uppercase tracking-widest text-primary">${new Date(review.created_at || Date.now()).toLocaleDateString("es-DO")}</p>
+              </div>
+              <span class="rounded-full bg-primary-container px-3 py-1 text-xs font-extrabold text-on-primary-container">${Number(review.rating || 0)} / 5</span>
+            </div>
+            <p class="mt-3 text-sm leading-6 text-on-surface-variant">${escapeHtml(review.comment || "")}</p>
+          </article>
+        `).join('')
+      : `<div class="rounded-xl bg-surface-container-low p-4 text-sm font-bold text-on-surface-variant">Este producto aun no tiene resenas.</div>`;
+  }
+
+  async function loadProductReviews(productId) {
+    const client = getStorefrontSupabaseClient();
+    if (!client) {
+      detailProductReviews = [];
+      renderDetailReviews();
+      return;
+    }
+    const { data, error } = await client
+      .from('product_reviews')
+      .select('id,product_id,user_id,rating,title,comment,status,created_at')
+      .eq('product_id', productId)
+      .eq('status', 'Publicado')
+      .order('created_at', { ascending: false });
+    if (error) {
+      detailProductReviews = [];
+      if (!isCustomerEngagementMissing(error)) showToast(error.message);
+    } else {
+      detailProductReviews = data || [];
+    }
+    renderDetailReviews();
+  }
+
+  async function submitProductReview(event) {
+    event.preventDefault();
+    const client = getStorefrontSupabaseClient();
+    if (!client || !currentCustomerUser) return showToast('Inicia sesion para comentar este producto.');
+    if (!selectedDetailProduct) return;
+    const rating = Number(document.getElementById('detail-review-rating').value || 5);
+    const title = document.getElementById('detail-review-title').value.trim();
+    const comment = document.getElementById('detail-review-comment').value.trim();
+    if (!comment) return showToast('Escribe tu comentario.');
+    const { error } = await client.from('product_reviews').upsert({
+      product_id: selectedDetailProduct.id,
+      user_id: currentCustomerUser.id,
+      rating,
+      title,
+      comment,
+      status: 'Publicado'
+    }, { onConflict: 'product_id,user_id' });
+    if (error) {
+      if (isCustomerEngagementMissing(error)) return showToast('Corre supabase-customer-engagement.sql para activar resenas.');
+      return showToast(error.message);
+    }
+    document.getElementById('detail-review-title').value = "";
+    document.getElementById('detail-review-comment').value = "";
+    await loadProductReviews(selectedDetailProduct.id);
+    await loadCustomerReviews();
+    showToast('Resena guardada');
   }
 
   function openProductDetail(productId) {
@@ -2546,6 +2873,10 @@
     });
     setProductImage(product.images[0], product.name);
     updateDetailCartCount(product.name);
+    updateDetailFavoriteButton();
+    detailProductReviews = [];
+    renderDetailReviews();
+    loadProductReviews(product.id);
 
     const modal = document.getElementById('product-detail-modal');
     modal.classList.remove('hidden');
@@ -2569,6 +2900,10 @@
     const qty = addToCart(selectedDetailProduct.id, selectedDetailProduct.name, selectedDetailProduct.price, selectedDetailProduct.images[0]);
     animateDetailAddButton(qty);
   });
+  document.getElementById('detail-favorite').addEventListener('click', () => {
+    if (selectedDetailProduct) toggleFavorite(selectedDetailProduct.id);
+  });
+  document.getElementById('detail-review-form').addEventListener('submit', submitProductReview);
   document.getElementById('signup-form').addEventListener('submit', signupCustomer);
   document.getElementById('login-form').addEventListener('submit', loginCustomer);
   document.getElementById('profile-logout').addEventListener('click', logoutCustomer);
@@ -2887,6 +3222,13 @@
   }
 
   document.addEventListener('click', (e) => {
+    const favoriteButton = e.target.closest('.favorite-toggle');
+    if (favoriteButton) {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleFavorite(favoriteButton.dataset.productId);
+      return;
+    }
     const categoryLink = e.target.closest('.category-link');
     if (categoryLink) {
       setCatalogCategory(categoryLink.dataset.category || "");
@@ -2914,6 +3256,7 @@
 
   // Initialize
   renderCustomerProfile();
+  renderProfileCommerce();
   applyProfileToCheckout();
   initCustomerAuth();
   initProductSearch();
