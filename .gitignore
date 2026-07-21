@@ -1,1 +1,4 @@
 catalina-sites.tar
+.env
+*.log
+*.tar

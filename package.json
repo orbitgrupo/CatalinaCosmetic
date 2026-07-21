@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build-worker.mjs",
-    "check": "node scripts/check-inline-js.mjs"
+    "check": "node scripts/check-inline-js.mjs",
+    "start": "node server.js"
   }
 }
