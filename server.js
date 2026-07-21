@@ -35,7 +35,20 @@ function getRequestBody(request) {
 function requestUrl(request) {
   const protocol = request.headers["x-forwarded-proto"] || "http";
   const host = request.headers["x-forwarded-host"] || request.headers.host || `127.0.0.1:${process.env.PORT || 3000}`;
-  return `${protocol}://${host}${request.url || "/"}`;
+  const basePath = normalizeBasePath(process.env.BASE_PATH || "");
+  const rawUrl = request.url || "/";
+  const pathname = rawUrl.split("?", 1)[0] || "/";
+  const search = rawUrl.includes("?") ? `?${rawUrl.split("?").slice(1).join("?")}` : "";
+  const cleanPath = basePath && (pathname === basePath || pathname.startsWith(`${basePath}/`))
+    ? pathname.slice(basePath.length) || "/"
+    : pathname;
+  return `${protocol}://${host}${cleanPath}${search}`;
+}
+
+function normalizeBasePath(value) {
+  const clean = String(value || "").trim().replace(/\/+$/, "");
+  if (!clean || clean === "/") return "";
+  return clean.startsWith("/") ? clean : `/${clean}`;
 }
 
 function appendHeader(response, key, value) {
@@ -69,9 +82,17 @@ if (!fs.existsSync(workerPath)) {
 
 const worker = (await import(pathToFileURL(workerPath).href)).default;
 const port = Number(process.env.PORT || 3000);
+const basePath = normalizeBasePath(process.env.BASE_PATH || "");
 
 const server = http.createServer(async (request, response) => {
   try {
+    const requestPath = (request.url || "/").split("?", 1)[0] || "/";
+    if (basePath && requestPath === basePath) {
+      response.statusCode = 308;
+      response.setHeader("location", `${basePath}/`);
+      response.end();
+      return;
+    }
     const body = ["GET", "HEAD"].includes(request.method || "GET") ? undefined : await getRequestBody(request);
     const webRequest = new Request(requestUrl(request), {
       method: request.method,
@@ -89,5 +110,5 @@ const server = http.createServer(async (request, response) => {
 });
 
 server.listen(port, "0.0.0.0", () => {
-  console.log(`Catalina Cosmetic corriendo en http://127.0.0.1:${port}`);
+  console.log(`Catalina Cosmetic corriendo en http://127.0.0.1:${port}${basePath || "/"}`);
 });

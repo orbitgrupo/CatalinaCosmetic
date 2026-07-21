@@ -47,6 +47,7 @@ Completa:
 
 ```env
 PORT=3000
+BASE_PATH=/catalina-cosmetic
 CATALINA_SUPABASE_URL=https://TU-PROYECTO.supabase.co
 CATALINA_SUPABASE_PUBLISHABLE_KEY=TU_CLAVE_PUBLICABLE
 CATALINA_SUPABASE_SERVICE_ROLE_KEY=TU_SERVICE_ROLE_KEY
@@ -73,6 +74,14 @@ Prueba local en el servidor:
 curl http://127.0.0.1:3000/
 ```
 
+Si vas a usar la URL de Tailscale:
+
+```text
+https://wawawa.tail874953.ts.net/catalina-cosmetic/
+```
+
+deja `BASE_PATH=/catalina-cosmetic` en `.env`.
+
 ## 6. Configurar Nginx
 
 Crea el archivo:
@@ -95,6 +104,41 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
     }
+}
+```
+
+Para mantenerlo en la ruta que ya usabas, `https://wawawa.tail874953.ts.net/catalina-cosmetic/`, usa este bloque en el `server` que ya tenga ese dominio:
+
+```nginx
+location = /catalina-cosmetic {
+    return 308 /catalina-cosmetic/;
+}
+
+location /catalina-cosmetic/ {
+    proxy_pass http://127.0.0.1:3000/catalina-cosmetic/;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+
+location /api/ {
+    proxy_pass http://127.0.0.1:3000/api/;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+
+location ~ ^/(supabase-.*\.sql|SUPABASE_SETUP\.md)$ {
+    proxy_pass http://127.0.0.1:3000;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
 }
 ```
 
