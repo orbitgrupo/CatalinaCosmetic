@@ -8,6 +8,7 @@ const siteContentSql = fs.readFileSync(new URL("supabase-site-content.sql", root
 const productImagesSql = fs.readFileSync(new URL("supabase-product-images.sql", root), "utf8");
 const productManagementSql = fs.readFileSync(new URL("supabase-product-management.sql", root), "utf8");
 const customerEngagementSql = fs.readFileSync(new URL("supabase-customer-engagement.sql", root), "utf8");
+const customerUniquenessSql = fs.readFileSync(new URL("supabase-customer-uniqueness.sql", root), "utf8");
 const realtimeSql = fs.readFileSync(new URL("supabase-realtime-sync.sql", root), "utf8");
 const setup = fs.readFileSync(new URL("SUPABASE_SETUP.md", root), "utf8");
 const distServer = new URL("dist/server/", root);
@@ -25,6 +26,7 @@ const siteContentSql = ${JSON.stringify(siteContentSql)};
 const productImagesSql = ${JSON.stringify(productImagesSql)};
 const productManagementSql = ${JSON.stringify(productManagementSql)};
 const customerEngagementSql = ${JSON.stringify(customerEngagementSql)};
+const customerUniquenessSql = ${JSON.stringify(customerUniquenessSql)};
 const realtimeSql = ${JSON.stringify(realtimeSql)};
 const setup = ${JSON.stringify(setup)};
 
@@ -142,7 +144,16 @@ async function supabaseRest(env, path, options = {}) {
   });
   const text = await response.text();
   const data = text ? JSON.parse(text) : null;
-  if (!response.ok) throw new Error(data?.message || "Supabase no acepto la operacion.");
+  if (!response.ok) {
+    const message = data?.message || "";
+    if (data?.code === "23505" && /customer_profiles/i.test(message) && /email/i.test(message)) {
+      throw new Error("Ya existe un cliente registrado con ese email.");
+    }
+    if (data?.code === "23505" && /customer_profiles/i.test(message) && /phone/i.test(message)) {
+      throw new Error("Ya existe un cliente registrado con ese telefono.");
+    }
+    throw new Error(message || "Supabase no acepto la operacion.");
+  }
   return data;
 }
 
@@ -790,6 +801,15 @@ export default {
 
     if (url.pathname === "/supabase-customer-engagement.sql") {
       return new Response(customerEngagementSql, {
+        headers: {
+          "content-type": "text/plain; charset=utf-8",
+          "cache-control": "public, max-age=300"
+        }
+      });
+    }
+
+    if (url.pathname === "/supabase-customer-uniqueness.sql") {
+      return new Response(customerUniquenessSql, {
         headers: {
           "content-type": "text/plain; charset=utf-8",
           "cache-control": "public, max-age=300"

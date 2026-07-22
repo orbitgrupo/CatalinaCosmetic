@@ -148,6 +148,12 @@ create index if not exists idx_orders_payment_status on public.orders (payment_s
 create index if not exists idx_order_items_order on public.order_items (order_id);
 create index if not exists idx_payments_order on public.payments (order_id);
 create index if not exists idx_shipment_events_order_event on public.shipment_events (order_id, event_at desc);
+create unique index if not exists customer_profiles_email_unique
+on public.customer_profiles (lower(email))
+where email is not null and btrim(email) <> '';
+create unique index if not exists customer_profiles_phone_unique
+on public.customer_profiles ((regexp_replace(coalesce(phone, ''), '\D', '', 'g')))
+where regexp_replace(coalesce(phone, ''), '\D', '', 'g') <> '';
 
 create or replace function public.set_updated_at()
 returns trigger

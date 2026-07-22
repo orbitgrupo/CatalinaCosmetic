@@ -846,6 +846,36 @@
       return { ...data, address: formatDominicanAddress(data) };
     }
 
+    function normalizeCustomerEmail(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function normalizeCustomerPhone(value) {
+      return String(value || "").replace(/\D/g, "");
+    }
+
+    function findDuplicateCustomer(customer) {
+      const email = normalizeCustomerEmail(customer.email);
+      const phone = normalizeCustomerPhone(customer.phone);
+      return state.customers.find(item => {
+        if (item.id === customer.id) return false;
+        if (email && normalizeCustomerEmail(item.email) === email) return true;
+        if (phone && normalizeCustomerPhone(item.phone) === phone) return true;
+        return false;
+      });
+    }
+
+    function customerDuplicateMessage(error) {
+      const message = String(error?.message || error || "");
+      if (/customer_profiles_email_unique|duplicate key.*email|ya existe.*email/i.test(message)) {
+        return "Ya existe un cliente registrado con ese email.";
+      }
+      if (/customer_profiles_phone_unique|duplicate key.*phone|telefono/i.test(message)) {
+        return "Ya existe un cliente registrado con ese telefono.";
+      }
+      return message || "No se pudo guardar el cliente.";
+    }
+
     function setCustomerAddressForm(customer = {}) {
       populateProvinceSelect("customer-province", "customer-city", customer.province || "Distrito Nacional", customer.city || "");
       document.getElementById("customer-house-number").value = customer.houseNumber || "";
@@ -1917,10 +1947,16 @@
         phone: document.getElementById("customer-phone").value.trim(),
         ...getCustomerAddressFromForm()
       };
+      const duplicate = findDuplicateCustomer(customer);
+      if (duplicate) {
+        const sameEmail = normalizeCustomerEmail(duplicate.email) === normalizeCustomerEmail(customer.email);
+        return showToast(sameEmail ? "Ya existe un cliente con ese email" : "Ya existe un cliente con ese telefono");
+      }
+      const saved = await saveCustomerToSupabase(customer);
+      if (supabaseClient && currentUser && !saved) return;
       const index = state.customers.findIndex(item => item.id === id);
       if (index >= 0) state.customers[index] = customer;
       else state.customers.unshift(customer);
-      await saveCustomerToSupabase(customer);
       event.target.reset();
       document.getElementById("customer-id").value = "";
       document.getElementById("customer-auth-id").value = "";
@@ -2440,9 +2476,13 @@
     }
 
     async function saveCustomerToSupabase(customer) {
-      if (!supabaseClient || !currentUser) return;
+      if (!supabaseClient || !currentUser) return false;
       const { error } = await supabaseClient.from("customer_profiles").upsert({ id: customer.id, full_name: customer.name, email: customer.email, phone: customer.phone, house_number: customer.houseNumber, street: customer.street, sector: customer.sector, province: customer.province, city: customer.city, address_reference: customer.reference, shipping_address: customer.address });
-      if (error) showToast(error.message);
+      if (error) {
+        showToast(customerDuplicateMessage(error));
+        return false;
+      }
+      return true;
     }
 
     async function updateOrder(id, key, value) {

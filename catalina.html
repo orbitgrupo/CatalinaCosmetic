@@ -1691,12 +1691,23 @@
     };
   }
 
+  function customerDuplicateMessage(error) {
+    const message = String(error?.message || error || "");
+    if (/customer_profiles_email_unique|duplicate key.*email|ya existe.*email/i.test(message)) {
+      return "Ya existe una cuenta creada con ese email.";
+    }
+    if (/customer_profiles_phone_unique|duplicate key.*phone|telefono/i.test(message)) {
+      return "Ya existe una cuenta creada con ese telefono.";
+    }
+    return message || "No se pudo guardar el perfil.";
+  }
+
   async function saveCustomerProfileToSupabase(profile) {
     const client = getStorefrontSupabaseClient();
     if (!client || !currentCustomerUser) return false;
     const { error } = await client.from("customer_profiles").upsert(getProfilePayload(profile));
     if (error) {
-      showToast(error.message);
+      showToast(customerDuplicateMessage(error));
       return false;
     }
     return true;
@@ -1730,8 +1741,9 @@
       phone: document.getElementById('profile-phone').value.trim(),
       ...getAddressFrom('profile')
     };
-    localStorage.setItem(CUSTOMER_PROFILE_KEY, JSON.stringify(profile));
     const synced = await saveCustomerProfileToSupabase(profile);
+    if (currentCustomerUser && !synced) return;
+    localStorage.setItem(CUSTOMER_PROFILE_KEY, JSON.stringify(profile));
     renderCustomerProfile();
     applyProfileToCheckout(profile);
     showToast(synced ? 'Perfil guardado en Supabase' : 'Perfil guardado localmente. Inicia sesion para sincronizar.');
