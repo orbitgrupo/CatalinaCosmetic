@@ -2,6 +2,7 @@
 -- Run this in Supabase SQL Editor for existing projects.
 
 alter table public.products add column if not exists sku text;
+alter table public.products add column if not exists short_description text;
 alter table public.products add column if not exists compare_at_price numeric(10,2) check (compare_at_price is null or compare_at_price >= 0);
 alter table public.products add column if not exists discount_percent numeric(5,2) not null default 0 check (discount_percent >= 0 and discount_percent <= 100);
 alter table public.products add column if not exists low_stock_threshold integer not null default 5 check (low_stock_threshold >= 0);
@@ -57,6 +58,11 @@ grant select on public.product_variants to anon;
 grant all on public.product_variants to authenticated;
 grant select on public.products to anon;
 grant all on public.products to authenticated;
+
+update public.products
+set short_description = left(description, 180)
+where short_description is null
+  and description is not null;
 
 do $$
 begin

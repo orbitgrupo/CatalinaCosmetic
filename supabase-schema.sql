@@ -7,6 +7,7 @@ create table if not exists public.products (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   category text not null,
+  short_description text,
   description text,
   sku text,
   price numeric(10,2) not null check (price >= 0),
@@ -21,6 +22,7 @@ create table if not exists public.products (
 );
 
 alter table public.products drop constraint if exists products_category_check;
+alter table public.products add column if not exists short_description text;
 alter table public.products add column if not exists sku text;
 alter table public.products add column if not exists compare_at_price numeric(10,2) check (compare_at_price is null or compare_at_price >= 0);
 alter table public.products add column if not exists discount_percent numeric(5,2) not null default 0 check (discount_percent >= 0 and discount_percent <= 100);

@@ -153,7 +153,7 @@ async function getActiveProducts(env) {
 async function getCatalog(env) {
   let products;
   try {
-    products = await supabaseRest(env, "products?select=id,name,category,description,sku,price,compare_at_price,discount_percent,stock,low_stock_threshold,image_url,is_active,product_images(id,image_url,storage_path,alt_text,sort_order),product_variants(id,name,value,sku,price_delta,stock,is_active,sort_order)&is_active=eq.true&order=created_at.desc", { method: "GET" });
+    products = await supabaseRest(env, "products?select=id,name,category,short_description,description,sku,price,compare_at_price,discount_percent,stock,low_stock_threshold,image_url,is_active,product_images(id,image_url,storage_path,alt_text,sort_order),product_variants(id,name,value,sku,price_delta,stock,is_active,sort_order)&is_active=eq.true&order=created_at.desc", { method: "GET" });
   } catch {
     try {
       products = await supabaseRest(env, "products?select=id,name,category,description,price,stock,image_url,is_active,product_images(id,image_url,storage_path,alt_text,sort_order)&is_active=eq.true&order=created_at.desc", { method: "GET" });
@@ -273,6 +273,7 @@ function cleanProductPayload(product = {}) {
     id: String(product.id || crypto.randomUUID()),
     name: String(product.name || "").trim().slice(0, 180),
     category: String(product.category || "").trim().slice(0, 120),
+    short_description: String(product.shortDescription || product.short_description || "").trim().slice(0, 220),
     description: String(product.description || "").trim().slice(0, 2000),
     sku: String(product.sku || "").trim().slice(0, 120) || null,
     price: Math.max(0, Number(product.price || 0)),

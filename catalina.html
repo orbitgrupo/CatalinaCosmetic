@@ -2514,6 +2514,7 @@
       reviews: Number(product.reviews || 0),
       rawStock: stock,
       stock: stock > 0 ? "En stock" : "Agotado",
+      shortDescription: product.short_description || product.shortDescription || "",
       description: product.description || "Producto seleccionado del catalogo Catalina.",
       usage: product.usage || "Usar segun indicacion del producto o recomendacion profesional.",
       benefits: Array.isArray(product.benefits) && product.benefits.length ? product.benefits : ["Rutina diaria", "Cuidado especializado", "Formula seleccionada"],
@@ -2542,7 +2543,7 @@
 
   function productMatchesSearch(product, term) {
     if (!term) return true;
-    const haystack = [product.name, product.formula, product.category, product.description, product.badge].join(" ").toLowerCase();
+    const haystack = [product.name, product.formula, product.category, product.shortDescription, product.description, product.badge].join(" ").toLowerCase();
     return haystack.includes(term.toLowerCase());
   }
 
@@ -2601,7 +2602,7 @@
         <div class="space-y-1">
           <span class="label-sm text-primary font-bold uppercase tracking-[0.1em]">${escapeHtml(product.formula)}</span>
           <h3 class="headline-sm font-extrabold text-on-surface group-hover:text-primary transition-colors">${escapeHtml(product.name)}</h3>
-          <p class="body-md text-on-surface-variant leading-relaxed py-2">${escapeHtml(product.description)}</p>
+          <p class="body-md text-on-surface-variant leading-relaxed py-2">${escapeHtml(product.shortDescription || product.description)}</p>
           <div class="flex items-center justify-between gap-4 pt-4">
             <span class="flex flex-col">
               <span class="text-xl font-headline font-bold">$${Number(product.price).toFixed(2)}</span>
@@ -2628,6 +2629,7 @@
         <div class="p-4">
           <p class="text-[10px] font-bold uppercase tracking-widest text-primary">${escapeHtml(product.category || "Producto")}</p>
           <h3 class="mt-1 min-h-[42px] text-sm font-extrabold leading-tight">${escapeHtml(product.name)}</h3>
+          <p class="mt-2 line-clamp-2 min-h-[38px] text-xs leading-5 text-on-surface-variant">${escapeHtml(product.shortDescription || product.description)}</p>
           <div class="mt-4 flex items-center justify-between gap-3">
             <span class="font-extrabold">$${Number(product.price || 0).toFixed(2)}</span>
             <button class="add-to-cart rounded-full ${buttonTone} p-2 text-white" data-id="${escapeHtml(product.id)}" data-name="${escapeHtml(product.name)}" data-price="${Number(product.price || 0).toFixed(2)}" data-img="${escapeHtml(image)}" type="button">
@@ -2698,7 +2700,7 @@
       if (!client) return;
       let productResponse = await client
         .from("products")
-        .select("id,name,category,description,sku,price,compare_at_price,discount_percent,stock,image_url,is_active,product_images(image_url,sort_order),product_variants(id,name,value,sku,price_delta,stock,is_active,sort_order)")
+        .select("id,name,category,short_description,description,sku,price,compare_at_price,discount_percent,stock,image_url,is_active,product_images(image_url,sort_order),product_variants(id,name,value,sku,price_delta,stock,is_active,sort_order)")
         .eq("is_active", true)
         .order("created_at", { ascending: false });
       if (productResponse.error) {

@@ -369,7 +369,8 @@
                 </div>
                 <div id="product-variants-builder" class="grid gap-2"></div>
               </div>
-              <textarea id="product-description" class="rounded-lg border-line" rows="4" placeholder="Descripcion"></textarea>
+              <textarea id="product-short-description" class="rounded-lg border-line" rows="2" maxlength="220" placeholder="Descripcion corta para la tarjeta del producto"></textarea>
+              <textarea id="product-description" class="rounded-lg border-line" rows="5" placeholder="Descripcion larga para el detalle del producto"></textarea>
               <button class="rounded-lg bg-violet px-5 py-3 font-bold text-white">Guardar producto</button>
               <button type="button" id="product-reset" class="rounded-lg border border-line px-5 py-3 font-bold text-muted">Limpiar</button>
             </form>
@@ -584,8 +585,8 @@
         { id: crypto.randomUUID(), name: "Kit", slug: "kit", description: "Rutinas completas y combinaciones listas para usar.", image: images.skin, isActive: true }
       ],
       products: [
-        { id: crypto.randomUUID(), name: "Serum Barrera Ceramide 5%", category: "Piel", price: 42, stock: 24, image: images.skin, description: "Repara la barrera cutanea con ceramidas, niacinamida y pantenol." },
-        { id: crypto.randomUUID(), name: "Aceite Capilar Biomimetic", category: "Cabello", price: 36, stock: 18, image: images.hair, description: "Tratamiento para brillo y puntas secas." }
+        { id: crypto.randomUUID(), name: "Serum Barrera Ceramide 5%", category: "Piel", price: 42, stock: 24, image: images.skin, shortDescription: "Repara la barrera cutanea con ceramidas.", description: "Repara la barrera cutanea con ceramidas, niacinamida y pantenol." },
+        { id: crypto.randomUUID(), name: "Aceite Capilar Biomimetic", category: "Cabello", price: 36, stock: 18, image: images.hair, shortDescription: "Brillo y nutricion para puntas secas.", description: "Tratamiento para brillo y puntas secas." }
       ],
       customers: [
         { id: crypto.randomUUID(), name: "Camila Torres", email: "camila@example.com", phone: "+1 809 555 0144", houseNumber: "12", street: "Calle Principal", sector: "Piantini", province: "Distrito Nacional", city: "Santo Domingo de Guzman", reference: "Cerca de la farmacia", address: "Casa/Apto 12, Calle Principal, Piantini, Santo Domingo de Guzman, Distrito Nacional. Ref: Cerca de la farmacia" }
@@ -1231,7 +1232,7 @@
       const isCustomerSession = currentUser && !isCurrentAdmin();
       const term = productAdminSearchTerm.toLowerCase();
       const filtered = state.products.filter(product => {
-        const matchesTerm = !term || [product.name, product.category, product.description].join(" ").toLowerCase().includes(term);
+        const matchesTerm = !term || [product.name, product.category, product.shortDescription, product.description].join(" ").toLowerCase().includes(term);
         const matchesCategory = !productAdminCategoryFilter || product.category === productAdminCategoryFilter;
         return matchesTerm && matchesCategory;
       });
@@ -1274,7 +1275,7 @@
               </div>
               <p class="mt-3 text-lg font-extrabold">${escapeHtml(product.name)}</p>
               <p class="mt-1 text-xs font-bold uppercase tracking-widest text-muted">${escapeHtml(product.sku || "Sin SKU")} - Aviso stock ${threshold}</p>
-              <p class="mt-1 line-clamp-2 text-sm text-muted">${escapeHtml(product.description || "Sin descripcion")}</p>
+              <p class="mt-1 line-clamp-2 text-sm text-muted">${escapeHtml(product.shortDescription || product.description || "Sin descripcion")}</p>
             </div>
             <div class="flex flex-col items-start gap-2 md:items-end">
               <p class="text-xl font-extrabold">${money(product.price)}</p>
@@ -1687,6 +1688,7 @@
         stock: Number(document.getElementById("product-stock").value),
         lowStockThreshold: Number(document.getElementById("product-low-stock").value || 5),
         image: imageUrl,
+        shortDescription: document.getElementById("product-short-description").value.trim(),
         description: document.getElementById("product-description").value.trim(),
         galleryItems: nextGalleryItems,
         gallery: nextGalleryItems.map(image => image.imageUrl || image.image_url || image.url).filter(Boolean),
@@ -1754,6 +1756,7 @@
       document.getElementById("product-stock").value = product.stock;
       document.getElementById("product-low-stock").value = product.lowStockThreshold || 5;
       document.getElementById("product-image").value = product.image;
+      document.getElementById("product-short-description").value = product.shortDescription || "";
       document.getElementById("product-description").value = product.description;
       document.getElementById("product-image-file").value = "";
       editingProductImages = (product.galleryItems || []).map((image, index) => ({
@@ -2045,7 +2048,7 @@
     function mapDatabaseProduct(product) {
       const galleryItems = (product.product_images || []).slice().sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0)).map((image, index) => ({ id: image.id || "", imageUrl: image.image_url, storagePath: image.storage_path || "", altText: image.alt_text || "", sortOrder: Number(image.sort_order || index) }));
       const variants = (product.product_variants || []).slice().sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0)).map((variant, index) => ({ id: variant.id, name: variant.name, value: variant.value, sku: variant.sku || "", priceDelta: Number(variant.price_delta || 0), stock: Number(variant.stock || 0), isActive: variant.is_active !== false, sortOrder: Number(variant.sort_order || index) }));
-      return { id: product.id, name: product.name, category: product.category, sku: product.sku || "", description: product.description || "", price: Number(product.price), compareAtPrice: Number(product.compare_at_price || 0), discountPercent: Number(product.discount_percent || 0), stock: Number(product.stock), lowStockThreshold: Number(product.low_stock_threshold || 5), image: product.image_url || galleryItems[0]?.imageUrl || images.skin, galleryItems, gallery: galleryItems.map(image => image.imageUrl), variants };
+      return { id: product.id, name: product.name, category: product.category, sku: product.sku || "", shortDescription: product.short_description || "", description: product.description || "", price: Number(product.price), compareAtPrice: Number(product.compare_at_price || 0), discountPercent: Number(product.discount_percent || 0), stock: Number(product.stock), lowStockThreshold: Number(product.low_stock_threshold || 5), image: product.image_url || galleryItems[0]?.imageUrl || images.skin, galleryItems, gallery: galleryItems.map(image => image.imageUrl), variants };
     }
 
     function mapDatabaseCustomer(customer) {
@@ -2133,7 +2136,7 @@
         if (showMessage) showToast(usedAdminSnapshot ? "Admin sincronizado" : "Catalogo sincronizado");
         return true;
       }
-      let productResponse = await supabaseClient.from("products").select("id,name,category,description,sku,price,compare_at_price,discount_percent,stock,low_stock_threshold,image_url,is_active,product_images(id,image_url,storage_path,alt_text,sort_order),product_variants(id,name,value,sku,price_delta,stock,is_active,sort_order)").eq("is_active", true).order("created_at", { ascending: false });
+      let productResponse = await supabaseClient.from("products").select("id,name,category,short_description,description,sku,price,compare_at_price,discount_percent,stock,low_stock_threshold,image_url,is_active,product_images(id,image_url,storage_path,alt_text,sort_order),product_variants(id,name,value,sku,price_delta,stock,is_active,sort_order)").eq("is_active", true).order("created_at", { ascending: false });
       if (productResponse.error) {
         productResponse = await supabaseClient.from("products").select("id,name,category,description,price,stock,image_url,is_active,product_images(id,image_url,storage_path,alt_text,sort_order)").eq("is_active", true).order("created_at", { ascending: false });
       }
