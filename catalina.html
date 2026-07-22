@@ -1443,6 +1443,59 @@
       const node = root.querySelector(selector);
       if (node && value) node.src = value;
     };
+    const setPromoMedia = (root, keys = {}) => {
+      if (!root) return;
+      const mediaUrl = content[keys.mediaUrl] || content[keys.imageUrl] || "";
+      const mediaType = content[keys.mediaType] === "video" ? "video" : "image";
+      const productId = content[keys.productId] || "";
+      const current = root.querySelector("video, img");
+      if (current && mediaUrl) {
+        const media = mediaType === "video" ? document.createElement("video") : document.createElement("img");
+        media.className = current.className || "h-full w-full object-cover";
+        media.setAttribute("aria-label", "Promocion Catalina");
+        if (mediaType === "video") {
+          media.src = mediaUrl;
+          media.muted = true;
+          media.loop = true;
+          media.playsInline = true;
+          media.preload = "metadata";
+          media.classList.add("promo-video");
+        } else {
+          media.src = mediaUrl;
+          media.alt = current.getAttribute("alt") || "Promocion Catalina";
+        }
+        current.replaceWith(media);
+      }
+      if (productId) {
+        root.classList.add("promo-product-link", "cursor-pointer");
+        root.dataset.productId = productId;
+        root.setAttribute("role", "button");
+        root.setAttribute("tabindex", "0");
+      }
+    };
+    const setupPromoVideoPlayback = () => {
+      const videos = [...document.querySelectorAll(".promo-video")];
+      if (!videos.length) return;
+      const pauseVideo = video => {
+        try { video.pause(); } catch {}
+      };
+      const playVideo = video => {
+        videos.forEach(other => { if (other !== video) pauseVideo(other); });
+        video.play().catch(() => {});
+      };
+      if (!("IntersectionObserver" in window)) {
+        videos[0]?.play().catch(() => {});
+        return;
+      }
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          const video = entry.target;
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.55) playVideo(video);
+          else pauseVideo(video);
+        });
+      }, { threshold: [0, 0.55, 0.8] });
+      videos.forEach(video => observer.observe(video));
+    };
 
     const allHomeSections = [...home.querySelectorAll(':scope > main > section')];
     const mobileHome = allHomeSections.find(section => section.classList.contains('md:hidden'));
@@ -1456,6 +1509,7 @@
       setText('p.text-sm.leading-6', content.heroBody, mobileHome);
       setText('button[data-page="catalog"]', content.heroCta, mobileHome);
       setImage('img[alt="Catalina mobile banner"]', content.heroImage, mobileHome);
+      setPromoMedia(mobileHome.querySelector(".relative.min-h-\\[430px\\]"), { mediaType: "heroMediaType", mediaUrl: "heroMediaUrl", imageUrl: "heroImage", productId: "heroProductId" });
       setText('h2.text-xl', content.newTitle, mobileHome);
     }
     if (heroSection) {
@@ -1464,6 +1518,7 @@
       setText('p.text-xl', content.heroBody, heroSection);
       setText('button[data-page="catalog"]', content.heroCta, heroSection);
       setImage('img', content.heroImage, heroSection);
+      setPromoMedia(heroSection.querySelector(".aspect-\\[4\\/5\\]"), { mediaType: "heroMediaType", mediaUrl: "heroMediaUrl", imageUrl: "heroImage", productId: "heroProductId" });
       setText('.absolute.-bottom-4 span', content.batchLabel, heroSection);
       setText('.absolute.-bottom-4 p', content.batchCopy, heroSection);
     }
@@ -1476,9 +1531,11 @@
       setText('.md\\:col-span-2.md\\:row-span-2 span', content.featuredBadge, newSection);
       setText('.md\\:col-span-2.md\\:row-span-2 h3', content.featuredTitle, newSection);
       setText('.md\\:col-span-2.md\\:row-span-2 button span:first-child', content.featuredCta, newSection);
+      setPromoMedia(newSection.querySelector(".md\\:col-span-2.md\\:row-span-2"), { mediaType: "featuredMediaType", mediaUrl: "featuredMediaUrl", productId: "featuredProductId" });
       setText('.md\\:col-span-2.group h3', content.secondaryTitle, newSection);
       setText('.md\\:col-span-2.group p', content.secondaryBody, newSection);
       setText('.md\\:col-span-2.group span.text-primary.text-sm', content.secondaryPrice, newSection);
+      setPromoMedia(newSection.querySelector(".md\\:col-span-2.group"), { mediaType: "secondaryMediaType", mediaUrl: "secondaryMediaUrl", productId: "secondaryProductId" });
     }
 
     const bundlesSection = desktopSections[2];
@@ -1488,9 +1545,9 @@
       setText('.max-w-3xl p', content.bundlesBody, bundlesSection);
       const cards = bundlesSection.querySelectorAll('.grid > div.bg-white');
       const bundleValues = [
-        ['bundleOneTitle', 'bundleOnePrice', 'bundleOneBody'],
-        ['bundleTwoTitle', 'bundleTwoPrice', 'bundleTwoBody'],
-        ['bundleThreeTitle', 'bundleThreePrice', 'bundleThreeBody']
+        ['bundleOneTitle', 'bundleOnePrice', 'bundleOneBody', 'bundleOneMediaType', 'bundleOneMediaUrl', 'bundleOneProductId'],
+        ['bundleTwoTitle', 'bundleTwoPrice', 'bundleTwoBody', 'bundleTwoMediaType', 'bundleTwoMediaUrl', 'bundleTwoProductId'],
+        ['bundleThreeTitle', 'bundleThreePrice', 'bundleThreeBody', 'bundleThreeMediaType', 'bundleThreeMediaUrl', 'bundleThreeProductId']
       ];
       cards.forEach((card, index) => {
         const keys = bundleValues[index];
@@ -1498,11 +1555,13 @@
         setText('h3', content[keys[0]], card);
         setText('span.text-primary.font-bold', content[keys[1]], card);
         setText('p.italic', content[keys[2]], card);
+        setPromoMedia(card, { mediaType: keys[3], mediaUrl: keys[4], productId: keys[5] });
       });
     }
 
     setText('footer .text-xl', content.footerBrand);
     setText('footer p', content.footerCopy);
+    setupPromoVideoPlayback();
   })();
 </script>
 
@@ -2966,7 +3025,13 @@
   document.getElementById('stripe-checkout-button').addEventListener('click', startStripeCheckout);
   document.addEventListener('keydown', (event) => {
     const card = event.target.closest('.product-card');
+    const promo = event.target.closest('.promo-product-link');
     if (event.key === 'Escape') closeProductDetail();
+    if ((event.key === 'Enter' || event.key === ' ') && promo) {
+      event.preventDefault();
+      openProductDetail(promo.dataset.productId);
+      return;
+    }
     if ((event.key === 'Enter' || event.key === ' ') && card) {
       event.preventDefault();
       openProductDetail(card.dataset.productId);
@@ -3286,6 +3351,11 @@
     const atc = e.target.closest('.add-to-cart');
     if (atc) {
       addToCart(atc.dataset.id || "", atc.dataset.name, atc.dataset.price, atc.dataset.img);
+      return;
+    }
+    const promoProduct = e.target.closest('.promo-product-link');
+    if (promoProduct?.dataset.productId && !e.target.closest('button')) {
+      openProductDetail(promoProduct.dataset.productId);
       return;
     }
     const productCard = e.target.closest('.product-card');

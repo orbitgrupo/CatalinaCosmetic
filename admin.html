@@ -216,6 +216,11 @@
               <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Descripcion hero<textarea id="home-hero-body" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" rows="3"></textarea></label>
               <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Texto del boton<input id="home-hero-cta" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
               <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Imagen principal<input id="home-hero-image" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+              <div class="grid gap-4 md:grid-cols-3">
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Tipo media hero<select id="home-hero-media-type" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal"><option value="image">Imagen</option><option value="video">Video</option></select></label>
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">URL media hero<input id="home-hero-media-url" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" placeholder="Imagen o video .mp4" /></label>
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Producto hero<select id="home-hero-product-id" class="home-product-link rounded-lg border-line text-sm font-normal normal-case tracking-normal"></select></label>
+              </div>
               <div class="grid gap-4 md:grid-cols-2">
                 <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Batch ID<input id="home-batch-label" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
                 <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Nota batch<input id="home-batch-copy" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
@@ -239,9 +244,19 @@
               <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Producto destacado<input id="home-featured-title" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
               <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Boton destacado<input id="home-featured-cta" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
               <div class="grid gap-4 md:grid-cols-3">
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Tipo media destacado<select id="home-featured-media-type" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal"><option value="image">Imagen</option><option value="video">Video</option></select></label>
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">URL media destacado<input id="home-featured-media-url" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" placeholder="Imagen o video .mp4" /></label>
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Producto destacado<select id="home-featured-product-id" class="home-product-link rounded-lg border-line text-sm font-normal normal-case tracking-normal"></select></label>
+              </div>
+              <div class="grid gap-4 md:grid-cols-3">
                 <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Tarjeta titulo<input id="home-secondary-title" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
                 <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Tarjeta texto<input id="home-secondary-body" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
                 <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Tarjeta precio<input id="home-secondary-price" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+              </div>
+              <div class="grid gap-4 md:grid-cols-3">
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Tipo media tarjeta<select id="home-secondary-media-type" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal"><option value="image">Imagen</option><option value="video">Video</option></select></label>
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">URL media tarjeta<input id="home-secondary-media-url" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" placeholder="Imagen o video .mp4" /></label>
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Producto tarjeta<select id="home-secondary-product-id" class="home-product-link rounded-lg border-line text-sm font-normal normal-case tracking-normal"></select></label>
               </div>
               <div class="grid gap-4 md:grid-cols-2">
                 <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Etiqueta bundles<input id="home-bundles-eyebrow" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
@@ -262,12 +277,21 @@
                 <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Bundle 1<input id="home-bundle-one-title" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
                 <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Precio 1<input id="home-bundle-one-price" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
                 <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Descripcion 1<input id="home-bundle-one-body" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Media 1<input id="home-bundle-one-media-url" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" placeholder="Imagen o video .mp4" /></label>
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Tipo media 1<select id="home-bundle-one-media-type" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal"><option value="image">Imagen</option><option value="video">Video</option></select></label>
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Producto 1<select id="home-bundle-one-product-id" class="home-product-link rounded-lg border-line text-sm font-normal normal-case tracking-normal"></select></label>
                 <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Bundle 2<input id="home-bundle-two-title" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
                 <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Precio 2<input id="home-bundle-two-price" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
                 <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Descripcion 2<input id="home-bundle-two-body" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Media 2<input id="home-bundle-two-media-url" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" placeholder="Imagen o video .mp4" /></label>
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Tipo media 2<select id="home-bundle-two-media-type" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal"><option value="image">Imagen</option><option value="video">Video</option></select></label>
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Producto 2<select id="home-bundle-two-product-id" class="home-product-link rounded-lg border-line text-sm font-normal normal-case tracking-normal"></select></label>
                 <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Bundle 3<input id="home-bundle-three-title" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
                 <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Precio 3<input id="home-bundle-three-price" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
                 <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Descripcion 3<input id="home-bundle-three-body" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Media 3<input id="home-bundle-three-media-url" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" placeholder="Imagen o video .mp4" /></label>
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Tipo media 3<select id="home-bundle-three-media-type" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal"><option value="image">Imagen</option><option value="video">Video</option></select></label>
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Producto 3<select id="home-bundle-three-product-id" class="home-product-link rounded-lg border-line text-sm font-normal normal-case tracking-normal"></select></label>
               </div>
               <div class="grid gap-4 md:grid-cols-2">
                 <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Footer marca<input id="home-footer-brand" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
@@ -548,6 +572,9 @@
       heroBody: "Formulated at the intersection of molecular biology and aesthetic dermatology. Transparency in every drop, precision in every result.",
       heroCta: "Explore Formulations",
       heroImage: "https://lh3.googleusercontent.com/aida-public/AB6AXuBnJFE6BP05X7e4PPbB7UZpRDagPOc05fMKVMX6XD8130If9E27dGKm0Dv01CxZhtSoqL_NgKc5r0s5DQd4vwAfz4HqpzVAOJRtTIjF7QyAvof7U_vEXsOZ_cIatALocajbTvSJctm6ffTSmmIT_UmeceItf9VZ5sqC0Au_dy1jNIJXTZBQxUPGnBMLY84nEx6rXswlrZ1jUyraur7KC1DwNIMXZg6SteodXBI1Wy7kA6UHsKPZeYiLSbnU_3v_dKxrJlw7m3QKSOQ",
+      heroMediaType: "image",
+      heroMediaUrl: "",
+      heroProductId: "",
       batchLabel: "Batch ID: CL-2024X",
       batchCopy: "\"98% Pure Hyaluronic Acid derived through bio-fermentation.\"",
       newEyebrow: "New Arrivals",
@@ -556,21 +583,36 @@
       featuredBadge: "Active Ingredient: Retinol+",
       featuredTitle: "Molecular Resurfacing Complex",
       featuredCta: "Study Results",
+      featuredMediaType: "image",
+      featuredMediaUrl: "",
+      featuredProductId: "",
       secondaryTitle: "pH Balance Mist",
       secondaryBody: "Restores skin barrier in under 60 seconds.",
       secondaryPrice: "€48.00",
+      secondaryMediaType: "image",
+      secondaryMediaUrl: "",
+      secondaryProductId: "",
       bundlesEyebrow: "The Regimens",
       bundlesTitle: "Curated Bundles",
       bundlesBody: "Systematic approaches to complex skin concerns. Our bundles are designed to work in synergy, maximizing bioavailability and structural integrity of the epidermis.",
       bundleOneTitle: "The Hydration Core",
       bundleOnePrice: "€145.00",
       bundleOneBody: "Deep cell replenishment system.",
+      bundleOneMediaType: "image",
+      bundleOneMediaUrl: "",
+      bundleOneProductId: "",
       bundleTwoTitle: "Advanced Age-Logic",
       bundleTwoPrice: "€210.00",
       bundleTwoBody: "Telomere support and repair.",
+      bundleTwoMediaType: "image",
+      bundleTwoMediaUrl: "",
+      bundleTwoProductId: "",
       bundleThreeTitle: "Clinical Clarity",
       bundleThreePrice: "€98.00",
       bundleThreeBody: "Balancing protocol for clear skin.",
+      bundleThreeMediaType: "image",
+      bundleThreeMediaUrl: "",
+      bundleThreeProductId: "",
       footerBrand: "CATALINA LABS",
       footerCopy: "© 2024 CATALINA LABS. FORMULATED WITH SCIENTIFIC PRECISION."
     };
@@ -1092,12 +1134,22 @@
     }
 
     function renderHomeEditor() {
+      renderHomeProductSelectors();
       Object.entries(homeFieldMap()).forEach(([key, id]) => {
         const field = document.getElementById(id);
         if (field && document.activeElement !== field) field.value = homeContent[key] || "";
       });
       renderHomePanels();
       renderHomePreview();
+    }
+
+    function renderHomeProductSelectors() {
+      const options = `<option value="">Sin producto enlazado</option>${state.products.map(product => `<option value="${escapeHtml(product.id)}">${escapeHtml(product.name)}</option>`).join("")}`;
+      document.querySelectorAll(".home-product-link").forEach(select => {
+        const current = select.value || homeContent[Object.entries(homeFieldMap()).find(([, id]) => id === select.id)?.[0]] || "";
+        select.innerHTML = options;
+        select.value = current;
+      });
     }
 
     function homeFieldMap() {
@@ -1109,6 +1161,9 @@
         heroBody: "home-hero-body",
         heroCta: "home-hero-cta",
         heroImage: "home-hero-image",
+        heroMediaType: "home-hero-media-type",
+        heroMediaUrl: "home-hero-media-url",
+        heroProductId: "home-hero-product-id",
         batchLabel: "home-batch-label",
         batchCopy: "home-batch-copy",
         newEyebrow: "home-new-eyebrow",
@@ -1117,21 +1172,36 @@
         featuredBadge: "home-featured-badge",
         featuredTitle: "home-featured-title",
         featuredCta: "home-featured-cta",
+        featuredMediaType: "home-featured-media-type",
+        featuredMediaUrl: "home-featured-media-url",
+        featuredProductId: "home-featured-product-id",
         secondaryTitle: "home-secondary-title",
         secondaryBody: "home-secondary-body",
         secondaryPrice: "home-secondary-price",
+        secondaryMediaType: "home-secondary-media-type",
+        secondaryMediaUrl: "home-secondary-media-url",
+        secondaryProductId: "home-secondary-product-id",
         bundlesEyebrow: "home-bundles-eyebrow",
         bundlesTitle: "home-bundles-title",
         bundlesBody: "home-bundles-body",
         bundleOneTitle: "home-bundle-one-title",
         bundleOnePrice: "home-bundle-one-price",
         bundleOneBody: "home-bundle-one-body",
+        bundleOneMediaType: "home-bundle-one-media-type",
+        bundleOneMediaUrl: "home-bundle-one-media-url",
+        bundleOneProductId: "home-bundle-one-product-id",
         bundleTwoTitle: "home-bundle-two-title",
         bundleTwoPrice: "home-bundle-two-price",
         bundleTwoBody: "home-bundle-two-body",
+        bundleTwoMediaType: "home-bundle-two-media-type",
+        bundleTwoMediaUrl: "home-bundle-two-media-url",
+        bundleTwoProductId: "home-bundle-two-product-id",
         bundleThreeTitle: "home-bundle-three-title",
         bundleThreePrice: "home-bundle-three-price",
         bundleThreeBody: "home-bundle-three-body",
+        bundleThreeMediaType: "home-bundle-three-media-type",
+        bundleThreeMediaUrl: "home-bundle-three-media-url",
+        bundleThreeProductId: "home-bundle-three-product-id",
         footerBrand: "home-footer-brand",
         footerCopy: "home-footer-copy"
       };
@@ -1159,6 +1229,7 @@
       const preview = document.getElementById("home-live-preview");
       if (!preview) return;
       const draft = readHomeDraft();
+      const mediaLabel = value => value === "video" ? "Video" : "Imagen";
       preview.innerHTML = `
         <div class="relative min-h-[330px] bg-ink text-white">
           <img class="absolute inset-0 h-full w-full object-cover opacity-55" src="${escapeHtml(draft.heroImage || images.skin)}" alt="Preview"/>
@@ -1168,6 +1239,7 @@
             <h3 class="text-3xl font-extrabold leading-none tracking-tight">${escapeHtml(draft.heroTitle).replace(/\n/g, "<br>")}</h3>
             <p class="mt-3 text-xs leading-5 text-white/75">${escapeHtml(draft.heroBody)}</p>
             <button class="mt-4 w-fit rounded-xl bg-white px-4 py-3 text-xs font-extrabold text-ink">${escapeHtml(draft.heroCta)}</button>
+            <p class="mt-3 text-[9px] font-bold uppercase tracking-widest text-white/60">${mediaLabel(draft.heroMediaType)} promocional</p>
           </div>
         </div>
         <div class="p-4">
@@ -1183,11 +1255,13 @@
               <p class="text-[9px] font-bold uppercase tracking-widest text-violet">${escapeHtml(draft.featuredBadge)}</p>
               <p class="mt-1 text-sm font-extrabold leading-tight">${escapeHtml(draft.featuredTitle)}</p>
               <p class="mt-3 text-xs font-bold text-ink">${escapeHtml(draft.featuredCta)}</p>
+              <p class="mt-2 text-[9px] font-bold uppercase tracking-widest text-muted">${mediaLabel(draft.featuredMediaType)}</p>
             </div>
             <div class="rounded-xl bg-white p-3 shadow-sm">
               <p class="text-sm font-extrabold leading-tight">${escapeHtml(draft.secondaryTitle)}</p>
               <p class="mt-2 text-[11px] text-muted">${escapeHtml(draft.secondaryBody)}</p>
               <p class="mt-3 text-sm font-extrabold">${escapeHtml(draft.secondaryPrice)}</p>
+              <p class="mt-2 text-[9px] font-bold uppercase tracking-widest text-muted">${mediaLabel(draft.secondaryMediaType)}</p>
             </div>
           </div>
           <div class="mt-4 rounded-xl bg-ink p-4 text-white">
