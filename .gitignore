@@ -2,3 +2,4 @@ catalina-sites.tar
 .env
 *.log
 *.tar
+public/uploads/

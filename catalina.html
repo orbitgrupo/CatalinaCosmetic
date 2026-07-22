@@ -1445,9 +1445,16 @@
     };
     const setPromoMedia = (root, keys = {}) => {
       if (!root) return;
-      const mediaUrl = content[keys.mediaUrl] || content[keys.imageUrl] || "";
-      const mediaType = content[keys.mediaType] === "video" ? "video" : "image";
-      const productId = content[keys.productId] || "";
+      const readContent = keyOrKeys => {
+        const keysList = Array.isArray(keyOrKeys) ? keyOrKeys : [keyOrKeys];
+        for (const key of keysList) {
+          if (key && content[key]) return content[key];
+        }
+        return "";
+      };
+      const mediaUrl = readContent(keys.mediaUrl) || readContent(keys.imageUrl);
+      const mediaType = readContent(keys.mediaType) === "video" ? "video" : "image";
+      const productId = readContent(keys.productId);
       const current = root.querySelector("video, img");
       if (current && mediaUrl) {
         const media = mediaType === "video" ? document.createElement("video") : document.createElement("img");
@@ -1509,8 +1516,10 @@
       setText('p.text-sm.leading-6', content.heroBody, mobileHome);
       setText('button[data-page="catalog"]', content.heroCta, mobileHome);
       setImage('img[alt="Catalina mobile banner"]', content.heroImage, mobileHome);
-      setPromoMedia(mobileHome.querySelector(".relative.min-h-\\[430px\\]"), { mediaType: "heroMediaType", mediaUrl: "heroMediaUrl", imageUrl: "heroImage", productId: "heroProductId" });
+      setPromoMedia(mobileHome.querySelector(".relative.min-h-\\[430px\\]"), { mediaType: ["mobileHeroMediaType", "heroMediaType"], mediaUrl: ["mobileHeroMediaUrl", "heroMediaUrl"], imageUrl: "heroImage", productId: ["mobileHeroProductId", "heroProductId"] });
       setText('h2.text-xl', content.newTitle, mobileHome);
+      const mobilePromoBanners = mobileHome.querySelectorAll(".relative.overflow-hidden.rounded-2xl");
+      setPromoMedia(mobilePromoBanners[1], { mediaType: ["mobileBannerMediaType", "secondaryMediaType"], mediaUrl: ["mobileBannerMediaUrl", "secondaryMediaUrl"], productId: ["mobileBannerProductId", "secondaryProductId"] });
     }
     if (heroSection) {
       setText('span.label-md', content.heroEyebrow, heroSection);

@@ -46,7 +46,7 @@ nano .env
 Completa:
 
 ```env
-PORT=3000
+PORT=3010
 BASE_PATH=/catalina-cosmetic
 CATALINA_SUPABASE_URL=https://TU-PROYECTO.supabase.co
 CATALINA_SUPABASE_PUBLISHABLE_KEY=TU_CLAVE_PUBLICABLE
@@ -71,7 +71,7 @@ pm2 startup
 Prueba local en el servidor:
 
 ```bash
-curl http://127.0.0.1:3000/
+curl http://127.0.0.1:3010/catalina-cosmetic/
 ```
 
 Si vas a usar la URL de Tailscale:
@@ -115,7 +115,7 @@ location = /catalina-cosmetic {
 }
 
 location /catalina-cosmetic/ {
-    proxy_pass http://127.0.0.1:3000/catalina-cosmetic/;
+    proxy_pass http://127.0.0.1:3010/catalina-cosmetic/;
     proxy_http_version 1.1;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
@@ -123,8 +123,44 @@ location /catalina-cosmetic/ {
     proxy_set_header X-Forwarded-Proto $scheme;
 }
 
-location /api/ {
-    proxy_pass http://127.0.0.1:3000/api/;
+location = /api/catalog {
+    proxy_pass http://127.0.0.1:3010/api/catalog;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+
+location = /api/create-checkout-session {
+    proxy_pass http://127.0.0.1:3010/api/create-checkout-session;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+
+location = /api/confirm-checkout-session {
+    proxy_pass http://127.0.0.1:3010/api/confirm-checkout-session;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+
+location = /api/stripe-webhook {
+    proxy_pass http://127.0.0.1:3010/api/stripe-webhook;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+
+location /api/admin/ {
+    proxy_pass http://127.0.0.1:3010/api/admin/;
     proxy_http_version 1.1;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
@@ -133,7 +169,7 @@ location /api/ {
 }
 
 location ~ ^/(supabase-.*\.sql|SUPABASE_SETUP\.md)$ {
-    proxy_pass http://127.0.0.1:3000;
+    proxy_pass http://127.0.0.1:3010;
     proxy_http_version 1.1;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
@@ -168,8 +204,18 @@ https://tudominio.com/api/stripe-webhook
 Copia el nuevo `whsec_...` en `.env` y reinicia:
 
 ```bash
-pm2 restart catalina
+pm2 restart catalina --update-env
 ```
+
+## Media de inicio
+
+Las imagenes y videos que subas desde el admin para la pagina de inicio se guardan en:
+
+```text
+/var/www/catalina/public/uploads/home-media/
+```
+
+El admin genera automaticamente la URL publica bajo `/catalina-cosmetic/uploads/home-media/...`. Mantén esa carpeta con permisos de escritura para el usuario que ejecuta PM2.
 
 ## Actualizar despues de cambios
 
@@ -179,5 +225,5 @@ git pull origin main
 npm install
 npm run check
 npm run build
-pm2 restart catalina
+pm2 restart catalina --update-env
 ```

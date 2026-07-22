@@ -48,6 +48,8 @@
     .editor-tab.active { background: #19223c; color: #fff; box-shadow: 0 12px 24px rgba(25,34,60,.16); }
     .editor-panel { display: none; }
     .editor-panel.active { display: grid; }
+    .screen-editor-panel { display: none; }
+    .screen-editor-panel.active { display: grid; }
     .preview-phone { min-height: 620px; border-radius: 34px; border: 10px solid #19223c; background: #f7f9fb; overflow: hidden; }
     .status-pill { border-radius: 999px; padding: 8px 12px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .12em; }
     @media print {
@@ -199,6 +201,23 @@
             <button class="editor-tab rounded-full bg-white px-5 py-3 text-sm font-extrabold text-muted" data-home-tab="sections" type="button"><span class="material-symbols-outlined align-middle text-base">view_quilt</span> Secciones</button>
             <button class="editor-tab rounded-full bg-white px-5 py-3 text-sm font-extrabold text-muted" data-home-tab="bundles" type="button"><span class="material-symbols-outlined align-middle text-base">redeem</span> Bundles</button>
           </div>
+          <div class="mb-5 grid gap-4 rounded-xl border border-line bg-white p-4 md:grid-cols-[220px_1fr]">
+            <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Pantalla a editar
+              <select id="home-screen-target" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal">
+                <option value="web">Web / pantallas grandes</option>
+                <option value="mobile">Mobile / telefonos</option>
+              </select>
+            </label>
+            <div class="grid gap-3 md:grid-cols-[1fr_220px_auto]">
+              <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Subir media al servidor
+                <input id="home-media-file" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" type="file" accept="image/*,video/*" />
+              </label>
+              <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Enviar a campo
+                <select id="home-media-target" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal"></select>
+              </label>
+              <button id="home-media-upload" class="self-end rounded-lg bg-ink px-4 py-3 text-sm font-bold text-white" type="button">Subir</button>
+            </div>
+          </div>
           <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_390px]">
             <div class="grid gap-6">
             <form id="home-form" class="editor-panel active field-surface gap-4 rounded-lg admin-card p-5" data-home-panel="hero">
@@ -296,6 +315,25 @@
               <div class="grid gap-4 md:grid-cols-2">
                 <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Footer marca<input id="home-footer-brand" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
                 <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Footer texto<input id="home-footer-copy" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+              </div>
+            </form>
+            <form class="screen-editor-panel field-surface gap-4 rounded-lg admin-card p-5" data-home-screen-panel="mobile">
+              <div class="flex items-center justify-between gap-4">
+                <div>
+                  <h2 class="text-xl font-extrabold">Media para telefonos</h2>
+                  <p class="text-sm text-muted">Edita videos o imagenes que aparecen solo en la version movil.</p>
+                </div>
+                <span class="material-symbols-outlined rounded-full bg-violet/10 p-3 text-violet">smartphone</span>
+              </div>
+              <div class="grid gap-4 md:grid-cols-3">
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Tipo banner principal<select id="home-mobile-hero-media-type" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal"><option value="image">Imagen</option><option value="video">Video</option></select></label>
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">URL banner principal<input id="home-mobile-hero-media-url" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" placeholder="Imagen o video .mp4" /></label>
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Producto banner principal<select id="home-mobile-hero-product-id" class="home-product-link rounded-lg border-line text-sm font-normal normal-case tracking-normal"></select></label>
+              </div>
+              <div class="grid gap-4 md:grid-cols-3">
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Tipo banner intermedio<select id="home-mobile-banner-media-type" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal"><option value="image">Imagen</option><option value="video">Video</option></select></label>
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">URL banner intermedio<input id="home-mobile-banner-media-url" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" placeholder="Imagen o video .mp4" /></label>
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Producto banner intermedio<select id="home-mobile-banner-product-id" class="home-product-link rounded-lg border-line text-sm font-normal normal-case tracking-normal"></select></label>
               </div>
             </form>
             </div>
@@ -575,6 +613,12 @@
       heroMediaType: "image",
       heroMediaUrl: "",
       heroProductId: "",
+      mobileHeroMediaType: "image",
+      mobileHeroMediaUrl: "",
+      mobileHeroProductId: "",
+      mobileBannerMediaType: "image",
+      mobileBannerMediaUrl: "",
+      mobileBannerProductId: "",
       batchLabel: "Batch ID: CL-2024X",
       batchCopy: "\"98% Pure Hyaluronic Acid derived through bio-fermentation.\"",
       newEyebrow: "New Arrivals",
@@ -667,6 +711,7 @@
     let productAdminSearchTerm = "";
     let productAdminCategoryFilter = "";
     let activeHomePanel = "hero";
+    let activeHomeScreen = "web";
     let editingProductImages = [];
     let editingProductVariants = [];
 
@@ -1164,6 +1209,12 @@
         heroMediaType: "home-hero-media-type",
         heroMediaUrl: "home-hero-media-url",
         heroProductId: "home-hero-product-id",
+        mobileHeroMediaType: "home-mobile-hero-media-type",
+        mobileHeroMediaUrl: "home-mobile-hero-media-url",
+        mobileHeroProductId: "home-mobile-hero-product-id",
+        mobileBannerMediaType: "home-mobile-banner-media-type",
+        mobileBannerMediaUrl: "home-mobile-banner-media-url",
+        mobileBannerProductId: "home-mobile-banner-product-id",
         batchLabel: "home-batch-label",
         batchCopy: "home-batch-copy",
         newEyebrow: "home-new-eyebrow",
@@ -1222,7 +1273,32 @@
 
     function renderHomePanels() {
       document.querySelectorAll(".editor-tab").forEach(tab => tab.classList.toggle("active", tab.dataset.homeTab === activeHomePanel));
-      document.querySelectorAll(".editor-panel").forEach(panel => panel.classList.toggle("active", panel.dataset.homePanel === activeHomePanel));
+      document.querySelectorAll(".editor-panel").forEach(panel => panel.classList.toggle("active", activeHomeScreen === "web" && panel.dataset.homePanel === activeHomePanel));
+      document.querySelectorAll(".screen-editor-panel").forEach(panel => panel.classList.toggle("active", panel.dataset.homeScreenPanel === activeHomeScreen));
+      const screenSelect = document.getElementById("home-screen-target");
+      if (screenSelect && screenSelect.value !== activeHomeScreen) screenSelect.value = activeHomeScreen;
+      renderHomeMediaTargetOptions();
+    }
+
+    function renderHomeMediaTargetOptions() {
+      const target = document.getElementById("home-media-target");
+      if (!target) return;
+      const options = activeHomeScreen === "mobile"
+        ? [
+            ["mobileHeroMediaUrl", "Mobile - banner principal"],
+            ["mobileBannerMediaUrl", "Mobile - banner intermedio"]
+          ]
+        : [
+            ["heroMediaUrl", "Web - hero"],
+            ["featuredMediaUrl", "Web - destacado"],
+            ["secondaryMediaUrl", "Web - tarjeta secundaria"],
+            ["bundleOneMediaUrl", "Web - bundle 1"],
+            ["bundleTwoMediaUrl", "Web - bundle 2"],
+            ["bundleThreeMediaUrl", "Web - bundle 3"]
+          ];
+      const current = target.value;
+      target.innerHTML = options.map(([value, label]) => `<option value="${value}">${label}</option>`).join("");
+      target.value = options.some(([value]) => value === current) ? current : options[0]?.[0] || "";
     }
 
     function renderHomePreview() {
@@ -1723,6 +1799,42 @@
         if (data?.url) uploaded.push({ url: data.url, path: data.path || path });
       }
       return uploaded;
+    }
+
+    function mediaTypeFieldForUrlKey(key) {
+      return {
+        heroMediaUrl: "heroMediaType",
+        featuredMediaUrl: "featuredMediaType",
+        secondaryMediaUrl: "secondaryMediaType",
+        bundleOneMediaUrl: "bundleOneMediaType",
+        bundleTwoMediaUrl: "bundleTwoMediaType",
+        bundleThreeMediaUrl: "bundleThreeMediaType",
+        mobileHeroMediaUrl: "mobileHeroMediaType",
+        mobileBannerMediaUrl: "mobileBannerMediaType"
+      }[key] || "";
+    }
+
+    async function uploadHomeMedia() {
+      const file = document.getElementById("home-media-file")?.files?.[0];
+      const targetKey = document.getElementById("home-media-target")?.value;
+      if (!file) return showToast("Selecciona una imagen o video");
+      if (!targetKey) return showToast("Selecciona donde colocar el media");
+      const form = new FormData();
+      form.append("file", file);
+      const data = await adminApiFetch("/api/admin/upload-home-media", { method: "POST", body: form });
+      if (!data?.url) return showToast("No se pudo subir el media");
+      homeContent[targetKey] = data.url;
+      const targetField = document.getElementById(homeFieldMap()[targetKey]);
+      if (targetField) targetField.value = data.url;
+      const typeKey = mediaTypeFieldForUrlKey(targetKey);
+      if (typeKey) {
+        const type = data.mediaType || (file.type.startsWith("video/") ? "video" : "image");
+        homeContent[typeKey] = type;
+        const typeField = document.getElementById(homeFieldMap()[typeKey]);
+        if (typeField) typeField.value = type;
+      }
+      renderHomePreview();
+      showToast("Media subido al servidor");
     }
 
     async function saveProduct(event) {
@@ -2436,6 +2548,12 @@
       if (event.target.classList.contains("order-status")) updateOrder(event.target.dataset.id, "status", event.target.value);
       if (event.target.classList.contains("order-carrier")) updateOrder(event.target.dataset.id, "carrier", event.target.value);
       if (event.target.id === "customer-province") populateCitySelect("customer-province", "customer-city");
+      if (event.target.id === "home-screen-target") {
+        activeHomeScreen = event.target.value === "mobile" ? "mobile" : "web";
+        renderHomePanels();
+        renderHomePreview();
+      }
+      if (Object.values(homeFieldMap()).includes(event.target.id)) renderHomePreview();
       if (event.target.id === "order-status-filter") {
         orderStatusFilter = event.target.value;
         renderOrders();
@@ -2481,6 +2599,7 @@
     document.getElementById("customer-form").addEventListener("submit", saveCustomer);
     document.getElementById("home-save").addEventListener("click", collectHomeContent);
     document.getElementById("home-reset").addEventListener("click", resetHomeContent);
+    document.getElementById("home-media-upload").addEventListener("click", uploadHomeMedia);
     document.getElementById("home-preview-refresh").addEventListener("click", renderHomePreview);
     document.getElementById("auth-login").addEventListener("click", loginSupabase);
     document.getElementById("auth-signup").addEventListener("click", signupSupabase);
