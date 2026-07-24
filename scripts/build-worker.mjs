@@ -194,7 +194,7 @@ async function getAdminSnapshot(request, env) {
   return { customers: customers || [], orders: orders || [], reviews: reviews || [] };
 }
 
-function cleanAdminAccountPayload(payload = {}) {
+function cleanUserAccountPayload(payload = {}) {
   const email = String(payload.email || "").trim().toLowerCase();
   const password = String(payload.password || "");
   const fullName = String(payload.fullName || "").trim().slice(0, 160);
@@ -203,7 +203,7 @@ function cleanAdminAccountPayload(payload = {}) {
   return { email, password, fullName };
 }
 
-async function createAdminAccount(request, env) {
+async function createUserAccount(request, env) {
   try {
     await requireAdminUser(request, env);
     let payload;
@@ -212,7 +212,7 @@ async function createAdminAccount(request, env) {
     } catch {
       return jsonResponse({ error: "Solicitud invalida." }, 400);
     }
-    const account = cleanAdminAccountPayload(payload);
+    const account = cleanUserAccountPayload(payload);
     const url = env.CATALINA_SUPABASE_URL || env.SUPABASE_URL || "";
     const serviceKey = env.CATALINA_SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_ROLE_KEY || "";
     if (!url || !serviceKey) return jsonResponse({ error: "Supabase service role no esta configurado en Sites." }, 503);
@@ -228,7 +228,7 @@ async function createAdminAccount(request, env) {
         email: account.email,
         password: account.password,
         email_confirm: true,
-        app_metadata: { role: "admin" },
+        app_metadata: { role: "user" },
         user_metadata: account.fullName ? { full_name: account.fullName } : {}
       })
     });
@@ -238,11 +238,11 @@ async function createAdminAccount(request, env) {
     return jsonResponse({
       id: data.id || "",
       email: data.email || account.email,
-      role: data.app_metadata?.role || "admin"
+      role: data.app_metadata?.role || "user"
     }, 201);
   } catch (error) {
     const status = /admin|permisos|sesion/i.test(error.message || "") ? 403 : 500;
-    return jsonResponse({ error: error.message || "No se pudo crear el administrador." }, status);
+    return jsonResponse({ error: error.message || "No se pudo crear el usuario." }, status);
   }
 }
 
@@ -739,7 +739,7 @@ export default {
     }
 
     if (url.pathname === "/api/admin/create-user" && request.method === "POST") {
-      return createAdminAccount(request, env || {});
+      return createUserAccount(request, env || {});
     }
 
     if (url.pathname === "/api/admin/ensure-product-images-bucket" && request.method === "POST") {

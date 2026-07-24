@@ -523,13 +523,13 @@
               </div>
             </div>
             <div class="rounded-sm bg-white p-5 shadow-soft">
-              <h2 class="text-xl font-extrabold">Crear administrador</h2>
-              <p class="mt-2 text-sm leading-6 text-muted">Solo una sesion admin activa puede crear otro usuario con permisos para productos, clientes, pedidos y envios.</p>
+              <h2 class="text-xl font-extrabold">Crear usuario</h2>
+              <p class="mt-2 text-sm leading-6 text-muted">Crea usuarios normales para clientes o personal. Los permisos de administrador principal solo se asignan directamente en Supabase.</p>
               <div class="mt-5 grid gap-3">
-                <input id="new-admin-name" class="rounded-lg border-line" type="text" placeholder="Nombre del administrador" />
-                <input id="new-admin-email" class="rounded-lg border-line" type="email" placeholder="admin@email.com" />
+                <input id="new-admin-name" class="rounded-lg border-line" type="text" placeholder="Nombre del usuario" />
+                <input id="new-admin-email" class="rounded-lg border-line" type="email" placeholder="usuario@email.com" />
                 <input id="new-admin-password" class="rounded-lg border-line" type="password" minlength="8" placeholder="Contrasena temporal" />
-                <button id="new-admin-create" class="rounded-lg bg-navy px-4 py-3 text-sm font-bold text-white" type="button">Crear usuario admin</button>
+                <button id="new-admin-create" class="rounded-lg bg-navy px-4 py-3 text-sm font-bold text-white" type="button">Crear usuario</button>
                 <p id="new-admin-message" class="hidden rounded-lg bg-shell px-4 py-3 text-sm font-semibold text-muted"></p>
               </div>
             </div>
@@ -2158,7 +2158,7 @@
       }
       renderAll();
       prepareOwnProfileForm();
-      setAuthMessage(currentUser ? "Cuenta normal creada. Para administrar, usa Crear administrador desde una sesion admin." : "Cuenta creada. Revisa tu email para confirmar.");
+      setAuthMessage(currentUser ? "Cuenta normal creada. Los permisos de administrador se asignan directamente en Supabase." : "Cuenta creada. Revisa tu email para confirmar.");
       showToast(currentUser ? "Cuenta creada" : "Revisa tu email");
     }
 
@@ -2247,10 +2247,10 @@
         document.getElementById("new-admin-name").value = "";
         document.getElementById("new-admin-email").value = "";
         document.getElementById("new-admin-password").value = "";
-        setNewAdminMessage(`Usuario admin creado: ${data.email || email}`);
-        showToast("Administrador creado");
+        setNewAdminMessage(`Usuario creado: ${data.email || email}`);
+        showToast("Usuario creado");
       } catch (error) {
-        setNewAdminMessage(error.message || "No se pudo crear el administrador.", true);
+        setNewAdminMessage(error.message || "No se pudo crear el usuario.", true);
       } finally {
         button.disabled = false;
         button.textContent = originalText;
