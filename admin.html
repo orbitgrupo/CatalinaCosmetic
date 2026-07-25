@@ -803,11 +803,11 @@
       try { return { ...defaultHomeContent, ...JSON.parse(saved) }; } catch { return { ...defaultHomeContent }; }
     }
 
-    async function persistHomeContent() {
+    async function persistHomeContent(message = "Inicio actualizado") {
       localStorage.setItem(HOME_STORAGE_KEY, JSON.stringify(homeContent));
       renderHomeEditor();
       await saveHomeContentToSupabase();
-      showToast("Inicio actualizado");
+      showToast(message);
     }
 
     function loadState() {
@@ -1960,9 +1960,10 @@
         const typeField = document.getElementById(homeFieldMap()[typeKey]);
         if (typeField) typeField.value = type;
       }
+      homeContent = readHomeDraft();
+      await persistHomeContent("Media subido y guardado");
       renderHomeMediaCards();
       renderHomePreview();
-      showToast("Media subido al servidor");
     }
 
     async function saveProduct(event) {
