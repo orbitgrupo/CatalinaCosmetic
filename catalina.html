@@ -292,6 +292,46 @@
         margin-top: 18px !important;
         gap: 10px !important;
       }
+      .profile-shell {
+        padding: 88px 14px 32px !important;
+      }
+      .profile-layout {
+        display: block !important;
+      }
+      .profile-sidebar {
+        display: none !important;
+      }
+      .profile-topbar {
+        border-radius: 0 !important;
+        background: transparent !important;
+        padding: 0 0 18px !important;
+        box-shadow: none !important;
+      }
+      .profile-topbar h1 {
+        font-size: 2rem !important;
+        line-height: 1.05 !important;
+        letter-spacing: 0 !important;
+      }
+      .profile-content-card {
+        border-radius: 18px !important;
+        padding: 16px !important;
+      }
+      .profile-order-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+      }
+      .profile-order-card {
+        border-radius: 16px !important;
+        padding: 14px !important;
+      }
+      .profile-order-images img,
+      .profile-order-images span {
+        width: 48px !important;
+        height: 48px !important;
+      }
+      .profile-mobile-nav {
+        display: grid !important;
+      }
     }
   </style>
 </head>
@@ -935,140 +975,131 @@
 
 <!-- ======================== PROFILE ======================== -->
 <div id="page-profile" class="page">
-  <main class="pt-32 pb-24 px-8 max-w-7xl mx-auto">
-    <header class="mb-16 flex flex-col md:flex-row md:items-end md:justify-between gap-8">
-      <div class="space-y-4">
-        <div class="inline-block py-1 px-3 bg-secondary-container text-on-secondary-container rounded-full text-[10px] font-bold tracking-[0.1em] uppercase">Mi Catalina</div>
-        <h1 id="profile-display-name" class="text-4xl md:text-5xl font-extrabold tracking-tighter text-on-surface">Crear perfil</h1>
-        <p id="profile-display-summary" class="text-on-surface-variant max-w-lg leading-relaxed">Administra tu cuenta, direcciones, pedidos, favoritos y resenas desde un solo lugar.</p>
-      </div>
-      <div class="flex gap-4">
-        <button class="nav-link bg-surface-container-high px-6 py-3 rounded-lg font-medium text-sm transition-all hover:bg-surface-container-highest" data-page="catalog">Comprar</button>
-        <button class="nav-link bg-primary text-on-primary px-6 py-3 rounded-lg font-medium text-sm transition-all hover:opacity-90" data-page="tracking">Rastrear pedido</button>
-      </div>
-    </header>
-    <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
-      <!-- Account Summary -->
-      <section class="md:col-span-8 bg-surface-container-lowest p-8 rounded-lg shadow-sm">
-        <div class="flex flex-col gap-6 mb-8 md:flex-row md:items-center md:justify-between">
-          <div class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-primary">dashboard</span>
+  <main class="profile-shell pt-28 pb-24 px-6 max-w-7xl mx-auto">
+    <div class="profile-layout grid gap-6 lg:grid-cols-[180px_1fr]">
+      <aside class="profile-sidebar rounded-2xl bg-surface-container-lowest p-5 shadow-sm">
+        <div class="mb-8">
+          <p class="text-2xl font-extrabold tracking-tight text-primary">Catalina</p>
+          <p class="mt-1 text-[10px] font-extrabold uppercase tracking-[0.18em] text-on-surface-variant">Mi cuenta</p>
+        </div>
+        <nav class="grid gap-2 text-sm font-bold text-on-surface">
+          <button class="rounded-lg bg-primary-container px-4 py-3 text-left text-on-primary-container" type="button"><span class="material-symbols-outlined mr-2 align-middle text-lg">shopping_bag</span>Mis Pedidos</button>
+          <button class="rounded-lg px-4 py-3 text-left hover:bg-surface-container-low" type="button"><span class="material-symbols-outlined mr-2 align-middle text-lg">person</span>Mi Perfil</button>
+          <button class="rounded-lg px-4 py-3 text-left hover:bg-surface-container-low" type="button"><span class="material-symbols-outlined mr-2 align-middle text-lg">location_on</span>Direcciones</button>
+          <button class="rounded-lg px-4 py-3 text-left hover:bg-surface-container-low" type="button"><span class="material-symbols-outlined mr-2 align-middle text-lg">favorite</span>Favoritos</button>
+          <button id="profile-logout" class="rounded-lg px-4 py-3 text-left hover:bg-surface-container-low" type="button"><span class="material-symbols-outlined mr-2 align-middle text-lg">logout</span>Cerrar sesion</button>
+        </nav>
+      </aside>
+      <section class="min-w-0">
+        <header class="profile-topbar mb-6 rounded-2xl bg-surface-container-lowest p-5 shadow-sm">
+          <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <h2 class="text-xl font-bold tracking-tight">Resumen de cuenta</h2>
-              <p class="text-sm text-on-surface-variant">Tus compras, productos guardados y actividad reciente.</p>
+              <p id="profile-display-summary" class="text-sm font-bold text-on-surface-variant">Administra pedidos, direcciones, favoritos y resenas.</p>
+              <h1 id="profile-display-name" class="mt-2 text-4xl font-extrabold tracking-tight text-on-surface">Mis Pedidos</h1>
+            </div>
+            <div class="flex items-center gap-3">
+              <button class="nav-link rounded-full bg-surface-container-low px-5 py-3 text-sm font-bold text-on-surface" data-page="catalog" type="button">Comprar</button>
+              <button class="nav-link rounded-full bg-primary px-5 py-3 text-sm font-bold text-on-primary" data-page="tracking" type="button">Rastrear</button>
+              <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary-container text-sm font-extrabold text-on-primary-container">C</div>
             </div>
           </div>
-          <span class="text-xs font-bold tracking-[0.1em] text-primary uppercase">Estilo marketplace</span>
+        </header>
+        <div class="profile-mobile-nav mb-5 hidden grid-cols-5 gap-1 rounded-2xl bg-surface-container-lowest p-2 text-center text-[10px] font-bold text-on-surface-variant shadow-sm">
+          <span><span class="material-symbols-outlined block text-lg">home</span>Inicio</span>
+          <span><span class="material-symbols-outlined block text-lg">category</span>Categorias</span>
+          <span class="text-primary"><span class="material-symbols-outlined block text-lg">shopping_bag</span>Pedidos</span>
+          <span><span class="material-symbols-outlined block text-lg">favorite</span>Favoritos</span>
+          <span><span class="material-symbols-outlined block text-lg">person</span>Perfil</span>
         </div>
-        <div id="profile-metrics" class="grid grid-cols-2 gap-3 md:grid-cols-4"></div>
-        <div class="mt-8 rounded-xl border border-outline-variant/20 bg-surface-container-low p-5">
-          <div class="mb-4 flex items-center justify-between gap-4">
-            <div>
-              <h3 class="font-extrabold text-on-surface">Sugerencias para ti</h3>
-              <p class="text-sm text-on-surface-variant">Productos activos del catalogo segun tu cuenta.</p>
+        <section class="profile-content-card rounded-2xl bg-surface-container-lowest p-6 shadow-sm">
+          <div class="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <h2 class="text-3xl font-extrabold tracking-tight">Mis Pedidos</h2>
+            <div class="flex flex-col gap-2 sm:flex-row">
+              <div class="relative">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-base text-on-surface-variant">search</span>
+                <input class="rounded-lg border-none bg-surface-container-low py-3 pl-9 pr-4 text-sm" placeholder="Buscar pedidos" />
+              </div>
+              <select class="rounded-lg border-none bg-surface-container-low px-4 py-3 text-sm font-bold text-on-surface"><option>Ultimos 3 meses</option></select>
+              <select class="rounded-lg border-none bg-surface-container-low px-4 py-3 text-sm font-bold text-on-surface"><option>Estado: Todos</option></select>
             </div>
-            <button class="nav-link rounded-full bg-white px-4 py-2 text-xs font-extrabold uppercase tracking-widest text-primary" data-page="catalog" type="button">Ver todo</button>
           </div>
-          <div id="profile-suggestions" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"></div>
-        </div>
-      </section>
-      <!-- Profile and Address -->
-      <section class="md:col-span-4 bg-surface-container-high p-8 rounded-lg">
-        <div class="mb-8 space-y-4">
-          <div class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-primary">account_circle</span>
-            <h2 class="text-xl font-bold tracking-tight">Cuenta cliente</h2>
+          <div id="customer-orders" class="profile-order-grid grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div class="rounded-xl bg-surface-container-low p-6 text-center text-sm font-bold text-on-surface-variant">Inicia sesion para ver tus pedidos.</div>
           </div>
-          <p id="profile-auth-status" class="rounded-lg bg-surface-container-lowest p-4 text-xs leading-5 text-on-surface-variant">Sin sesion iniciada.</p>
-          <form id="signup-form" class="grid gap-3 rounded-lg bg-surface-container-lowest p-4">
-            <p class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-primary">Crear cuenta</p>
-            <input id="signup-name" class="w-full rounded-lg border-none bg-surface-container-low px-4 py-3 text-sm focus:ring-1 focus:ring-primary" placeholder="Nombre completo" required/>
-            <input id="signup-email" class="w-full rounded-lg border-none bg-surface-container-low px-4 py-3 text-sm focus:ring-1 focus:ring-primary" type="email" placeholder="Email" required/>
-            <input id="signup-password" class="w-full rounded-lg border-none bg-surface-container-low px-4 py-3 text-sm focus:ring-1 focus:ring-primary" type="password" minlength="6" placeholder="Password" required/>
-            <button class="rounded-lg bg-primary py-3 text-xs font-bold uppercase tracking-[0.1em] text-on-primary" type="submit">Crear cuenta</button>
-          </form>
-          <form id="login-form" class="grid gap-3 rounded-lg bg-surface-container-lowest p-4">
-            <p class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-primary">Iniciar sesion</p>
-            <input id="login-email" class="w-full rounded-lg border-none bg-surface-container-low px-4 py-3 text-sm focus:ring-1 focus:ring-primary" type="email" placeholder="Email" required/>
-            <input id="login-password" class="w-full rounded-lg border-none bg-surface-container-low px-4 py-3 text-sm focus:ring-1 focus:ring-primary" type="password" placeholder="Password" required/>
-            <div class="grid grid-cols-2 gap-3">
+        </section>
+        <section class="mt-6 grid gap-6 xl:grid-cols-[1fr_380px]">
+          <div class="grid gap-6">
+            <section class="profile-content-card rounded-2xl bg-surface-container-lowest p-6 shadow-sm">
+              <div class="mb-5 flex items-center justify-between">
+                <div>
+                  <h2 class="text-xl font-extrabold">Resumen de cuenta</h2>
+                  <p class="text-sm text-on-surface-variant">Compras, actividad y productos recomendados.</p>
+                </div>
+                <span class="rounded-full bg-primary-container px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-on-primary-container">Marketplace</span>
+              </div>
+              <div id="profile-metrics" class="grid grid-cols-2 gap-3 md:grid-cols-4"></div>
+              <div class="mt-6">
+                <div class="mb-4 flex items-center justify-between">
+                  <h3 class="font-extrabold">Sugerencias para ti</h3>
+                  <button class="nav-link rounded-full bg-surface-container-low px-4 py-2 text-xs font-extrabold text-primary" data-page="catalog" type="button">Ver todo</button>
+                </div>
+                <div id="profile-suggestions" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"></div>
+              </div>
+            </section>
+            <section class="profile-content-card rounded-2xl bg-surface-container-lowest p-6 shadow-sm">
+              <div class="mb-5 flex items-center justify-between">
+                <h2 class="text-xl font-extrabold">Favoritos</h2>
+                <span id="profile-favorites-count" class="rounded-full bg-primary-container px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-on-primary-container">0</span>
+              </div>
+              <div id="profile-favorites" class="grid gap-4 sm:grid-cols-2"></div>
+            </section>
+            <section class="profile-content-card rounded-2xl bg-surface-container-lowest p-6 shadow-sm">
+              <div class="mb-5 flex items-center justify-between">
+                <h2 class="text-xl font-extrabold">Mis resenas</h2>
+                <span id="profile-reviews-count" class="rounded-full bg-secondary-container px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-on-secondary-container">0</span>
+              </div>
+              <div id="profile-reviews" class="grid gap-4"></div>
+            </section>
+          </div>
+          <aside class="profile-content-card h-fit rounded-2xl bg-surface-container-high p-6 shadow-sm">
+            <div class="mb-5">
+              <h2 class="text-xl font-extrabold">Cuenta cliente</h2>
+              <p id="profile-auth-status" class="mt-3 rounded-xl bg-surface-container-lowest p-4 text-xs leading-5 text-on-surface-variant">Sin sesion iniciada.</p>
+            </div>
+            <form id="signup-form" class="mb-4 grid gap-3 rounded-xl bg-surface-container-lowest p-4">
+              <p class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-primary">Crear cuenta</p>
+              <input id="signup-name" class="rounded-lg border-none bg-surface-container-low px-4 py-3 text-sm" placeholder="Nombre completo" required/>
+              <input id="signup-email" class="rounded-lg border-none bg-surface-container-low px-4 py-3 text-sm" type="email" placeholder="Email" required/>
+              <input id="signup-password" class="rounded-lg border-none bg-surface-container-low px-4 py-3 text-sm" type="password" minlength="6" placeholder="Password" required/>
+              <button class="rounded-lg bg-primary py-3 text-xs font-bold uppercase tracking-[0.1em] text-on-primary" type="submit">Crear cuenta</button>
+            </form>
+            <form id="login-form" class="mb-6 grid gap-3 rounded-xl bg-surface-container-lowest p-4">
+              <p class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-primary">Iniciar sesion</p>
+              <input id="login-email" class="rounded-lg border-none bg-surface-container-low px-4 py-3 text-sm" type="email" placeholder="Email" required/>
+              <input id="login-password" class="rounded-lg border-none bg-surface-container-low px-4 py-3 text-sm" type="password" placeholder="Password" required/>
               <button class="rounded-lg bg-on-surface py-3 text-xs font-bold uppercase tracking-[0.1em] text-white" type="submit">Entrar</button>
-              <button id="profile-logout" class="rounded-lg border border-outline-variant/40 py-3 text-xs font-bold uppercase tracking-[0.1em] text-on-surface" type="button">Salir</button>
-            </div>
-            <a class="text-xs font-extrabold uppercase tracking-[0.1em] text-primary" href="./reset-password.html">Recuperar contrasena</a>
-          </form>
-        </div>
-        <div class="flex items-center gap-3 mb-8">
-          <span class="material-symbols-outlined text-primary">location_on</span>
-          <h2 class="text-xl font-bold tracking-tight">Perfil y envio</h2>
-        </div>
-        <form id="profile-form" class="space-y-4">
-          <input id="profile-name" class="w-full rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm focus:ring-1 focus:ring-primary" placeholder="Nombre completo"/>
-          <input id="profile-email" class="w-full rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm focus:ring-1 focus:ring-primary" type="email" placeholder="Email"/>
-          <input id="profile-phone" class="w-full rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm focus:ring-1 focus:ring-primary" placeholder="Telefono"/>
-          <div class="grid grid-cols-2 gap-3">
-            <input id="profile-house-number" class="w-full rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm focus:ring-1 focus:ring-primary" placeholder="Casa/Apto"/>
-            <input id="profile-street" class="w-full rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm focus:ring-1 focus:ring-primary" placeholder="Calle"/>
-          </div>
-          <input id="profile-sector" class="w-full rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm focus:ring-1 focus:ring-primary" placeholder="Sector / barrio"/>
-          <div class="grid grid-cols-2 gap-3">
-            <select id="profile-province" class="w-full rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm focus:ring-1 focus:ring-primary"></select>
-            <select id="profile-city" class="w-full rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm focus:ring-1 focus:ring-primary"></select>
-          </div>
-          <input id="profile-reference" class="w-full rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm focus:ring-1 focus:ring-primary" placeholder="Referencia"/>
-          <button class="w-full rounded-lg bg-primary py-3 text-xs font-bold uppercase tracking-[0.1em] text-on-primary" type="submit">Guardar perfil</button>
-          <p id="profile-address-preview" class="rounded-lg bg-surface-container-lowest p-4 text-xs leading-5 text-on-surface-variant">Sin direccion registrada.</p>
-        </form>
-      </section>
-      <section class="md:col-span-6 bg-surface-container-lowest p-8 rounded-lg shadow-sm">
-        <div class="mb-6 flex items-center justify-between gap-4">
-          <div class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-primary">favorite</span>
-            <h2 class="text-xl font-bold tracking-tight">Favoritos</h2>
-          </div>
-          <span id="profile-favorites-count" class="rounded-full bg-primary-container px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-on-primary-container">0</span>
-        </div>
-        <div id="profile-favorites" class="grid gap-4"></div>
-      </section>
-
-      <section class="md:col-span-6 bg-surface-container-lowest p-8 rounded-lg shadow-sm">
-        <div class="mb-6 flex items-center justify-between gap-4">
-          <div class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-primary">rate_review</span>
-            <h2 class="text-xl font-bold tracking-tight">Mis resenas</h2>
-          </div>
-          <span id="profile-reviews-count" class="rounded-full bg-secondary-container px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-on-secondary-container">0</span>
-        </div>
-        <div id="profile-reviews" class="grid gap-4"></div>
-      </section>
-
-      <!-- Order Archives -->
-      <section class="md:col-span-12 bg-surface-container-low p-8 rounded-lg overflow-hidden">
-        <div class="flex justify-between items-center mb-8">
-          <div class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-primary">inventory_2</span>
-            <h2 class="text-xl font-bold tracking-tight">Order Archives</h2>
-          </div>
-          <span class="text-xs font-bold tracking-[0.1em] text-primary uppercase hover:opacity-70 transition-all cursor-pointer nav-link" data-page="history">View Full History</span>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left">
-            <thead>
-              <tr class="border-b border-outline-variant/20">
-                <th class="pb-4 text-[10px] font-bold tracking-widest text-outline uppercase">Order ID</th>
-                <th class="pb-4 text-[10px] font-bold tracking-widest text-outline uppercase">Date</th>
-                <th class="pb-4 text-[10px] font-bold tracking-widest text-outline uppercase">Items</th>
-                <th class="pb-4 text-[10px] font-bold tracking-widest text-outline uppercase">Status</th>
-                <th class="pb-4 text-right text-[10px] font-bold tracking-widest text-outline uppercase">Total</th>
-              </tr>
-            </thead>
-            <tbody id="customer-orders" class="divide-y divide-outline-variant/10">
-              <tr>
-                <td colspan="5" class="py-10 text-center text-sm text-on-surface-variant">Inicia sesion para ver tus pedidos.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+              <a class="text-xs font-extrabold uppercase tracking-[0.1em] text-primary" href="./reset-password.html">Recuperar contrasena</a>
+            </form>
+            <h2 class="mb-4 text-xl font-extrabold">Perfil y envio</h2>
+            <form id="profile-form" class="space-y-3">
+              <input id="profile-name" class="w-full rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm" placeholder="Nombre completo"/>
+              <input id="profile-email" class="w-full rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm" type="email" placeholder="Email"/>
+              <input id="profile-phone" class="w-full rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm" placeholder="Telefono"/>
+              <div class="grid grid-cols-2 gap-3">
+                <input id="profile-house-number" class="rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm" placeholder="Casa/Apto"/>
+                <input id="profile-street" class="rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm" placeholder="Calle"/>
+              </div>
+              <input id="profile-sector" class="w-full rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm" placeholder="Sector / barrio"/>
+              <div class="grid grid-cols-2 gap-3">
+                <select id="profile-province" class="rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm"></select>
+                <select id="profile-city" class="rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm"></select>
+              </div>
+              <input id="profile-reference" class="w-full rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm" placeholder="Referencia"/>
+              <button class="w-full rounded-lg bg-primary py-3 text-xs font-bold uppercase tracking-[0.1em] text-on-primary" type="submit">Guardar perfil</button>
+              <p id="profile-address-preview" class="rounded-xl bg-surface-container-lowest p-4 text-xs leading-5 text-on-surface-variant">Sin direccion registrada.</p>
+            </form>
+          </aside>
+        </section>
       </section>
     </div>
   </main>
@@ -1913,8 +1944,8 @@
     document.getElementById('profile-phone').value = profile.phone || "";
     setAddressFields('profile', profile);
     document.getElementById('profile-address-preview').textContent = profile.address || 'Sin direccion registrada.';
-    document.getElementById('profile-display-name').textContent = profile.name || 'Crear perfil';
-    document.getElementById('profile-display-summary').textContent = profile.email ? `${profile.email} · ${profile.address || 'Direccion pendiente'}` : 'Guarda tus datos y direccion de Republica Dominicana para acelerar tus pedidos.';
+    document.getElementById('profile-display-name').textContent = 'Mis Pedidos';
+    document.getElementById('profile-display-summary').textContent = profile.email ? `Hola, ${profile.name || profile.email}. ${profile.address || 'Direccion pendiente'}` : 'Guarda tus datos y direccion de Republica Dominicana para acelerar tus pedidos.';
   }
 
   function applyProfileToCheckout(profile = loadCustomerProfile()) {
@@ -2172,34 +2203,50 @@
     const body = document.getElementById('customer-orders');
     if (!body) return;
     if (!currentCustomerUser) {
-      body.innerHTML = `<tr><td colspan="5" class="py-10 text-center text-sm text-on-surface-variant">Inicia sesion para ver tus pedidos.</td></tr>`;
+      body.innerHTML = `<div class="col-span-full rounded-xl bg-surface-container-low p-6 text-center text-sm font-bold text-on-surface-variant">Inicia sesion para ver tus pedidos.</div>`;
       return;
     }
     if (!customerOrders.length) {
-      body.innerHTML = `<tr><td colspan="5" class="py-10 text-center text-sm text-on-surface-variant">Todavia no tienes pedidos guardados.</td></tr>`;
+      body.innerHTML = `<div class="col-span-full rounded-xl bg-surface-container-low p-6 text-center text-sm font-bold text-on-surface-variant">Todavia no tienes pedidos guardados.</div>`;
       return;
     }
     body.innerHTML = customerOrders.map(order => {
       const items = order.order_items || [];
       const total = Number(order.total || orderTotalFromRows(order));
+      const status = order.status || 'Recibido';
+      const statusTone = status === 'Entregado' ? 'bg-primary-container text-on-primary-container' : status === 'Enviado' ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface-container-high text-on-surface-variant';
+      const itemImages = items.slice(0, 2).map(item => {
+        const product = getProductById(item.product_id);
+        const image = product?.images?.[0] || "";
+        return image
+          ? `<img class="h-20 w-20 rounded-lg object-cover bg-surface-container-low" src="${escapeHtml(image)}" alt="${escapeHtml(item.product_name || product?.name || 'Producto')}"/>`
+          : `<span class="flex h-20 w-20 items-center justify-center rounded-lg bg-surface-container-low text-xs font-extrabold text-primary">${escapeHtml((item.product_name || 'P').slice(0, 1).toUpperCase())}</span>`;
+      }).join('');
       return `
-        <tr class="hover:bg-surface-container-high transition-colors cursor-pointer nav-link" data-page="tracking" data-order-number="${escapeHtml(order.order_number || order.id)}">
-          <td class="py-6 text-sm font-bold">#${escapeHtml(order.order_number || order.id)}</td>
-          <td class="py-6 text-sm text-on-surface-variant">${new Date(order.created_at || Date.now()).toLocaleDateString()}</td>
-          <td class="py-6 text-sm">
-            <div class="flex -space-x-2">
-              ${items.slice(0, 3).map(item => `<div class="w-8 h-8 rounded-full border-2 border-surface-container-low bg-surface-container-highest flex items-center justify-center text-[10px] font-bold">${escapeHtml((item.product_name || 'P').slice(0, 1).toUpperCase())}</div>`).join('')}
-              ${items.length > 3 ? `<div class="w-8 h-8 rounded-full border-2 border-surface-container-low bg-surface-container-highest flex items-center justify-center text-[10px] font-bold">+${items.length - 3}</div>` : ''}
+        <article class="profile-order-card rounded-xl border border-outline-variant/20 bg-white p-4 shadow-sm">
+          <div class="mb-3 flex items-start justify-between gap-3">
+            <div>
+              <p class="text-sm font-extrabold">Order #${escapeHtml(order.order_number || order.id)}</p>
+              <p class="mt-1 text-xs font-medium text-on-surface-variant">${new Date(order.created_at || Date.now()).toLocaleDateString()}</p>
             </div>
-          </td>
-          <td class="py-6">
-            <div class="flex flex-col gap-1">
-              <span class="w-fit px-3 py-1 rounded-full bg-primary-container text-on-primary-container text-[10px] font-bold uppercase">${escapeHtml(order.status || 'Recibido')}</span>
-              <span class="w-fit px-3 py-1 rounded-full bg-surface-container-highest text-on-surface-variant text-[10px] font-bold uppercase">${escapeHtml(order.payment_status || 'Pendiente')}</span>
+            <div class="text-right">
+              <p class="text-sm font-extrabold">$${total.toFixed(2)}</p>
+              <span class="mt-1 inline-flex rounded-full bg-surface-container-low px-3 py-1 text-[10px] font-bold text-on-surface-variant">${escapeHtml(order.payment_status || 'Pendiente')}</span>
             </div>
-          </td>
-          <td class="py-6 text-right text-sm font-bold">$${total.toFixed(2)}</td>
-        </tr>
+          </div>
+          <div class="profile-order-images mb-4 flex gap-2">${itemImages || `<span class="flex h-20 w-20 items-center justify-center rounded-lg bg-surface-container-low text-xs font-extrabold text-primary">CAT</span>`}</div>
+          <div class="mb-4 flex items-center justify-between">
+            <div>
+              <p class="text-sm font-extrabold">Order #${escapeHtml(order.order_number || order.id)}</p>
+              <p class="text-xs text-on-surface-variant">${items.length || 0} articulos</p>
+            </div>
+            <span class="rounded-full ${statusTone} px-3 py-1 text-[10px] font-extrabold">${escapeHtml(status)}</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <button class="nav-link rounded-lg border border-outline-variant/30 py-2 text-xs font-extrabold" data-page="tracking" data-order-number="${escapeHtml(order.order_number || order.id)}" type="button">Ver Detalles</button>
+            <button class="nav-link rounded-lg bg-primary py-2 text-xs font-extrabold text-on-primary" data-page="catalog" type="button">Recomprar</button>
+          </div>
+        </article>
       `;
     }).join('');
   }
