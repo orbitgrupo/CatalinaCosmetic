@@ -1517,6 +1517,8 @@
 
     const HOME_STORAGE_KEY = 'catalina-home-content-v1';
     let content = null;
+    let homeContentSignature = "";
+    let homeRefreshClient = null;
     const config = window.__CATALINA_CONFIG__ || {};
     const url = window.CATALINA_SUPABASE_URL || config.supabaseUrl || "";
     const key = window.CATALINA_SUPABASE_PUBLISHABLE_KEY || config.supabasePublishableKey || "";
@@ -1525,8 +1527,12 @@
         const client = window.supabase.createClient(url, key, {
           auth: { storageKey: 'catalina-home-reader-v1', persistSession: true, autoRefreshToken: true }
         });
+        homeRefreshClient = client;
         const { data } = await client.from("site_content").select("content").eq("key", "page_home").maybeSingle();
-        if (data?.content) content = data.content;
+        if (data?.content) {
+          content = data.content;
+          localStorage.setItem(HOME_STORAGE_KEY, JSON.stringify(content));
+        }
       } catch (error) {
         console.warn("No se pudo cargar la home desde Supabase", error);
       }
@@ -1536,6 +1542,7 @@
       if (!saved) return;
       try { content = JSON.parse(saved); } catch { return; }
     }
+    homeContentSignature = JSON.stringify(content || {});
 
     const home = document.getElementById('page-home');
     if (!home) return;
@@ -1685,6 +1692,21 @@
     setText('footer .text-xl', content.footerBrand);
     setText('footer p', content.footerCopy);
     setupPromoVideoPlayback();
+    if (homeRefreshClient) {
+      setInterval(async () => {
+        try {
+          const { data } = await homeRefreshClient.from("site_content").select("content").eq("key", "page_home").maybeSingle();
+          if (!data?.content) return;
+          const nextSignature = JSON.stringify(data.content);
+          if (nextSignature && nextSignature !== homeContentSignature) {
+            localStorage.setItem(HOME_STORAGE_KEY, nextSignature);
+            window.location.reload();
+          }
+        } catch (error) {
+          console.warn("No se pudo refrescar la home", error);
+        }
+      }, 12000);
+    }
   })();
 </script>
 

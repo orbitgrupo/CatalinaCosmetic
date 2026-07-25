@@ -806,7 +806,8 @@
     async function persistHomeContent(message = "Inicio actualizado") {
       localStorage.setItem(HOME_STORAGE_KEY, JSON.stringify(homeContent));
       renderHomeEditor();
-      await saveHomeContentToSupabase();
+      const saved = await saveHomeContentToSupabase();
+      if (!saved) return;
       showToast(message);
     }
 
@@ -2565,13 +2566,20 @@
     }
 
     async function saveHomeContentToSupabase() {
-      if (!supabaseClient || !currentUser) return;
+      if (!supabaseClient || !currentUser) {
+        showToast("Entra como admin para publicar el inicio en Supabase");
+        return false;
+      }
       const { error } = await supabaseClient.from("site_content").upsert({
         key: "page_home",
         content: homeContent,
         updated_by: currentUser.id
       });
-      if (error) showToast(error.message);
+      if (error) {
+        showToast(error.message);
+        return false;
+      }
+      return true;
     }
 
     async function saveCustomerToSupabase(customer) {
