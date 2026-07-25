@@ -285,6 +285,7 @@
                 <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Producto destacado<select id="home-featured-product-id" class="home-product-link rounded-lg border-line text-sm font-normal normal-case tracking-normal"></select></label>
               </div>
               <div class="grid gap-4 md:grid-cols-3">
+                <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Etiqueta tarjeta<input id="home-secondary-badge" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
                 <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Tarjeta titulo<input id="home-secondary-title" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
                 <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Tarjeta texto<input id="home-secondary-body" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
                 <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Tarjeta precio<input id="home-secondary-price" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
@@ -293,6 +294,25 @@
                 <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Tipo media tarjeta<select id="home-secondary-media-type" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal"><option value="image">Imagen</option><option value="video">Video</option></select></label>
                 <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">URL media tarjeta<input id="home-secondary-media-url" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" placeholder="Imagen o video .mp4" /></label>
                 <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Producto tarjeta<select id="home-secondary-product-id" class="home-product-link rounded-lg border-line text-sm font-normal normal-case tracking-normal"></select></label>
+              </div>
+              <div class="rounded-xl border border-line bg-shell p-4">
+                <div class="mb-3">
+                  <p class="text-xs font-extrabold uppercase tracking-widest text-muted">Tarjetas pequeñas debajo</p>
+                  <p class="text-sm text-muted">Edita C-Complex, Trial Kit, sus medias y el producto enlazado.</p>
+                </div>
+                <div class="grid gap-4 md:grid-cols-3">
+                  <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Tarjeta 1 titulo<input id="home-new-card-one-title" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+                  <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Tarjeta 1 texto<input id="home-new-card-one-body" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+                  <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Producto 1<select id="home-new-card-one-product-id" class="home-product-link rounded-lg border-line text-sm font-normal normal-case tracking-normal"></select></label>
+                  <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Tipo media 1<select id="home-new-card-one-media-type" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal"><option value="image">Imagen</option><option value="video">Video</option></select></label>
+                  <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted md:col-span-2">URL media 1<input id="home-new-card-one-media-url" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" placeholder="Imagen o video .mp4" /></label>
+                  <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Tarjeta 2 titulo<input id="home-new-card-two-title" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+                  <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Tarjeta 2 texto<input id="home-new-card-two-body" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+                  <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Boton tarjeta 2<input id="home-new-card-two-cta" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+                  <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Producto 2<select id="home-new-card-two-product-id" class="home-product-link rounded-lg border-line text-sm font-normal normal-case tracking-normal"></select></label>
+                  <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Tipo media 2<select id="home-new-card-two-media-type" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal"><option value="image">Imagen</option><option value="video">Video</option></select></label>
+                  <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">URL media 2<input id="home-new-card-two-media-url" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" placeholder="Imagen o video .mp4" /></label>
+                </div>
               </div>
               <div class="grid gap-4 md:grid-cols-2">
                 <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Etiqueta bundles<input id="home-bundles-eyebrow" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
@@ -647,12 +667,24 @@
       featuredMediaType: "image",
       featuredMediaUrl: "",
       featuredProductId: "",
+      secondaryBadge: "Lab Report",
       secondaryTitle: "pH Balance Mist",
       secondaryBody: "Restores skin barrier in under 60 seconds.",
       secondaryPrice: "€48.00",
       secondaryMediaType: "image",
       secondaryMediaUrl: "",
       secondaryProductId: "",
+      newCardOneTitle: "C-Complex",
+      newCardOneBody: "Concentrated Drop",
+      newCardOneMediaType: "image",
+      newCardOneMediaUrl: "",
+      newCardOneProductId: "",
+      newCardTwoTitle: "Trial Kit",
+      newCardTwoBody: "7-Day Scientific Regimen",
+      newCardTwoCta: "Order Sample",
+      newCardTwoMediaType: "image",
+      newCardTwoMediaUrl: "",
+      newCardTwoProductId: "",
       bundlesEyebrow: "The Regimens",
       bundlesTitle: "Curated Bundles",
       bundlesBody: "Systematic approaches to complex skin concerns. Our bundles are designed to work in synergy, maximizing bioavailability and structural integrity of the epidermis.",
@@ -1274,12 +1306,24 @@
         featuredMediaType: "home-featured-media-type",
         featuredMediaUrl: "home-featured-media-url",
         featuredProductId: "home-featured-product-id",
+        secondaryBadge: "home-secondary-badge",
         secondaryTitle: "home-secondary-title",
         secondaryBody: "home-secondary-body",
         secondaryPrice: "home-secondary-price",
         secondaryMediaType: "home-secondary-media-type",
         secondaryMediaUrl: "home-secondary-media-url",
         secondaryProductId: "home-secondary-product-id",
+        newCardOneTitle: "home-new-card-one-title",
+        newCardOneBody: "home-new-card-one-body",
+        newCardOneMediaType: "home-new-card-one-media-type",
+        newCardOneMediaUrl: "home-new-card-one-media-url",
+        newCardOneProductId: "home-new-card-one-product-id",
+        newCardTwoTitle: "home-new-card-two-title",
+        newCardTwoBody: "home-new-card-two-body",
+        newCardTwoCta: "home-new-card-two-cta",
+        newCardTwoMediaType: "home-new-card-two-media-type",
+        newCardTwoMediaUrl: "home-new-card-two-media-url",
+        newCardTwoProductId: "home-new-card-two-product-id",
         bundlesEyebrow: "home-bundles-eyebrow",
         bundlesTitle: "home-bundles-title",
         bundlesBody: "home-bundles-body",
@@ -1340,6 +1384,8 @@
             { urlKey: "heroMediaUrl", typeKey: "heroMediaType", productKey: "heroProductId", label: "Web - hero principal", detail: "Imagen o video grande de la primera pantalla." },
             { urlKey: "featuredMediaUrl", typeKey: "featuredMediaType", productKey: "featuredProductId", label: "Web - producto destacado", detail: "Bloque grande dentro de novedades." },
             { urlKey: "secondaryMediaUrl", typeKey: "secondaryMediaType", productKey: "secondaryProductId", label: "Web - tarjeta secundaria", detail: "Promocion secundaria junto al destacado." },
+            { urlKey: "newCardOneMediaUrl", typeKey: "newCardOneMediaType", productKey: "newCardOneProductId", label: "Web - tarjeta C-Complex", detail: "Tarjeta pequeña izquierda bajo la tarjeta secundaria." },
+            { urlKey: "newCardTwoMediaUrl", typeKey: "newCardTwoMediaType", productKey: "newCardTwoProductId", label: "Web - tarjeta Trial Kit", detail: "Tarjeta pequeña derecha bajo la tarjeta secundaria." },
             { urlKey: "bundleOneMediaUrl", typeKey: "bundleOneMediaType", productKey: "bundleOneProductId", label: "Web - bundle 1", detail: "Primera tarjeta de regimenes." },
             { urlKey: "bundleTwoMediaUrl", typeKey: "bundleTwoMediaType", productKey: "bundleTwoProductId", label: "Web - bundle 2", detail: "Segunda tarjeta de regimenes." },
             { urlKey: "bundleThreeMediaUrl", typeKey: "bundleThreeMediaType", productKey: "bundleThreeProductId", label: "Web - bundle 3", detail: "Tercera tarjeta de regimenes." }
@@ -1460,9 +1506,20 @@
             </div>
             <div class="rounded-xl bg-white p-3 shadow-sm">
               <p class="text-sm font-extrabold leading-tight">${escapeHtml(draft.secondaryTitle)}</p>
+              <p class="mt-1 text-[9px] font-bold uppercase tracking-widest text-violet">${escapeHtml(draft.secondaryBadge)}</p>
               <p class="mt-2 text-[11px] text-muted">${escapeHtml(draft.secondaryBody)}</p>
               <p class="mt-3 text-sm font-extrabold">${escapeHtml(draft.secondaryPrice)}</p>
               <p class="mt-2 text-[9px] font-bold uppercase tracking-widest text-muted">${mediaLabel(draft.secondaryMediaType)}</p>
+            </div>
+          </div>
+          <div class="mt-4 grid grid-cols-2 gap-3">
+            <div class="rounded-xl bg-white p-3 shadow-sm">
+              <p class="text-sm font-extrabold">${escapeHtml(draft.newCardOneTitle)}</p>
+              <p class="mt-1 text-[10px] uppercase tracking-widest text-muted">${escapeHtml(draft.newCardOneBody)}</p>
+            </div>
+            <div class="rounded-xl bg-white p-3 shadow-sm">
+              <p class="text-sm font-extrabold">${escapeHtml(draft.newCardTwoTitle)}</p>
+              <p class="mt-1 text-[10px] text-muted">${escapeHtml(draft.newCardTwoBody)}</p>
             </div>
           </div>
           <div class="mt-4 rounded-xl bg-ink p-4 text-white">
@@ -1931,6 +1988,8 @@
         heroMediaUrl: "heroMediaType",
         featuredMediaUrl: "featuredMediaType",
         secondaryMediaUrl: "secondaryMediaType",
+        newCardOneMediaUrl: "newCardOneMediaType",
+        newCardTwoMediaUrl: "newCardTwoMediaType",
         bundleOneMediaUrl: "bundleOneMediaType",
         bundleTwoMediaUrl: "bundleTwoMediaType",
         bundleThreeMediaUrl: "bundleThreeMediaType",
