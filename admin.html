@@ -207,13 +207,16 @@
             <button class="editor-tab rounded-full bg-white px-5 py-3 text-sm font-extrabold text-muted" data-home-tab="sections" type="button"><span class="material-symbols-outlined align-middle text-base">view_quilt</span> Secciones</button>
             <button class="editor-tab rounded-full bg-white px-5 py-3 text-sm font-extrabold text-muted" data-home-tab="bundles" type="button"><span class="material-symbols-outlined align-middle text-base">redeem</span> Bundles</button>
           </div>
-          <div class="mb-5 grid gap-4 rounded-xl border border-line bg-white p-4 md:grid-cols-[220px_1fr]">
+          <div class="mb-5 grid gap-4 rounded-xl border border-line bg-white p-4 md:grid-cols-[220px_180px_1fr]">
             <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Pantalla a editar
               <select id="home-screen-target" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal">
                 <option value="web">Web / pantallas grandes</option>
                 <option value="mobile">Mobile / telefonos</option>
               </select>
             </label>
+            <button id="home-sync-screens" class="self-end rounded-lg border border-violet bg-violet/10 px-4 py-3 text-sm font-extrabold text-violet" type="button">
+              Sincronizar pantallas
+            </button>
             <div class="grid gap-3 md:grid-cols-[1fr_220px_auto]">
               <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Subir media al servidor
                 <input id="home-media-file" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" type="file" accept="image/*,video/*" />
@@ -1405,6 +1408,32 @@
       homeContent[key] = value;
       const field = document.getElementById(homeFieldMap()[key]);
       if (field && field.value !== value) field.value = value;
+    }
+
+    async function syncHomeScreens() {
+      homeContent = readHomeDraft();
+      const pairs = activeHomeScreen === "mobile"
+        ? [
+            ["mobileHeroMediaType", "heroMediaType"],
+            ["mobileHeroMediaUrl", "heroMediaUrl"],
+            ["mobileHeroProductId", "heroProductId"],
+            ["mobileBannerMediaType", "secondaryMediaType"],
+            ["mobileBannerMediaUrl", "secondaryMediaUrl"],
+            ["mobileBannerProductId", "secondaryProductId"]
+          ]
+        : [
+            ["heroMediaType", "mobileHeroMediaType"],
+            ["heroMediaUrl", "mobileHeroMediaUrl"],
+            ["heroProductId", "mobileHeroProductId"],
+            ["secondaryMediaType", "mobileBannerMediaType"],
+            ["secondaryMediaUrl", "mobileBannerMediaUrl"],
+            ["secondaryProductId", "mobileBannerProductId"]
+          ];
+      pairs.forEach(([source, target]) => syncHomeContentField(target, homeContent[source] || ""));
+      homeContent = readHomeDraft();
+      renderHomePanels();
+      renderHomePreview();
+      await persistHomeContent(activeHomeScreen === "mobile" ? "Mobile sincronizado hacia web" : "Web sincronizado hacia mobile");
     }
 
     function homeKeyForFieldId(fieldId) {
@@ -2718,6 +2747,7 @@
       if (generateTracking) generateTrackingForOrder(generateTracking.dataset.id);
       const homeTab = event.target.closest(".editor-tab");
       if (homeTab) switchHomePanel(homeTab.dataset.homeTab);
+      if (event.target.closest("#home-sync-screens")) syncHomeScreens();
       const mediaPick = event.target.closest(".home-media-pick");
       if (mediaPick?.dataset.mediaTargetKey) {
         const target = document.getElementById("home-media-target");
