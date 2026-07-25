@@ -43,10 +43,16 @@ Subscribe it to `checkout.session.completed`, then copy the signing secret into 
 
 Password recovery:
 
-- In Supabase Dashboard, add the production recovery URL to Auth redirect URLs:
+- In Supabase Dashboard > Authentication > URL Configuration, set Site URL to:
 
 ```text
-https://YOUR_SITE_URL/reset-password.html
+https://wawawa.tail874953.ts.net/catalina-cosmetic
+```
+
+- Add this production recovery URL to Redirect URLs:
+
+```text
+https://wawawa.tail874953.ts.net/catalina-cosmetic/reset-password.html
 ```
 
 - Customers and admins can click `Recuperar contrasena`. Supabase sends the email, redirects back to `/reset-password.html`, and that page shows the new password form.
