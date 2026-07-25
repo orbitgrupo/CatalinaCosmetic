@@ -41,15 +41,15 @@ Subscribe it to `checkout.session.completed`, then copy the signing secret into 
 
 16. Redeploy the latest Sites version after setting the variables.
 
-Password recovery for admins:
+Password recovery:
 
-- In Supabase Dashboard, add the production admin URL to Auth redirect URLs:
+- In Supabase Dashboard, add the production recovery URL to Auth redirect URLs:
 
 ```text
-https://YOUR_SITE_URL/admin.html
+https://YOUR_SITE_URL/reset-password.html
 ```
 
-- Admins can click `Recuperar contrasena` in `/admin.html`. Supabase sends the email, redirects back to `/admin.html?recover=1`, and the admin panel shows the new password form.
+- Customers and admins can click `Recuperar contrasena`. Supabase sends the email, redirects back to `/reset-password.html`, and that page shows the new password form.
 
 Product image uploads:
 

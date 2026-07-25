@@ -509,7 +509,7 @@
                   <button id="auth-signup" class="rounded-lg bg-violet px-4 py-3 text-sm font-bold text-white">Crear cuenta normal</button>
                   <button id="auth-logout" class="rounded-lg border border-line px-4 py-3 text-sm font-bold">Salir</button>
                 </div>
-                <button id="auth-forgot" class="text-left text-sm font-bold text-violet" type="button">Recuperar contrasena</button>
+                <a class="text-left text-sm font-bold text-violet" href="./reset-password.html">Recuperar contrasena</a>
                 <p id="auth-message" class="hidden rounded-lg bg-shell px-4 py-3 text-sm font-semibold text-muted"></p>
                 <div id="password-recovery-panel" class="hidden rounded-xl border border-line bg-shell p-4">
                   <h3 class="text-sm font-extrabold uppercase tracking-widest text-ink">Nueva contrasena</h3>
@@ -2644,7 +2644,7 @@
     document.getElementById("auth-login").addEventListener("click", loginSupabase);
     document.getElementById("auth-signup").addEventListener("click", signupSupabase);
     document.getElementById("auth-logout").addEventListener("click", logoutSupabase);
-    document.getElementById("auth-forgot").addEventListener("click", requestPasswordRecovery);
+    document.getElementById("auth-forgot")?.addEventListener("click", requestPasswordRecovery);
     document.getElementById("recovery-password-save").addEventListener("click", saveRecoveredPassword);
     document.getElementById("new-admin-create").addEventListener("click", createAdminUser);
     document.getElementById("sync-pull").addEventListener("click", runManualSync);
