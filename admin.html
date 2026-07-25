@@ -57,6 +57,20 @@
     .media-preview-frame video,
     .media-preview-frame img { height: 100%; width: 100%; object-fit: cover; }
     .media-empty-frame { display: grid; place-items: center; min-height: 160px; color: #8a94aa; }
+    .admin-login-screen {
+      min-height: 100vh;
+      background:
+        linear-gradient(90deg, rgba(12,18,31,.72), rgba(12,18,31,.32)),
+        url("https://images.unsplash.com/photo-1483347756197-71ef80e95f73?auto=format&fit=crop&w=1800&q=80") center/cover no-repeat;
+    }
+    .admin-login-field {
+      border: 0;
+      border-radius: 2px;
+      background: rgba(255,255,255,.94);
+      color: #19223c;
+      min-height: 36px;
+    }
+    .admin-login-field:focus { box-shadow: 0 0 0 4px rgba(255,122,52,.28); }
     .status-pill { border-radius: 999px; padding: 8px 12px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .12em; }
     @media print {
       body * { visibility: hidden; }
@@ -66,6 +80,39 @@
   </style>
 </head>
 <body class="bg-shell text-ink">
+  <section id="admin-login-screen" class="admin-login-screen fixed inset-0 z-[100] flex items-center justify-center px-6 py-10 text-white">
+    <div class="grid w-full max-w-5xl gap-10 md:grid-cols-[1fr_380px] md:items-center">
+      <div>
+        <h1 class="max-w-sm text-5xl font-extrabold leading-none tracking-tight md:text-6xl">Welcome<br/>Back</h1>
+        <p class="mt-6 max-w-md text-sm leading-6 text-white/78">Administra productos, contenido del inicio, clientes, pedidos y envios desde un panel conectado a Supabase.</p>
+        <div class="mt-7 flex items-center gap-4 text-white">
+          <span class="flex h-8 w-8 items-center justify-center rounded-full bg-white/18 text-xs font-extrabold">f</span>
+          <span class="flex h-8 w-8 items-center justify-center rounded-full bg-white/18 text-xs font-extrabold">x</span>
+          <span class="flex h-8 w-8 items-center justify-center rounded-full bg-white/18 text-xs font-extrabold">ig</span>
+          <span class="flex h-8 w-8 items-center justify-center rounded-full bg-white/18 text-xs font-extrabold">yt</span>
+        </div>
+      </div>
+      <form id="admin-gate-form" class="rounded-2xl bg-black/10 p-6 backdrop-blur-sm md:p-8">
+        <h2 class="text-3xl font-extrabold tracking-tight">Sign in</h2>
+        <div class="mt-5 grid gap-3">
+          <label class="grid gap-1 text-xs font-bold text-white/90">Email Address
+            <input id="gate-auth-email" class="admin-login-field px-3 text-sm" type="email" autocomplete="email" />
+          </label>
+          <label class="grid gap-1 text-xs font-bold text-white/90">Password
+            <input id="gate-auth-password" class="admin-login-field px-3 text-sm" type="password" autocomplete="current-password" />
+          </label>
+          <label class="mt-1 flex items-center gap-2 text-xs text-white/80">
+            <input id="gate-remember" class="rounded border-white/30 bg-white/20 text-orange-500 focus:ring-orange-400" type="checkbox" checked />
+            Remember Me
+          </label>
+          <button id="gate-auth-login" class="mt-2 w-fit rounded bg-orange-500 px-5 py-3 text-sm font-extrabold text-white shadow-lg shadow-orange-950/20 hover:bg-orange-400" type="submit">Sign in now</button>
+          <button id="gate-auth-forgot" class="w-fit text-left text-xs font-bold text-white/80 hover:text-white" type="button">Lost your password?</button>
+          <p id="gate-auth-message" class="hidden rounded bg-black/25 px-3 py-2 text-sm font-semibold text-white"></p>
+        </div>
+        <p class="mt-7 max-w-xs text-center text-[11px] leading-5 text-white/75">By clicking on "Sign in now" you agree to Catalina admin security policies.</p>
+      </form>
+    </div>
+  </section>
   <div class="min-h-screen lg:grid lg:grid-cols-[180px_1fr]">
     <aside class="border-r border-line bg-white">
       <div class="flex h-16 items-center gap-3 px-5">
@@ -954,15 +1001,34 @@
 
     function setAuthMessage(message, isError = false) {
       const node = document.getElementById("auth-message");
-      if (!node) return;
+      const gateNode = document.getElementById("gate-auth-message");
       if (!message) {
-        node.classList.add("hidden");
-        node.textContent = "";
+        if (node) {
+          node.classList.add("hidden");
+          node.textContent = "";
+        }
+        if (gateNode) {
+          gateNode.classList.add("hidden");
+          gateNode.textContent = "";
+        }
         return;
       }
-      node.textContent = message;
-      node.classList.remove("hidden", "text-muted", "text-coral", "bg-shell", "bg-coral/10");
-      node.classList.add(isError ? "text-coral" : "text-muted", isError ? "bg-coral/10" : "bg-shell");
+      if (node) {
+        node.textContent = message;
+        node.classList.remove("hidden", "text-muted", "text-coral", "bg-shell", "bg-coral/10");
+        node.classList.add(isError ? "text-coral" : "text-muted", isError ? "bg-coral/10" : "bg-shell");
+      }
+      if (gateNode) {
+        gateNode.textContent = message;
+        gateNode.classList.remove("hidden", "text-white", "text-red-200", "bg-black/25", "bg-red-950/45");
+        gateNode.classList.add(isError ? "text-red-200" : "text-white", isError ? "bg-red-950/45" : "bg-black/25");
+      }
+    }
+
+    function updateAdminGate() {
+      const gate = document.getElementById("admin-login-screen");
+      if (!gate) return;
+      gate.classList.toggle("hidden", Boolean(currentUser && isCurrentAdmin()));
     }
 
     function isPasswordRecoveryReturn() {
@@ -2277,6 +2343,7 @@
     function renderAuthState() {
       const role = currentUser?.app_metadata?.role || "";
       document.getElementById("auth-state").textContent = currentUser ? `Sesion activa: ${currentUser.email}${role ? ` (${role})` : ""}` : "Sin sesion activa.";
+      updateAdminGate();
       setPasswordRecoveryMode(adminPasswordRecoveryMode);
       if (adminPasswordRecoveryMode) {
         setAuthMessage("Enlace de recuperacion validado. Escribe tu nueva contrasena.");
@@ -2298,13 +2365,14 @@
         setAuthMessage("Configura Supabase en Sites antes de entrar.", true);
         return showToast("Configura Supabase en Sites");
       }
-      const email = document.getElementById("auth-email").value.trim();
-      const password = document.getElementById("auth-password").value;
+      const gateVisible = !document.getElementById("admin-login-screen")?.classList.contains("hidden");
+      const email = (gateVisible ? document.getElementById("gate-auth-email")?.value || "" : document.getElementById("auth-email")?.value || "").trim();
+      const password = gateVisible ? document.getElementById("gate-auth-password")?.value || "" : document.getElementById("auth-password")?.value || "";
       if (!email || !password) return setAuthMessage("Escribe email y contrasena.", true);
-      const button = document.getElementById("auth-login");
+      const button = gateVisible ? document.getElementById("gate-auth-login") : document.getElementById("auth-login");
       const originalText = button.textContent;
       button.disabled = true;
-      button.textContent = "Entrando...";
+      button.textContent = gateVisible ? "Signing in..." : "Entrando...";
       setAuthMessage("Validando sesion...");
       const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
       button.disabled = false;
@@ -2319,6 +2387,7 @@
       await pullFromSupabase(false);
       if (isCurrentAdmin()) {
         setAuthMessage("Sesion admin activa. Ya puedes administrar productos, clientes, pedidos y envios.");
+        updateAdminGate();
         showToast("Sesion iniciada");
       } else {
         setAuthMessage("Sesion iniciada, pero esta cuenta no es admin. Agrega app_metadata.role = admin en Supabase.", true);
@@ -2331,7 +2400,8 @@
         setAuthMessage("Configura Supabase en Sites antes de crear cuentas.", true);
         return showToast("Configura Supabase en Sites");
       }
-      const email = document.getElementById("auth-email").value.trim();
+      const gateVisible = !document.getElementById("admin-login-screen")?.classList.contains("hidden");
+      const email = (gateVisible ? document.getElementById("gate-auth-email")?.value || "" : document.getElementById("auth-email")?.value || "").trim();
       const password = document.getElementById("auth-password").value;
       if (!email || !password) return setAuthMessage("Escribe email y contrasena.", true);
       const { data, error } = await supabaseClient.auth.signUp({ email, password });
@@ -2877,6 +2947,11 @@
     document.getElementById("home-reset").addEventListener("click", resetHomeContent);
     document.getElementById("home-media-upload").addEventListener("click", uploadHomeMedia);
     document.getElementById("home-preview-refresh").addEventListener("click", renderHomePreview);
+    document.getElementById("admin-gate-form").addEventListener("submit", event => {
+      event.preventDefault();
+      loginSupabase();
+    });
+    document.getElementById("gate-auth-forgot").addEventListener("click", requestPasswordRecovery);
     document.getElementById("auth-login").addEventListener("click", loginSupabase);
     document.getElementById("auth-signup").addEventListener("click", signupSupabase);
     document.getElementById("auth-logout").addEventListener("click", logoutSupabase);
