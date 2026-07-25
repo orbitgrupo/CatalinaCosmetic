@@ -92,6 +92,11 @@
     .page.active { display: block; }
     .nav-link { cursor: pointer; }
     .product-card { cursor: pointer; }
+    .profile-section-panel:not(.active) { display: none !important; }
+    .profile-section-tab.active {
+      background: #c5e8fa;
+      color: #355665;
+    }
     .product-card:focus-visible {
       outline: 3px solid rgba(66, 99, 114, .35);
       outline-offset: 4px;
@@ -983,10 +988,10 @@
           <p class="mt-1 text-[10px] font-extrabold uppercase tracking-[0.18em] text-on-surface-variant">Mi cuenta</p>
         </div>
         <nav class="grid gap-2 text-sm font-bold text-on-surface">
-          <button class="rounded-lg bg-primary-container px-4 py-3 text-left text-on-primary-container" type="button"><span class="material-symbols-outlined mr-2 align-middle text-lg">shopping_bag</span>Mis Pedidos</button>
-          <button class="rounded-lg px-4 py-3 text-left hover:bg-surface-container-low" type="button"><span class="material-symbols-outlined mr-2 align-middle text-lg">person</span>Mi Perfil</button>
-          <button class="rounded-lg px-4 py-3 text-left hover:bg-surface-container-low" type="button"><span class="material-symbols-outlined mr-2 align-middle text-lg">location_on</span>Direcciones</button>
-          <button class="rounded-lg px-4 py-3 text-left hover:bg-surface-container-low" type="button"><span class="material-symbols-outlined mr-2 align-middle text-lg">favorite</span>Favoritos</button>
+          <button class="profile-section-tab rounded-lg bg-primary-container px-4 py-3 text-left text-on-primary-container" data-profile-section="orders" type="button"><span class="material-symbols-outlined mr-2 align-middle text-lg">shopping_bag</span>Mis Pedidos</button>
+          <button class="profile-section-tab rounded-lg px-4 py-3 text-left hover:bg-surface-container-low" data-profile-section="profile" type="button"><span class="material-symbols-outlined mr-2 align-middle text-lg">person</span>Mi Perfil</button>
+          <button class="profile-section-tab rounded-lg px-4 py-3 text-left hover:bg-surface-container-low" data-profile-section="addresses" type="button"><span class="material-symbols-outlined mr-2 align-middle text-lg">location_on</span>Direcciones</button>
+          <button class="profile-section-tab rounded-lg px-4 py-3 text-left hover:bg-surface-container-low" data-profile-section="favorites" type="button"><span class="material-symbols-outlined mr-2 align-middle text-lg">favorite</span>Favoritos</button>
           <button id="profile-logout" class="rounded-lg px-4 py-3 text-left hover:bg-surface-container-low" type="button"><span class="material-symbols-outlined mr-2 align-middle text-lg">logout</span>Cerrar sesion</button>
         </nav>
       </aside>
@@ -1004,14 +1009,13 @@
             </div>
           </div>
         </header>
-        <div class="profile-mobile-nav mb-5 hidden grid-cols-5 gap-1 rounded-2xl bg-surface-container-lowest p-2 text-center text-[10px] font-bold text-on-surface-variant shadow-sm">
-          <span><span class="material-symbols-outlined block text-lg">home</span>Inicio</span>
-          <span><span class="material-symbols-outlined block text-lg">category</span>Categorias</span>
-          <span class="text-primary"><span class="material-symbols-outlined block text-lg">shopping_bag</span>Pedidos</span>
-          <span><span class="material-symbols-outlined block text-lg">favorite</span>Favoritos</span>
-          <span><span class="material-symbols-outlined block text-lg">person</span>Perfil</span>
+        <div class="profile-mobile-nav mb-5 hidden grid-cols-4 gap-1 rounded-2xl bg-surface-container-lowest p-2 text-center text-[10px] font-bold text-on-surface-variant shadow-sm">
+          <button class="profile-section-tab text-primary" data-profile-section="orders" type="button"><span class="material-symbols-outlined block text-lg">shopping_bag</span>Pedidos</button>
+          <button class="profile-section-tab" data-profile-section="profile" type="button"><span class="material-symbols-outlined block text-lg">person</span>Perfil</button>
+          <button class="profile-section-tab" data-profile-section="addresses" type="button"><span class="material-symbols-outlined block text-lg">location_on</span>Direcciones</button>
+          <button class="profile-section-tab" data-profile-section="favorites" type="button"><span class="material-symbols-outlined block text-lg">favorite</span>Favoritos</button>
         </div>
-        <section class="profile-content-card rounded-2xl bg-surface-container-lowest p-6 shadow-sm">
+        <section class="profile-section-panel active profile-content-card rounded-2xl bg-surface-container-lowest p-6 shadow-sm" data-profile-panel="orders">
           <div class="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <h2 class="text-3xl font-extrabold tracking-tight">Mis Pedidos</h2>
             <div class="flex flex-col gap-2 sm:flex-row">
@@ -1027,8 +1031,18 @@
             <div class="rounded-xl bg-surface-container-low p-6 text-center text-sm font-bold text-on-surface-variant">Inicia sesion para ver tus pedidos.</div>
           </div>
         </section>
-        <section class="mt-6 grid gap-6 xl:grid-cols-[1fr_380px]">
-          <div class="grid gap-6">
+        <section class="profile-section-panel mt-6 grid gap-6" data-profile-panel="profile">
+            <section class="profile-content-card rounded-2xl bg-surface-container-lowest p-6 shadow-sm">
+              <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <h2 class="text-2xl font-extrabold">Mi Perfil</h2>
+                  <p class="mt-1 text-sm text-on-surface-variant">Resumen de tu cuenta, estado de sesion y actividad.</p>
+                </div>
+                <button class="profile-section-tab rounded-full bg-primary px-5 py-3 text-sm font-bold text-on-primary" data-profile-section="addresses" type="button">Editar datos</button>
+              </div>
+              <p id="profile-auth-status" class="mt-5 rounded-xl bg-surface-container-low p-4 text-xs leading-5 text-on-surface-variant">Sin sesion iniciada.</p>
+              <p id="profile-address-preview" class="mt-4 rounded-xl bg-surface-container-low p-4 text-xs leading-5 text-on-surface-variant">Sin direccion registrada.</p>
+            </section>
             <section class="profile-content-card rounded-2xl bg-surface-container-lowest p-6 shadow-sm">
               <div class="mb-5 flex items-center justify-between">
                 <div>
@@ -1048,23 +1062,26 @@
             </section>
             <section class="profile-content-card rounded-2xl bg-surface-container-lowest p-6 shadow-sm">
               <div class="mb-5 flex items-center justify-between">
-                <h2 class="text-xl font-extrabold">Favoritos</h2>
-                <span id="profile-favorites-count" class="rounded-full bg-primary-container px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-on-primary-container">0</span>
-              </div>
-              <div id="profile-favorites" class="grid gap-4 sm:grid-cols-2"></div>
-            </section>
-            <section class="profile-content-card rounded-2xl bg-surface-container-lowest p-6 shadow-sm">
-              <div class="mb-5 flex items-center justify-between">
                 <h2 class="text-xl font-extrabold">Mis resenas</h2>
                 <span id="profile-reviews-count" class="rounded-full bg-secondary-container px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-on-secondary-container">0</span>
               </div>
               <div id="profile-reviews" class="grid gap-4"></div>
             </section>
-          </div>
+          </section>
+        <section class="profile-section-panel mt-6" data-profile-panel="favorites">
+          <section class="profile-content-card rounded-2xl bg-surface-container-lowest p-6 shadow-sm">
+            <div class="mb-5 flex items-center justify-between">
+              <h2 class="text-xl font-extrabold">Favoritos</h2>
+              <span id="profile-favorites-count" class="rounded-full bg-primary-container px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-on-primary-container">0</span>
+            </div>
+            <div id="profile-favorites" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></div>
+          </section>
+        </section>
+        <section class="profile-section-panel mt-6" data-profile-panel="addresses">
           <aside class="profile-content-card h-fit rounded-2xl bg-surface-container-high p-6 shadow-sm">
             <div class="mb-5">
-              <h2 class="text-xl font-extrabold">Cuenta cliente</h2>
-              <p id="profile-auth-status" class="mt-3 rounded-xl bg-surface-container-lowest p-4 text-xs leading-5 text-on-surface-variant">Sin sesion iniciada.</p>
+              <h2 class="text-xl font-extrabold">Direcciones</h2>
+              <p class="mt-3 rounded-xl bg-surface-container-lowest p-4 text-xs leading-5 text-on-surface-variant">Guarda aqui tus datos de entrega para Republica Dominicana.</p>
             </div>
             <form id="signup-form" class="mb-4 grid gap-3 rounded-xl bg-surface-container-lowest p-4">
               <p class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-primary">Crear cuenta</p>
@@ -1096,7 +1113,6 @@
               </div>
               <input id="profile-reference" class="w-full rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm" placeholder="Referencia"/>
               <button class="w-full rounded-lg bg-primary py-3 text-xs font-bold uppercase tracking-[0.1em] text-on-primary" type="submit">Guardar perfil</button>
-              <p id="profile-address-preview" class="rounded-xl bg-surface-container-lowest p-4 text-xs leading-5 text-on-surface-variant">Sin direccion registrada.</p>
             </form>
           </aside>
         </section>
@@ -1944,8 +1960,30 @@
     document.getElementById('profile-phone').value = profile.phone || "";
     setAddressFields('profile', profile);
     document.getElementById('profile-address-preview').textContent = profile.address || 'Sin direccion registrada.';
-    document.getElementById('profile-display-name').textContent = 'Mis Pedidos';
     document.getElementById('profile-display-summary').textContent = profile.email ? `Hola, ${profile.name || profile.email}. ${profile.address || 'Direccion pendiente'}` : 'Guarda tus datos y direccion de Republica Dominicana para acelerar tus pedidos.';
+    setProfileSection(activeProfileSection);
+  }
+
+  function setProfileSection(section = 'orders') {
+    const titles = {
+      orders: 'Mis Pedidos',
+      profile: 'Mi Perfil',
+      addresses: 'Direcciones',
+      favorites: 'Favoritos'
+    };
+    activeProfileSection = titles[section] ? section : 'orders';
+    document.querySelectorAll('[data-profile-panel]').forEach(panel => {
+      panel.classList.toggle('active', panel.dataset.profilePanel === activeProfileSection);
+    });
+    document.querySelectorAll('.profile-section-tab').forEach(tab => {
+      const active = tab.dataset.profileSection === activeProfileSection;
+      tab.classList.toggle('active', active);
+      tab.classList.toggle('text-primary', active);
+      tab.classList.toggle('bg-primary-container', active);
+      tab.classList.toggle('text-on-primary-container', active);
+    });
+    const title = document.getElementById('profile-display-name');
+    if (title) title.textContent = titles[activeProfileSection];
   }
 
   function applyProfileToCheckout(profile = loadCustomerProfile()) {
@@ -2087,6 +2125,7 @@
   let customerOrders = [];
   let customerFavorites = [];
   let customerReviews = [];
+  let activeProfileSection = 'orders';
   let detailProductReviews = [];
   let customerSecurityTimer = null;
   let customerSecurityActivityBound = false;
@@ -3552,6 +3591,12 @@
   }
 
   document.addEventListener('click', (e) => {
+    const profileTab = e.target.closest('.profile-section-tab');
+    if (profileTab?.dataset.profileSection) {
+      e.preventDefault();
+      setProfileSection(profileTab.dataset.profileSection);
+      return;
+    }
     const favoriteButton = e.target.closest('.favorite-toggle');
     if (favoriteButton) {
       e.preventDefault();
