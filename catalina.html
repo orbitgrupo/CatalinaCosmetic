@@ -495,7 +495,7 @@
           <span class="text-primary font-bold border-b-2 border-primary-container pb-1 hover:border-primary transition-all cursor-pointer nav-link" data-page="catalog">View All Research</span>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div class="md:col-span-2 md:row-span-2 group relative overflow-hidden rounded-xl bg-surface-container">
+          <div class="md:col-span-2 md:row-span-2 group relative overflow-hidden rounded-xl bg-surface-container" data-home-slot="featured">
             <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC5NqCRJKiNRI4lQ2g1RdtIcH8cDtEyFsL9Ojoyw2xQ1iGAT9OzBqNdirRJHj4ufimI0WehKaJZPBbFO9djuTxMD0s6IM6x17tFL-Fqj6XUe29CJDGtbpg286VlGu1MjviGHColPR3UVbBRvmmrYcFbPueIxJGWSUvFCi-g0gLmndii4ftHgWRJ3xKwQ7BVWxpGcxzFlv4_TGUywlc0QdzNb9vhcxzx-j9VfGb6NgsvxxB7fk1Oe7lsp1nDJOxI1Qwnn42J5dUM3Zc" alt="Serum"/>
             <div class="absolute inset-0 bg-gradient-to-t from-on-surface/80 via-transparent to-transparent"></div>
             <div class="absolute bottom-0 left-0 p-10">
@@ -507,7 +507,7 @@
               </button>
             </div>
           </div>
-          <div class="md:col-span-2 group relative overflow-hidden rounded-xl bg-surface-container-high aspect-video">
+          <div class="md:col-span-2 group relative overflow-hidden rounded-xl bg-surface-container-high aspect-video" data-home-slot="secondary">
             <div class="flex h-full">
               <div class="w-1/2 p-8 flex flex-col justify-center">
                 <span class="text-xs font-bold text-primary tracking-widest uppercase mb-2">Lab Report</span>
@@ -520,14 +520,14 @@
               </div>
             </div>
           </div>
-          <div class="md:col-span-1 group relative overflow-hidden rounded-xl bg-surface-container-highest">
+          <div class="md:col-span-1 group relative overflow-hidden rounded-xl bg-surface-container-highest" data-home-slot="new-card-one">
             <div class="p-6">
               <img class="w-full aspect-square object-cover rounded-lg mb-6 shadow-sm" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBvz7B4lSkOl3ifWctYjWokcdD_qIAD3_ItTyaHq7jzO3yzuHptgNBUNcxRATE4-PSgyahg613wiOANPW6dKIxS4BbYXUkggA44Jps1lST0y_BUQ-DLEDkMuwZV_hTEBGMKx6f9lTwX5QLiYrDTjz4XfpQMDPD4c-RF_j0_EckEoQBh8kDo0mOWs5cXciHFDLGCJA3GBb7EOzIHKhTs4ko0GZxdbuCQVE2Tn9HUIxVVwSEDWSJEw5HwStAx-H6lm7I5bO-tZi2QztI" alt="C-Complex"/>
               <h3 class="font-bold text-lg mb-1">C-Complex</h3>
               <span class="text-xs text-on-surface-variant uppercase tracking-widest">Concentrated Drop</span>
             </div>
           </div>
-          <div class="md:col-span-1 group relative overflow-hidden rounded-xl bg-surface-container-lowest border border-outline-variant/10">
+          <div class="md:col-span-1 group relative overflow-hidden rounded-xl bg-surface-container-lowest border border-outline-variant/10" data-home-slot="new-card-two">
             <div class="p-6">
               <div class="aspect-square bg-surface flex items-center justify-center rounded-lg mb-6">
                 <span class="material-symbols-outlined text-5xl text-primary/30">science</span>
@@ -1663,16 +1663,18 @@
       setText('span.label-md', content.newEyebrow, newSection);
       setText('h2', content.newTitle, newSection);
       setText('[data-page="catalog"].cursor-pointer', content.newLink, newSection);
-      setText('.md\\:col-span-2.md\\:row-span-2 span', content.featuredBadge, newSection);
-      setText('.md\\:col-span-2.md\\:row-span-2 h3', content.featuredTitle, newSection);
-      setText('.md\\:col-span-2.md\\:row-span-2 button span:first-child', content.featuredCta, newSection);
-      setPromoMedia(newSection.querySelector(".md\\:col-span-2.md\\:row-span-2"), { mediaType: "featuredMediaType", mediaUrl: "featuredMediaUrl", productId: "featuredProductId" });
-      setText('.md\\:col-span-2.group span.text-xs', content.secondaryBadge, newSection);
-      setText('.md\\:col-span-2.group h3', content.secondaryTitle, newSection);
-      setText('.md\\:col-span-2.group p', content.secondaryBody, newSection);
-      setText('.md\\:col-span-2.group span.text-primary.text-sm', content.secondaryPrice, newSection);
-      setPromoMedia(newSection.querySelector(".md\\:col-span-2.group"), { mediaType: "secondaryMediaType", mediaUrl: "secondaryMediaUrl", productId: "secondaryProductId", fallbackUrl: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=900&q=80" });
-      const miniCards = newSection.querySelectorAll(".md\\:col-span-1.group");
+      const featuredCard = newSection.querySelector('[data-home-slot="featured"]');
+      const secondaryCard = newSection.querySelector('[data-home-slot="secondary"]');
+      setText('span', content.featuredBadge, featuredCard);
+      setText('h3', content.featuredTitle, featuredCard);
+      setText('button span:first-child', content.featuredCta, featuredCard);
+      setPromoMedia(featuredCard, { mediaType: "featuredMediaType", mediaUrl: "featuredMediaUrl", productId: "featuredProductId" });
+      setText('span.text-xs', content.secondaryBadge, secondaryCard);
+      setText('h3', content.secondaryTitle, secondaryCard);
+      setText('p', content.secondaryBody, secondaryCard);
+      setText('span.text-primary.text-sm', content.secondaryPrice, secondaryCard);
+      setPromoMedia(secondaryCard, { mediaType: "secondaryMediaType", mediaUrl: "secondaryMediaUrl", productId: "secondaryProductId", fallbackUrl: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=900&q=80" });
+      const miniCards = [newSection.querySelector('[data-home-slot="new-card-one"]'), newSection.querySelector('[data-home-slot="new-card-two"]')].filter(Boolean);
       const miniCardValues = [
         ["newCardOneTitle", "newCardOneBody", "", "newCardOneMediaType", "newCardOneMediaUrl", "newCardOneProductId"],
         ["newCardTwoTitle", "newCardTwoBody", "newCardTwoCta", "newCardTwoMediaType", "newCardTwoMediaUrl", "newCardTwoProductId"]
