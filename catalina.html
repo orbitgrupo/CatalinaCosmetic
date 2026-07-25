@@ -1573,7 +1573,7 @@
         }
         return "";
       };
-      const mediaUrl = readContent(keys.mediaUrl) || readContent(keys.imageUrl);
+      const mediaUrl = readContent(keys.mediaUrl) || readContent(keys.imageUrl) || keys.fallbackUrl || "";
       const mediaType = readContent(keys.mediaType) === "video" ? "video" : "image";
       const productId = readContent(keys.productId);
       const current = root.querySelector("video, img");
@@ -1671,7 +1671,7 @@
       setText('.md\\:col-span-2.group h3', content.secondaryTitle, newSection);
       setText('.md\\:col-span-2.group p', content.secondaryBody, newSection);
       setText('.md\\:col-span-2.group span.text-primary.text-sm', content.secondaryPrice, newSection);
-      setPromoMedia(newSection.querySelector(".md\\:col-span-2.group"), { mediaType: "secondaryMediaType", mediaUrl: "secondaryMediaUrl", productId: "secondaryProductId" });
+      setPromoMedia(newSection.querySelector(".md\\:col-span-2.group"), { mediaType: "secondaryMediaType", mediaUrl: "secondaryMediaUrl", productId: "secondaryProductId", fallbackUrl: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=900&q=80" });
       const miniCards = newSection.querySelectorAll(".md\\:col-span-1.group");
       const miniCardValues = [
         ["newCardOneTitle", "newCardOneBody", "", "newCardOneMediaType", "newCardOneMediaUrl", "newCardOneProductId"],
