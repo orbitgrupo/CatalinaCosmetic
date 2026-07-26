@@ -2366,7 +2366,14 @@
       const config = window.__CATALINA_CONFIG__ || {};
       const url = window.CATALINA_SUPABASE_URL || config.supabaseUrl || "";
       const key = window.CATALINA_SUPABASE_PUBLISHABLE_KEY || config.supabasePublishableKey || "";
-      if (url && key && window.supabase) {
+      if (url && key && !window.supabase) {
+        await waitForSupabaseClient();
+      }
+      if (!url || !key) {
+        setAuthMessage("Faltan las claves publicas de Supabase en el servidor.", true);
+      } else if (!window.supabase) {
+        setAuthMessage("No se pudo cargar la libreria de Supabase. Recarga la pagina o revisa /vendor/supabase.js.", true);
+      } else {
         supabaseClient = window.supabase.createClient(url, key, {
           auth: {
             storageKey: ADMIN_AUTH_STORAGE_KEY,
@@ -2418,6 +2425,17 @@
       renderAll();
     }
 
+    function waitForSupabaseClient(timeoutMs = 5000) {
+      const startedAt = Date.now();
+      return new Promise(resolve => {
+        const check = () => {
+          if (window.supabase || Date.now() - startedAt >= timeoutMs) return resolve(Boolean(window.supabase));
+          setTimeout(check, 100);
+        };
+        check();
+      });
+    }
+
     function renderAuthState() {
       const role = currentUser?.app_metadata?.role || "";
       document.getElementById("auth-state").textContent = currentUser ? `Sesion activa: ${currentUser.email}${role ? ` (${role})` : ""}` : "Sin sesion activa.";
@@ -2442,8 +2460,13 @@
 
     async function loginSupabase() {
       if (!supabaseClient) {
-        setAuthMessage("Configura Supabase en Sites antes de entrar.", true);
-        return showToast("Configura Supabase en Sites");
+        const config = window.__CATALINA_CONFIG__ || {};
+        const hasConfig = Boolean(window.CATALINA_SUPABASE_URL || config.supabaseUrl) && Boolean(window.CATALINA_SUPABASE_PUBLISHABLE_KEY || config.supabasePublishableKey);
+        const message = hasConfig && !window.supabase
+          ? "No se pudo cargar la libreria de Supabase. Recarga la pagina."
+          : "Configura Supabase en el servidor antes de entrar.";
+        setAuthMessage(message, true);
+        return showToast(message);
       }
       const gateVisible = !document.getElementById("admin-login-screen")?.classList.contains("hidden");
       const email = (gateVisible ? document.getElementById("gate-auth-email")?.value || "" : document.getElementById("auth-email")?.value || "").trim();
