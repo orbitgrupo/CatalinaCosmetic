@@ -81,6 +81,34 @@ function jsonResponse(payload, status = 200) {
   });
 }
 
+async function vendorSupabaseScript() {
+  const sources = [
+    "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2",
+    "https://unpkg.com/@supabase/supabase-js@2"
+  ];
+  for (const source of sources) {
+    try {
+      const response = await fetch(source);
+      if (!response.ok) continue;
+      return new Response(await response.text(), {
+        headers: securityHeaders({
+          "content-type": "application/javascript; charset=utf-8",
+          "cache-control": "public, max-age=86400"
+        })
+      });
+    } catch {
+      // Try the next CDN.
+    }
+  }
+  return new Response("console.error('Supabase client could not be loaded.');", {
+    status: 503,
+    headers: securityHeaders({
+      "content-type": "application/javascript; charset=utf-8",
+      "cache-control": "no-store"
+    })
+  });
+}
+
 function cleanCheckoutItems(items) {
   if (!Array.isArray(items)) return [];
   return items.slice(0, 50).map(item => ({
@@ -925,6 +953,10 @@ export default {
           "cache-control": "public, max-age=300"
         })
       });
+    }
+
+    if (url.pathname === "/vendor/supabase.js") {
+      return vendorSupabaseScript();
     }
 
     if (url.pathname === "/admin" || url.pathname === "/admin.html") {
