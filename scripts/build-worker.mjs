@@ -12,6 +12,9 @@ const customerEngagementSql = fs.readFileSync(new URL("supabase-customer-engagem
 const customerUniquenessSql = fs.readFileSync(new URL("supabase-customer-uniqueness.sql", root), "utf8");
 const realtimeSql = fs.readFileSync(new URL("supabase-realtime-sync.sql", root), "utf8");
 const setup = fs.readFileSync(new URL("SUPABASE_SETUP.md", root), "utf8");
+const favicon = fs.readFileSync(new URL("assets/favicon.svg", root), "utf8");
+const faviconAdmin = fs.readFileSync(new URL("assets/favicon-admin.svg", root), "utf8");
+const siteManifest = fs.readFileSync(new URL("assets/site.webmanifest", root), "utf8");
 const distServer = new URL("dist/server/", root);
 const distOpenAI = new URL("dist/.openai/", root);
 
@@ -31,6 +34,9 @@ const customerEngagementSql = ${JSON.stringify(customerEngagementSql)};
 const customerUniquenessSql = ${JSON.stringify(customerUniquenessSql)};
 const realtimeSql = ${JSON.stringify(realtimeSql)};
 const setup = ${JSON.stringify(setup)};
+const favicon = ${JSON.stringify(favicon)};
+const faviconAdmin = ${JSON.stringify(faviconAdmin)};
+const siteManifest = ${JSON.stringify(siteManifest)};
 
 function withRuntimeConfig(body, env) {
   const basePath = normalizeBasePath(env.BASE_PATH || "");
@@ -873,6 +879,33 @@ export default {
         headers: securityHeaders({
           "content-type": "text/html; charset=utf-8",
           "cache-control": "no-store"
+        })
+      });
+    }
+
+    if (url.pathname === "/favicon.svg") {
+      return new Response(favicon, {
+        headers: securityHeaders({
+          "content-type": "image/svg+xml; charset=utf-8",
+          "cache-control": "public, max-age=86400"
+        })
+      });
+    }
+
+    if (url.pathname === "/favicon-admin.svg") {
+      return new Response(faviconAdmin, {
+        headers: securityHeaders({
+          "content-type": "image/svg+xml; charset=utf-8",
+          "cache-control": "public, max-age=86400"
+        })
+      });
+    }
+
+    if (url.pathname === "/site.webmanifest") {
+      return new Response(siteManifest, {
+        headers: securityHeaders({
+          "content-type": "application/manifest+json; charset=utf-8",
+          "cache-control": "public, max-age=86400"
         })
       });
     }

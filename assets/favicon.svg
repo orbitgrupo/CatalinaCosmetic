@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Catalina">
+  <defs>
+    <linearGradient id="bg" x1="10" x2="54" y1="6" y2="58" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f7f9fb"/>
+      <stop offset="1" stop-color="#c5e8fa"/>
+    </linearGradient>
+    <linearGradient id="mark" x1="18" x2="48" y1="13" y2="52" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#224352"/>
+      <stop offset="1" stop-color="#426372"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="18" fill="url(#bg)"/>
+  <path fill="url(#mark)" d="M34.1 12.5c-12 0-22 9.1-22 20.4 0 11.2 9.5 18.7 20.1 18.7 6.4 0 11.7-2.4 15.4-6.6l-5.3-6.1c-2.4 2.5-5.5 4.2-9.3 4.2-5.8 0-10.7-4.2-10.7-10.4 0-6.5 5.1-11.2 11.5-11.2 3.3 0 6.1 1 8.4 3.2l5.2-6.7c-3.4-3.4-7.9-5.5-13.3-5.5Z"/>
+  <path fill="#f7f9fb" d="M38.6 26.2c2.4 4.6 5.8 7.9 5.8 12.1 0 4.4-3.4 7.4-7.7 7.4s-7.6-3-7.6-7.4c0-4.2 3.1-7.5 5.6-12.1.9-1.7 3-1.7 3.9 0Z"/>
+  <path fill="#426372" d="M36.8 31.6c1.5 2.7 3.3 4.8 3.3 7 0 2-1.5 3.3-3.4 3.3s-3.4-1.3-3.4-3.3c0-2.2 1.9-4.3 3.5-7Z"/>
+</svg>
