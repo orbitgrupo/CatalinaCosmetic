@@ -274,6 +274,7 @@ async function getAdminSnapshot(request, env) {
     }
     return { customers: customers || [], orders, reviews: reviews || [] };
   }
+  const vendors = await listVendorAccounts(env);
   const customers = await supabaseRest(env, "customer_profiles?select=id,full_name,email,phone,house_number,street,sector,province,city,address_reference,shipping_address,created_at&order=created_at.desc", { method: "GET" });
   const orders = await supabaseRest(env, "orders?select=id,order_number,customer_id,status,payment_status,carrier,tracking_code,estimated_delivery,created_at,subtotal,shipping_amount,total,order_items(product_id,product_name,unit_price,quantity),shipment_events(status,note,event_at)&order=created_at.desc", { method: "GET" });
   let reviews = [];
@@ -282,7 +283,30 @@ async function getAdminSnapshot(request, env) {
   } catch {
     reviews = [];
   }
-  return { customers: customers || [], orders: orders || [], reviews: reviews || [] };
+  return { vendors, customers: customers || [], orders: orders || [], reviews: reviews || [] };
+}
+
+async function listVendorAccounts(env) {
+  const url = env.CATALINA_SUPABASE_URL || env.SUPABASE_URL || "";
+  const serviceKey = env.CATALINA_SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_ROLE_KEY || "";
+  if (!url || !serviceKey) return [];
+  const response = await fetch(url + "/auth/v1/admin/users?page=1&per_page=200", {
+    headers: {
+      "apikey": serviceKey,
+      "authorization": "Bearer " + serviceKey
+    }
+  });
+  if (!response.ok) return [];
+  const payload = await response.json().catch(() => ({}));
+  const users = Array.isArray(payload.users) ? payload.users : [];
+  return users
+    .filter(user => user?.app_metadata?.role === "vendor")
+    .map(user => ({
+      id: user.id,
+      email: user.email || "",
+      fullName: user.user_metadata?.full_name || user.user_metadata?.name || "",
+      created_at: user.created_at || ""
+    }));
 }
 
 function cleanUserAccountPayload(payload = {}) {
@@ -331,6 +355,7 @@ async function createUserAccount(request, env) {
     return jsonResponse({
       id: data.id || "",
       email: data.email || account.email,
+      fullName: account.fullName,
       role: data.app_metadata?.role || account.role
     }, 201);
   } catch (error) {
@@ -386,6 +411,7 @@ function cleanProductPayload(product = {}) {
     stock: Math.max(0, Math.round(Number(product.stock || 0))),
     low_stock_threshold: Math.max(0, Math.round(Number(product.lowStockThreshold || 5))),
     image_url: String(product.image || "").trim().slice(0, 1200),
+    owner_user_id: String(product.ownerUserId || product.owner_user_id || "").trim() || null,
     is_active: true
   };
 }
