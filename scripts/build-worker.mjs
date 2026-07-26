@@ -12,6 +12,7 @@ const customerEngagementSql = fs.readFileSync(new URL("supabase-customer-engagem
 const customerUniquenessSql = fs.readFileSync(new URL("supabase-customer-uniqueness.sql", root), "utf8");
 const realtimeSql = fs.readFileSync(new URL("supabase-realtime-sync.sql", root), "utf8");
 const vendorRolesSql = fs.readFileSync(new URL("supabase-vendor-roles.sql", root), "utf8");
+const vendorApplicationsSql = fs.readFileSync(new URL("supabase-vendor-applications.sql", root), "utf8");
 const setup = fs.readFileSync(new URL("SUPABASE_SETUP.md", root), "utf8");
 const favicon = fs.readFileSync(new URL("assets/favicon.svg", root), "utf8");
 const faviconAdmin = fs.readFileSync(new URL("assets/favicon-admin.svg", root), "utf8");
@@ -35,6 +36,7 @@ const customerEngagementSql = ${JSON.stringify(customerEngagementSql)};
 const customerUniquenessSql = ${JSON.stringify(customerUniquenessSql)};
 const realtimeSql = ${JSON.stringify(realtimeSql)};
 const vendorRolesSql = ${JSON.stringify(vendorRolesSql)};
+const vendorApplicationsSql = ${JSON.stringify(vendorApplicationsSql)};
 const setup = ${JSON.stringify(setup)};
 const favicon = ${JSON.stringify(favicon)};
 const faviconAdmin = ${JSON.stringify(faviconAdmin)};
@@ -275,6 +277,7 @@ async function getAdminSnapshot(request, env) {
     return { customers: customers || [], orders, reviews: reviews || [] };
   }
   const vendors = await listVendorAccounts(env);
+  const vendorApplications = await listVendorApplications(env);
   const customers = await supabaseRest(env, "customer_profiles?select=id,full_name,email,phone,house_number,street,sector,province,city,address_reference,shipping_address,created_at&order=created_at.desc", { method: "GET" });
   const orders = await supabaseRest(env, "orders?select=id,order_number,customer_id,status,payment_status,carrier,tracking_code,estimated_delivery,created_at,subtotal,shipping_amount,total,order_items(product_id,product_name,unit_price,quantity),shipment_events(status,note,event_at)&order=created_at.desc", { method: "GET" });
   let reviews = [];
@@ -283,7 +286,15 @@ async function getAdminSnapshot(request, env) {
   } catch {
     reviews = [];
   }
-  return { vendors, customers: customers || [], orders: orders || [], reviews: reviews || [] };
+  return { vendors, vendorApplications, customers: customers || [], orders: orders || [], reviews: reviews || [] };
+}
+
+async function listVendorApplications(env) {
+  try {
+    return await supabaseRest(env, "vendor_applications?select=*&order=created_at.desc", { method: "GET" });
+  } catch {
+    return [];
+  }
 }
 
 async function listVendorAccounts(env) {
@@ -362,6 +373,77 @@ async function createUserAccount(request, env) {
     const status = /admin|permisos|sesion/i.test(error.message || "") ? 403 : 500;
     return jsonResponse({ error: error.message || "No se pudo crear el usuario." }, status);
   }
+}
+
+function cleanVendorApplicationReviewPayload(payload = {}) {
+  const id = String(payload.id || "").trim();
+  const status = String(payload.status || "").trim();
+  const notes = String(payload.notes || "").trim().slice(0, 1000);
+  if (!id) throw new Error("Solicitud invalida.");
+  if (!["Aprobado", "Rechazado", "En revision"].includes(status)) throw new Error("Estado invalido.");
+  return { id, status, notes };
+}
+
+async function reviewVendorApplication(request, env) {
+  try {
+    const admin = await requireAdminUser(request, env);
+    const payload = cleanVendorApplicationReviewPayload(await request.json().catch(() => ({})));
+    const applications = await supabaseRest(env, "vendor_applications?select=*&id=eq." + encodeURIComponent(payload.id), { method: "GET" });
+    const application = applications?.[0];
+    if (!application) return jsonResponse({ error: "Solicitud no encontrada." }, 404);
+
+    await supabaseRest(env, "vendor_applications?id=eq." + encodeURIComponent(payload.id), {
+      method: "PATCH",
+      headers: { "prefer": "return=representation" },
+      body: JSON.stringify({
+        status: payload.status,
+        admin_notes: payload.notes,
+        reviewed_by: admin.id,
+        reviewed_at: new Date().toISOString()
+      })
+    });
+
+    let vendor = null;
+    if (payload.status === "Aprobado") {
+      vendor = await updateUserRole(env, application.user_id, "vendor");
+    }
+    return jsonResponse({ ok: true, status: payload.status, vendor });
+  } catch (error) {
+    const status = /admin|permisos|sesion/i.test(error.message || "") ? 403 : 500;
+    return jsonResponse({ error: error.message || "No se pudo revisar la solicitud." }, status);
+  }
+}
+
+async function updateUserRole(env, userId, role) {
+  const url = env.CATALINA_SUPABASE_URL || env.SUPABASE_URL || "";
+  const serviceKey = env.CATALINA_SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_ROLE_KEY || "";
+  if (!url || !serviceKey) throw new Error("Supabase service role no esta configurado.");
+  const getResponse = await fetch(url + "/auth/v1/admin/users/" + encodeURIComponent(userId), {
+    headers: {
+      "apikey": serviceKey,
+      "authorization": "Bearer " + serviceKey
+    }
+  });
+  const current = await getResponse.json().catch(() => ({}));
+  if (!getResponse.ok) throw new Error(current?.msg || current?.message || "No se pudo leer el usuario.");
+  const appMetadata = { ...(current.app_metadata || {}), role };
+  const response = await fetch(url + "/auth/v1/admin/users/" + encodeURIComponent(userId), {
+    method: "PUT",
+    headers: {
+      "apikey": serviceKey,
+      "authorization": "Bearer " + serviceKey,
+      "content-type": "application/json"
+    },
+    body: JSON.stringify({ app_metadata: appMetadata })
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data?.msg || data?.message || "No se pudo actualizar el rol del usuario.");
+  return {
+    id: data.id || userId,
+    email: data.email || current.email || "",
+    fullName: data.user_metadata?.full_name || current.user_metadata?.full_name || "",
+    created_at: data.created_at || current.created_at || ""
+  };
 }
 
 async function ensureProductImagesBucket(request, env) {
@@ -879,6 +961,10 @@ export default {
       return createUserAccount(request, env || {});
     }
 
+    if (url.pathname === "/api/admin/review-vendor-application" && request.method === "POST") {
+      return reviewVendorApplication(request, env || {});
+    }
+
     if (url.pathname === "/api/admin/ensure-product-images-bucket" && request.method === "POST") {
       return ensureProductImagesBucket(request, env || {});
     }
@@ -965,6 +1051,15 @@ export default {
 
     if (url.pathname === "/supabase-vendor-roles.sql") {
       return new Response(vendorRolesSql, {
+        headers: securityHeaders({
+          "content-type": "text/plain; charset=utf-8",
+          "cache-control": "public, max-age=300"
+        })
+      });
+    }
+
+    if (url.pathname === "/supabase-vendor-applications.sql") {
+      return new Response(vendorApplicationsSql, {
         headers: securityHeaders({
           "content-type": "text/plain; charset=utf-8",
           "cache-control": "public, max-age=300"

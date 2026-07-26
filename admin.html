@@ -557,6 +557,15 @@
             <button class="side-link rounded-lg bg-navy px-4 py-3 text-sm font-bold text-white" data-view="settings" type="button">Crear vendedor</button>
           </div>
           <div id="vendor-insights" class="mb-5 grid gap-3 md:grid-cols-4"></div>
+          <div class="mb-6 rounded-lg admin-card p-5">
+            <div class="flex flex-col justify-between gap-3 md:flex-row md:items-end">
+              <div>
+                <h2 class="text-xl font-extrabold">Solicitudes de admision</h2>
+                <p class="text-sm text-muted">Evalua clientes que quieren convertirse en vendedores antes de aprobarlos.</p>
+              </div>
+            </div>
+            <div id="vendor-applications" class="mt-5 grid gap-4"></div>
+          </div>
           <div id="admin-vendors" class="grid gap-4 xl:grid-cols-2"></div>
           <div class="mt-6 rounded-lg admin-card p-5">
             <div class="flex flex-col justify-between gap-3 md:flex-row md:items-end">
@@ -807,6 +816,7 @@
         { id: crypto.randomUUID(), name: "Aceite Capilar Biomimetic", category: "Cabello", price: 36, stock: 18, image: images.hair, shortDescription: "Brillo y nutricion para puntas secas.", description: "Tratamiento para brillo y puntas secas." }
       ],
       vendors: [],
+      vendorApplications: [],
       customers: [
         { id: crypto.randomUUID(), name: "Camila Torres", email: "camila@example.com", phone: "+1 809 555 0144", houseNumber: "12", street: "Calle Principal", sector: "Piantini", province: "Distrito Nacional", city: "Santo Domingo de Guzman", reference: "Cerca de la farmacia", address: "Casa/Apto 12, Calle Principal, Piantini, Santo Domingo de Guzman, Distrito Nacional. Ref: Cerca de la farmacia" }
       ],
@@ -1859,6 +1869,7 @@
 
     function renderVendors() {
       const vendors = state.vendors || [];
+      const applications = state.vendorApplications || [];
       const totalRevenue = vendors.reduce((sum, vendor) => sum + vendorMetrics(vendor.id).revenue, 0);
       const activeVendorCount = vendors.filter(vendor => vendorMetrics(vendor.id).products.length).length;
       const unassignedProducts = state.products.filter(product => !product.ownerUserId).length;
@@ -1868,8 +1879,38 @@
           ["Vendedores", vendors.length],
           ["Activos", activeVendorCount],
           ["Ventas asignadas", money(totalRevenue)],
-          ["Productos sin asignar", unassignedProducts]
+          ["Solicitudes pendientes", applications.filter(item => item.status === "Pendiente" || item.status === "En revision").length]
         ].map(([label, value]) => `<div class="rounded-xl bg-white p-4 shadow-sm"><p class="text-xs font-extrabold uppercase tracking-widest text-muted">${label}</p><p class="mt-2 text-2xl font-extrabold">${value}</p></div>`).join("");
+      }
+      const applicationList = document.getElementById("vendor-applications");
+      if (applicationList) {
+        applicationList.innerHTML = applications.map(application => {
+          const statusTone = application.status === "Aprobado" ? "bg-green/10 text-green" : application.status === "Rechazado" ? "bg-coral/10 text-coral" : "bg-violet/10 text-violet";
+          const sellerLabel = { brand_owner: "Dueno de marca", independent: "Productos independientes", both: "Ambos" }[application.sellerType] || application.sellerType || "No indicado";
+          return `
+            <article class="rounded-xl border border-line bg-white p-4">
+              <div class="flex flex-col justify-between gap-4 md:flex-row md:items-start">
+                <div>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="rounded-full ${statusTone} px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest">${escapeHtml(application.status || "Pendiente")}</span>
+                    <span class="rounded-full bg-shell px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-muted">${escapeHtml(sellerLabel)}</span>
+                  </div>
+                  <h3 class="mt-3 text-lg font-extrabold">${escapeHtml(application.businessName || "Negocio sin nombre")}</h3>
+                  <p class="mt-1 text-sm text-muted">${escapeHtml(application.fullName || "Solicitante")} - ${escapeHtml(application.email || "")} - ${escapeHtml(application.phone || "")}</p>
+                  <p class="mt-3 text-sm leading-6 text-muted"><strong>Categorias:</strong> ${escapeHtml(application.productCategories || "")} - <strong>Productos:</strong> ${Number(application.productCount || 0)}</p>
+                  <p class="mt-2 text-sm leading-6 text-muted">${escapeHtml(application.experience || "")}</p>
+                  ${application.socialLinks ? `<p class="mt-2 text-xs font-bold text-violet">${escapeHtml(application.socialLinks)}</p>` : ""}
+                  ${application.adminNotes ? `<p class="mt-3 rounded-lg bg-shell p-3 text-sm font-semibold text-muted">${escapeHtml(application.adminNotes)}</p>` : ""}
+                </div>
+                <div class="grid min-w-[220px] gap-2">
+                  <textarea class="vendor-application-notes rounded-lg border-line text-sm" data-id="${escapeHtml(application.id)}" rows="3" placeholder="Notas internas">${escapeHtml(application.adminNotes || "")}</textarea>
+                  <button class="review-vendor-application rounded-lg bg-green px-4 py-2 text-xs font-extrabold uppercase tracking-widest text-white" data-id="${escapeHtml(application.id)}" data-status="Aprobado" type="button">Aprobar</button>
+                  <button class="review-vendor-application rounded-lg border border-line px-4 py-2 text-xs font-extrabold uppercase tracking-widest text-coral" data-id="${escapeHtml(application.id)}" data-status="Rechazado" type="button">Rechazar</button>
+                </div>
+              </div>
+            </article>
+          `;
+        }).join("") || `<div class="rounded-xl border border-dashed border-line bg-white p-6 text-center text-muted">No hay solicitudes de vendedores todavia.</div>`;
       }
       const list = document.getElementById("admin-vendors");
       if (list) {
@@ -2776,6 +2817,29 @@
       };
     }
 
+    function mapVendorApplication(application) {
+      return {
+        id: application.id,
+        userId: application.user_id,
+        fullName: application.full_name || "",
+        email: application.email || "",
+        phone: application.phone || "",
+        businessName: application.business_name || "",
+        sellerType: application.seller_type || "",
+        productCategories: application.product_categories || "",
+        productCount: Number(application.product_count || 0),
+        hasInventory: Boolean(application.has_inventory),
+        hasRegisteredBusiness: Boolean(application.has_registered_business),
+        sellsOnline: Boolean(application.sells_online),
+        socialLinks: application.social_links || "",
+        experience: application.experience || "",
+        message: application.message || "",
+        status: application.status || "Pendiente",
+        adminNotes: application.admin_notes || "",
+        createdAt: application.created_at || ""
+      };
+    }
+
     function mapDatabaseCustomer(customer) {
       return { id: customer.id, name: customer.full_name, email: customer.email, phone: customer.phone || "", houseNumber: customer.house_number || "", street: customer.street || "", sector: customer.sector || "", province: customer.province || "", city: customer.city || "", reference: customer.address_reference || "", address: customer.shipping_address || "" };
     }
@@ -2829,6 +2893,7 @@
         if (!response.ok) return false;
         const snapshot = await response.json();
         if (Array.isArray(snapshot.vendors)) state.vendors = snapshot.vendors.map(mapAuthVendor);
+        if (Array.isArray(snapshot.vendorApplications)) state.vendorApplications = snapshot.vendorApplications.map(mapVendorApplication);
         if (Array.isArray(snapshot.customers)) state.customers = snapshot.customers.map(mapDatabaseCustomer);
         if (Array.isArray(snapshot.orders)) state.orders = snapshot.orders.map(mapDatabaseOrder);
         if (Array.isArray(snapshot.reviews)) state.reviews = snapshot.reviews.map(mapDatabaseReview);
@@ -3033,6 +3098,34 @@
       }
     }
 
+    async function reviewVendorApplication(id, status) {
+      if (!isCurrentAdmin()) return showToast("Solo el admin puede evaluar solicitudes.");
+      const notes = Array.from(document.querySelectorAll(".vendor-application-notes"))
+        .find(item => item.dataset.id === id)?.value.trim() || "";
+      try {
+        const response = await adminApiFetch("/api/admin/review-vendor-application", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ id, status, notes })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || "No se pudo actualizar la solicitud.");
+        const application = state.vendorApplications.find(item => item.id === id);
+        if (application) {
+          application.status = status;
+          application.adminNotes = notes;
+        }
+        if (status === "Aprobado" && data.vendor?.id) {
+          state.vendors = [mapAuthVendor(data.vendor), ...(state.vendors || []).filter(vendor => vendor.id !== data.vendor.id)];
+        }
+        renderVendors();
+        renderVendorOptions();
+        showToast(status === "Aprobado" ? "Vendedor aprobado" : "Solicitud rechazada");
+      } catch (error) {
+        showToast(error.message || "No se pudo revisar la solicitud");
+      }
+    }
+
     async function generateTrackingForOrder(id) {
       if (isCurrentVendor()) return showToast("Los vendedores no pueden crear etiquetas.");
       const order = state.orders.find(item => item.id === id);
@@ -3113,6 +3206,8 @@
         if (filter) filter.value = orderStatusFilter;
         renderOrders();
       }
+      const reviewApplication = event.target.closest(".review-vendor-application");
+      if (reviewApplication) reviewVendorApplication(reviewApplication.dataset.id, reviewApplication.dataset.status);
       const galleryMove = event.target.closest(".gallery-move");
       if (galleryMove) moveProductImage(Number(galleryMove.dataset.index), Number(galleryMove.dataset.direction));
       const galleryDelete = event.target.closest(".gallery-delete");
