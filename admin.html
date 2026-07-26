@@ -1835,14 +1835,14 @@
         }).join("");
       }
       const term = orderSearchTerm.toLowerCase();
-      const visibleOrders = sourceOrders.filter(order => {
+      const filteredOrders = sourceOrders.filter(order => {
         const customer = customerById(order.customerId);
         const haystack = [order.id, order.status, order.paymentStatus, order.trackingCode, order.carrier, customer.name, customer.email, customer.phone, customer.address].join(" ").toLowerCase();
         const matchesTerm = !term || haystack.includes(term);
         const matchesStatus = !orderStatusFilter || order.status === orderStatusFilter;
         return matchesTerm && matchesStatus;
       });
-      document.getElementById("admin-orders").innerHTML = visibleOrders.map(order => {
+      document.getElementById("admin-orders").innerHTML = filteredOrders.map(order => {
         const customer = customerById(order.customerId);
         const trackingCode = order.trackingCode || "";
         const labelReady = (order.paymentStatus || "") === "Pagado" && trackingCode;
