@@ -33,24 +33,43 @@ const realtimeSql = ${JSON.stringify(realtimeSql)};
 const setup = ${JSON.stringify(setup)};
 
 function withRuntimeConfig(body, env) {
+  const basePath = normalizeBasePath(env.BASE_PATH || "");
   const config = {
     supabaseUrl: env.CATALINA_SUPABASE_URL || env.SUPABASE_URL || "",
     supabasePublishableKey: env.CATALINA_SUPABASE_PUBLISHABLE_KEY || env.SUPABASE_PUBLISHABLE_KEY || "",
     stripeConfigured: Boolean(env.STRIPE_SECRET_KEY),
     stripeWebhookConfigured: Boolean(env.STRIPE_WEBHOOK_SECRET),
-    supabaseServiceConfigured: Boolean(env.CATALINA_SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_ROLE_KEY)
+    supabaseServiceConfigured: Boolean(env.CATALINA_SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_ROLE_KEY),
+    basePath
   };
   const script = \`<script>window.__CATALINA_CONFIG__=\${JSON.stringify(config)};</script>\`;
   return body.replace("</head>", \`\${script}</head>\`);
 }
 
+function normalizeBasePath(value) {
+  const clean = String(value || "").trim().replace(/\\/+$/, "");
+  if (!clean || clean === "/") return "";
+  return clean.startsWith("/") ? clean : \`/\${clean}\`;
+}
+
+function securityHeaders(extra = {}) {
+  return {
+    "x-content-type-options": "nosniff",
+    "x-frame-options": "DENY",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "permissions-policy": "camera=(), microphone=(), geolocation=()",
+    "content-security-policy": "base-uri 'self'; object-src 'none'; frame-ancestors 'none'",
+    ...extra
+  };
+}
+
 function jsonResponse(payload, status = 200) {
   return new Response(JSON.stringify(payload), {
     status,
-    headers: {
+    headers: securityHeaders({
       "content-type": "application/json; charset=utf-8",
       "cache-control": "no-store"
-    }
+    })
   });
 }
 
@@ -420,6 +439,15 @@ async function uploadAdminProductImage(request, env) {
     const path = String(form.get("path") || "").replace(/^\\/+/, "");
     if (!file || typeof file.arrayBuffer !== "function") return jsonResponse({ error: "Archivo invalido." }, 400);
     if (!path || path.includes("..")) return jsonResponse({ error: "Ruta de imagen invalida." }, 400);
+    const maxBytes = Number(env.CATALINA_PRODUCT_IMAGE_MAX_BYTES || 12 * 1024 * 1024);
+    const mimeType = String(file.type || "");
+    const extension = String(path.split(".").pop() || "").toLowerCase();
+    const allowedMimes = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"]);
+    const allowedExtensions = new Set(["jpg", "jpeg", "png", "webp", "gif", "avif"]);
+    if (!allowedMimes.has(mimeType) || !allowedExtensions.has(extension)) {
+      return jsonResponse({ error: "Solo se permiten imagenes JPG, PNG, WebP, GIF o AVIF." }, 400);
+    }
+    if (Number(file.size || 0) > maxBytes) return jsonResponse({ error: "La imagen es demasiado grande." }, 400);
     const objectPath = path.split("/").map(segment => encodeURIComponent(segment)).join("/");
     const response = await fetch(\`\${url}/storage/v1/object/product-images/\${objectPath}\`, {
       method: "POST",
@@ -656,7 +684,10 @@ async function createStripeCheckoutSession(request, env) {
     const items = buildServerCheckoutItems(requestedItems, products || []);
     if (!items.length) return jsonResponse({ error: "El carrito esta vacio." }, 400);
 
-    const origin = new URL(request.url).origin;
+    const requestUrl = new URL(request.url);
+    const origin = requestUrl.origin;
+    const basePath = normalizeBasePath(env.BASE_PATH || "");
+    const returnBase = \`\${origin}\${basePath || ""}/\`;
     const customer = payload.customer || {};
     const order = await createPendingOrder(env, user, customer, items);
     const subtotalCents = items.reduce((sum, item) => sum + item.priceCents * item.quantity, 0);
@@ -664,8 +695,8 @@ async function createStripeCheckoutSession(request, env) {
     const params = new URLSearchParams();
 
     params.set("mode", "payment");
-    params.set("success_url", \`\${origin}/?checkout=success&session_id={CHECKOUT_SESSION_ID}&order=\${encodeURIComponent(order.order_number || "")}\`);
-    params.set("cancel_url", \`\${origin}/?checkout=cancel\`);
+    params.set("success_url", \`\${returnBase}?checkout=success&session_id={CHECKOUT_SESSION_ID}&order=\${encodeURIComponent(order.order_number || "")}\`);
+    params.set("cancel_url", \`\${returnBase}?checkout=cancel\`);
     params.set("billing_address_collection", "auto");
     params.set("phone_number_collection[enabled]", "true");
     params.set("metadata[source]", "catalina-cosmetic");
@@ -758,108 +789,108 @@ export default {
 
     if (url.pathname === "/supabase-schema.sql") {
       return new Response(schema, {
-        headers: {
+        headers: securityHeaders({
           "content-type": "text/plain; charset=utf-8",
           "cache-control": "public, max-age=300"
-        }
+        })
       });
     }
 
     if (url.pathname === "/supabase-seed.sql") {
       return new Response(seed, {
-        headers: {
+        headers: securityHeaders({
           "content-type": "text/plain; charset=utf-8",
           "cache-control": "public, max-age=300"
-        }
+        })
       });
     }
 
     if (url.pathname === "/supabase-site-content.sql") {
       return new Response(siteContentSql, {
-        headers: {
+        headers: securityHeaders({
           "content-type": "text/plain; charset=utf-8",
           "cache-control": "public, max-age=300"
-        }
+        })
       });
     }
 
     if (url.pathname === "/supabase-product-images.sql") {
       return new Response(productImagesSql, {
-        headers: {
+        headers: securityHeaders({
           "content-type": "text/plain; charset=utf-8",
           "cache-control": "public, max-age=300"
-        }
+        })
       });
     }
 
     if (url.pathname === "/supabase-product-management.sql") {
       return new Response(productManagementSql, {
-        headers: {
+        headers: securityHeaders({
           "content-type": "text/plain; charset=utf-8",
           "cache-control": "public, max-age=300"
-        }
+        })
       });
     }
 
     if (url.pathname === "/supabase-customer-engagement.sql") {
       return new Response(customerEngagementSql, {
-        headers: {
+        headers: securityHeaders({
           "content-type": "text/plain; charset=utf-8",
           "cache-control": "public, max-age=300"
-        }
+        })
       });
     }
 
     if (url.pathname === "/supabase-customer-uniqueness.sql") {
       return new Response(customerUniquenessSql, {
-        headers: {
+        headers: securityHeaders({
           "content-type": "text/plain; charset=utf-8",
           "cache-control": "public, max-age=300"
-        }
+        })
       });
     }
 
     if (url.pathname === "/supabase-realtime-sync.sql") {
       return new Response(realtimeSql, {
-        headers: {
+        headers: securityHeaders({
           "content-type": "text/plain; charset=utf-8",
           "cache-control": "public, max-age=300"
-        }
+        })
       });
     }
 
     if (url.pathname === "/SUPABASE_SETUP.md") {
       return new Response(setup, {
-        headers: {
+        headers: securityHeaders({
           "content-type": "text/markdown; charset=utf-8",
           "cache-control": "public, max-age=300"
-        }
+        })
       });
     }
 
     if (url.pathname === "/admin" || url.pathname === "/admin.html") {
       return new Response(withRuntimeConfig(admin, env || {}), {
-        headers: {
+        headers: securityHeaders({
           "content-type": "text/html; charset=utf-8",
           "cache-control": "no-store"
-        }
+        })
       });
     }
 
     if (url.pathname === "/reset-password" || url.pathname === "/reset-password.html" || url.pathname === "/recuperar-contrasena" || url.pathname === "/recuperar-contrasena.html") {
       return new Response(withRuntimeConfig(resetPassword, env || {}), {
-        headers: {
+        headers: securityHeaders({
           "content-type": "text/html; charset=utf-8",
           "cache-control": "no-store"
-        }
+        })
       });
     }
 
     return new Response(withRuntimeConfig(html, env || {}), {
-      headers: {
+      headers: securityHeaders({
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-store"
-      }
+      })
     });
   }
 };

@@ -71,6 +71,17 @@ function appendHeader(response, key, value) {
   response.setHeader(key, value);
 }
 
+function setSecurityHeaders(response, request) {
+  response.setHeader("x-content-type-options", "nosniff");
+  response.setHeader("x-frame-options", "DENY");
+  response.setHeader("referrer-policy", "strict-origin-when-cross-origin");
+  response.setHeader("permissions-policy", "camera=(), microphone=(), geolocation=()");
+  response.setHeader("content-security-policy", "base-uri 'self'; object-src 'none'; frame-ancestors 'none'");
+  if ((request?.headers?.["x-forwarded-proto"] || "").toLowerCase() === "https") {
+    response.setHeader("strict-transport-security", "max-age=31536000; includeSubDomains");
+  }
+}
+
 async function writeWebResponse(serverResponse, webResponse) {
   serverResponse.statusCode = webResponse.status;
   webResponse.headers.forEach((value, key) => appendHeader(serverResponse, key, value));
@@ -133,6 +144,15 @@ async function handleHomeMediaUpload(request, body) {
   const mimeType = String(file.type || "");
   const mediaType = mimeType.startsWith("video/") ? "video" : mimeType.startsWith("image/") ? "image" : "";
   if (!mediaType) throw new Error("Solo se permiten imagenes o videos.");
+  const extension = path.extname(file.name || "").toLowerCase();
+  const allowedImageTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"]);
+  const allowedVideoTypes = new Set(["video/mp4", "video/webm"]);
+  const allowedImageExt = new Set([".jpg", ".jpeg", ".png", ".webp", ".gif", ".avif"]);
+  const allowedVideoExt = new Set([".mp4", ".webm"]);
+  const validMedia = mediaType === "image"
+    ? allowedImageTypes.has(mimeType) && allowedImageExt.has(extension)
+    : allowedVideoTypes.has(mimeType) && allowedVideoExt.has(extension);
+  if (!validMedia) throw new Error("Formato no permitido. Usa JPG, PNG, WebP, GIF, AVIF, MP4 o WebM.");
   const uploadDir = path.join(__dirname, "public", "uploads", "home-media");
   await fs.promises.mkdir(uploadDir, { recursive: true });
   const fileName = safeUploadFileName(file.name, mediaType);
@@ -184,6 +204,7 @@ const basePath = normalizeBasePath(process.env.BASE_PATH || "");
 
 const server = http.createServer(async (request, response) => {
   try {
+    setSecurityHeaders(response, request);
     const requestPath = (request.url || "/").split("?", 1)[0] || "/";
     const appPath = stripBasePath(requestPath, basePath);
     if (basePath && requestPath === basePath) {

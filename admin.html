@@ -814,6 +814,16 @@
     let editingProductImages = [];
     let editingProductVariants = [];
 
+    function catalinaBasePath() {
+      const configured = String((window.__CATALINA_CONFIG__ || {}).basePath || "").replace(/\/+$/, "");
+      return configured && window.location.pathname.startsWith(configured) ? configured : "";
+    }
+
+    function catalinaApiPath(path) {
+      const cleanPath = String(path || "").startsWith("/") ? String(path || "") : `/${path || ""}`;
+      return `${catalinaBasePath()}${cleanPath}`;
+    }
+
     function getAdminLastActivity() {
       const value = Number(localStorage.getItem(ADMIN_ACTIVITY_STORAGE_KEY) || 0);
       return Number.isFinite(value) && value > 0 ? value : 0;
@@ -2036,7 +2046,7 @@
       const { data: sessionData } = await supabaseClient.auth.getSession();
       const accessToken = sessionData.session?.access_token;
       if (!accessToken) throw new Error("La sesion admin expiro. Entra de nuevo.");
-      const response = await fetch("/api/admin/ensure-product-images-bucket", {
+      const response = await fetch(catalinaApiPath("/api/admin/ensure-product-images-bucket"), {
         method: "POST",
         headers: { "authorization": `Bearer ${accessToken}` }
       });
@@ -2050,7 +2060,7 @@
       const { data: sessionData } = await supabaseClient.auth.getSession();
       const accessToken = sessionData.session?.access_token;
       if (!accessToken) throw new Error("La sesion admin expiro. Entra de nuevo.");
-      const response = await fetch(path, {
+      const response = await fetch(catalinaApiPath(path), {
         ...options,
         headers: {
           "authorization": `Bearer ${accessToken}`,
@@ -2492,7 +2502,7 @@
         const { data: sessionData } = await supabaseClient.auth.getSession();
         const accessToken = sessionData.session?.access_token;
         if (!accessToken) throw new Error("La sesion admin expiro. Entra de nuevo.");
-        const response = await fetch("/api/admin/create-user", {
+        const response = await fetch(catalinaApiPath("/api/admin/create-user"), {
           method: "POST",
           headers: {
             "authorization": `Bearer ${accessToken}`,
@@ -2557,7 +2567,7 @@
     async function pullCatalogFromServer() {
       if (window.location.protocol === "file:") return false;
       try {
-        const response = await fetch("/api/catalog", { cache: "no-store" });
+        const response = await fetch(catalinaApiPath("/api/catalog"), { cache: "no-store" });
         if (!response.ok) return false;
         const catalog = await response.json();
         if (!Array.isArray(catalog.products)) return false;
@@ -2577,7 +2587,7 @@
       const accessToken = sessionData.session?.access_token;
       if (!accessToken) return false;
       try {
-        const response = await fetch("/api/admin/snapshot", {
+        const response = await fetch(catalinaApiPath("/api/admin/snapshot"), {
           cache: "no-store",
           headers: { "authorization": `Bearer ${accessToken}` }
         });

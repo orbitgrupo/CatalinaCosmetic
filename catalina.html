@@ -2165,6 +2165,16 @@
   let storefrontSyncInterval = null;
   let selectedTrackingOrderNumber = "";
 
+  function catalinaBasePath() {
+    const configured = String((window.__CATALINA_CONFIG__ || {}).basePath || "").replace(/\/+$/, "");
+    return configured && window.location.pathname.startsWith(configured) ? configured : "";
+  }
+
+  function catalinaApiPath(path) {
+    const cleanPath = String(path || "").startsWith("/") ? String(path || "") : `/${path || ""}`;
+    return `${catalinaBasePath()}${cleanPath}`;
+  }
+
   function getStorefrontSupabaseClient() {
     if (storefrontSupabaseClient) return storefrontSupabaseClient;
     const config = window.__CATALINA_CONFIG__ || {};
@@ -3039,7 +3049,7 @@
     const client = getStorefrontSupabaseClient();
     try {
       if (window.location.protocol !== 'file:') {
-        const catalogResponse = await fetch('/api/catalog', { cache: 'no-store' });
+        const catalogResponse = await fetch(catalinaApiPath('/api/catalog'), { cache: 'no-store' });
         if (catalogResponse.ok) {
           const catalog = await catalogResponse.json();
           if (Array.isArray(catalog.products)) {
@@ -3528,7 +3538,7 @@
       const { data: sessionData } = await client.auth.getSession();
       const accessToken = sessionData.session?.access_token;
       if (!accessToken) throw new Error('Inicia sesion para comprar.');
-      const response = await fetch('/api/create-checkout-session', {
+      const response = await fetch(catalinaApiPath('/api/create-checkout-session'), {
         method: 'POST',
         headers: {
           'content-type': 'application/json',
@@ -3563,7 +3573,7 @@
     const sessionId = params.get('session_id') || "";
     if (!sessionId) return;
     try {
-      const response = await fetch('/api/confirm-checkout-session', {
+      const response = await fetch(catalinaApiPath('/api/confirm-checkout-session'), {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ sessionId })
