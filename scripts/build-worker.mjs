@@ -11,6 +11,7 @@ const productManagementSql = fs.readFileSync(new URL("supabase-product-managemen
 const customerEngagementSql = fs.readFileSync(new URL("supabase-customer-engagement.sql", root), "utf8");
 const customerUniquenessSql = fs.readFileSync(new URL("supabase-customer-uniqueness.sql", root), "utf8");
 const realtimeSql = fs.readFileSync(new URL("supabase-realtime-sync.sql", root), "utf8");
+const vendorRolesSql = fs.readFileSync(new URL("supabase-vendor-roles.sql", root), "utf8");
 const setup = fs.readFileSync(new URL("SUPABASE_SETUP.md", root), "utf8");
 const favicon = fs.readFileSync(new URL("assets/favicon.svg", root), "utf8");
 const faviconAdmin = fs.readFileSync(new URL("assets/favicon-admin.svg", root), "utf8");
@@ -33,6 +34,7 @@ const productManagementSql = ${JSON.stringify(productManagementSql)};
 const customerEngagementSql = ${JSON.stringify(customerEngagementSql)};
 const customerUniquenessSql = ${JSON.stringify(customerUniquenessSql)};
 const realtimeSql = ${JSON.stringify(realtimeSql)};
+const vendorRolesSql = ${JSON.stringify(vendorRolesSql)};
 const setup = ${JSON.stringify(setup)};
 const favicon = ${JSON.stringify(favicon)};
 const faviconAdmin = ${JSON.stringify(faviconAdmin)};
@@ -132,6 +134,18 @@ async function requireAdminUser(request, env) {
   return user;
 }
 
+async function requireAdminOrVendorUser(request, env) {
+  const user = await getSupabaseUser(request, env);
+  const role = user?.app_metadata?.role || "";
+  if (!user?.id) throw new Error("Inicia sesion.");
+  if (!["admin", "vendor"].includes(role)) throw new Error("Esta cuenta no tiene permisos para el dashboard.");
+  return user;
+}
+
+function isVendorUser(user) {
+  return user?.app_metadata?.role === "vendor";
+}
+
 function bytesToHex(buffer) {
   return [...new Uint8Array(buffer)].map(byte => byte.toString(16).padStart(2, "0")).join("");
 }
@@ -191,10 +205,10 @@ async function getActiveProducts(env) {
 async function getCatalog(env) {
   let products;
   try {
-    products = await supabaseRest(env, "products?select=id,name,category,short_description,description,sku,price,compare_at_price,discount_percent,stock,low_stock_threshold,image_url,is_active,product_images(id,image_url,storage_path,alt_text,sort_order),product_variants(id,name,value,sku,price_delta,stock,is_active,sort_order)&is_active=eq.true&order=created_at.desc", { method: "GET" });
+    products = await supabaseRest(env, "products?select=id,name,category,short_description,description,sku,price,compare_at_price,discount_percent,stock,low_stock_threshold,image_url,is_active,owner_user_id,product_images(id,image_url,storage_path,alt_text,sort_order),product_variants(id,name,value,sku,price_delta,stock,is_active,sort_order)&is_active=eq.true&order=created_at.desc", { method: "GET" });
   } catch {
     try {
-      products = await supabaseRest(env, "products?select=id,name,category,description,price,stock,image_url,is_active,product_images(id,image_url,storage_path,alt_text,sort_order)&is_active=eq.true&order=created_at.desc", { method: "GET" });
+      products = await supabaseRest(env, "products?select=id,name,category,description,price,stock,image_url,is_active,owner_user_id,product_images(id,image_url,storage_path,alt_text,sort_order)&is_active=eq.true&order=created_at.desc", { method: "GET" });
     } catch {
       products = await supabaseRest(env, "products?select=id,name,category,description,price,stock,image_url,is_active&is_active=eq.true&order=created_at.desc", { method: "GET" });
     }
@@ -209,7 +223,29 @@ async function getCatalog(env) {
 }
 
 async function getAdminSnapshot(request, env) {
-  await requireAdminUser(request, env);
+  const user = await requireAdminOrVendorUser(request, env);
+  if (isVendorUser(user)) {
+    const products = await supabaseRest(env, \`products?select=id&owner_user_id=eq.\${encodeURIComponent(user.id)}\`, { method: "GET" });
+    const productIds = new Set((products || []).map(product => product.id).filter(Boolean));
+    const ordersRaw = await supabaseRest(env, "orders?select=id,order_number,customer_id,status,payment_status,carrier,tracking_code,estimated_delivery,created_at,subtotal,shipping_amount,total,order_items(product_id,product_name,unit_price,quantity),shipment_events(status,note,event_at)&order=created_at.desc", { method: "GET" });
+    const orders = (ordersRaw || []).map(order => ({
+      ...order,
+      order_items: (order.order_items || []).filter(item => productIds.has(item.product_id))
+    })).filter(order => (order.order_items || []).length);
+    const customerIds = [...new Set(orders.map(order => order.customer_id).filter(Boolean))];
+    const customers = customerIds.length
+      ? await supabaseRest(env, \`customer_profiles?select=id,full_name,email,phone,house_number,street,sector,province,city,address_reference,shipping_address,created_at&id=in.(\${customerIds.map(encodeURIComponent).join(",")})&order=created_at.desc\`, { method: "GET" })
+      : [];
+    let reviews = [];
+    try {
+      reviews = productIds.size
+        ? await supabaseRest(env, \`product_reviews?select=id,product_id,user_id,rating,title,comment,status,created_at&product_id=in.(\${[...productIds].map(encodeURIComponent).join(",")})&order=created_at.desc\`, { method: "GET" })
+        : [];
+    } catch {
+      reviews = [];
+    }
+    return { customers: customers || [], orders, reviews: reviews || [] };
+  }
   const customers = await supabaseRest(env, "customer_profiles?select=id,full_name,email,phone,house_number,street,sector,province,city,address_reference,shipping_address,created_at&order=created_at.desc", { method: "GET" });
   const orders = await supabaseRest(env, "orders?select=id,order_number,customer_id,status,payment_status,carrier,tracking_code,estimated_delivery,created_at,subtotal,shipping_amount,total,order_items(product_id,product_name,unit_price,quantity),shipment_events(status,note,event_at)&order=created_at.desc", { method: "GET" });
   let reviews = [];
@@ -225,9 +261,11 @@ function cleanUserAccountPayload(payload = {}) {
   const email = String(payload.email || "").trim().toLowerCase();
   const password = String(payload.password || "");
   const fullName = String(payload.fullName || "").trim().slice(0, 160);
+  const role = String(payload.role || "user").trim().toLowerCase();
   if (!email || !email.includes("@")) throw new Error("Escribe un email valido.");
   if (password.length < 8) throw new Error("La contrasena debe tener minimo 8 caracteres.");
-  return { email, password, fullName };
+  if (!["user", "vendor"].includes(role)) throw new Error("Rol invalido.");
+  return { email, password, fullName, role };
 }
 
 async function createUserAccount(request, env) {
@@ -255,7 +293,7 @@ async function createUserAccount(request, env) {
         email: account.email,
         password: account.password,
         email_confirm: true,
-        app_metadata: { role: "user" },
+        app_metadata: { role: account.role },
         user_metadata: account.fullName ? { full_name: account.fullName } : {}
       })
     });
@@ -265,7 +303,7 @@ async function createUserAccount(request, env) {
     return jsonResponse({
       id: data.id || "",
       email: data.email || account.email,
-      role: data.app_metadata?.role || "user"
+      role: data.app_metadata?.role || account.role
     }, 201);
   } catch (error) {
     const status = /admin|permisos|sesion/i.test(error.message || "") ? 403 : 500;
@@ -275,7 +313,7 @@ async function createUserAccount(request, env) {
 
 async function ensureProductImagesBucket(request, env) {
   try {
-    await requireAdminUser(request, env);
+    await requireAdminOrVendorUser(request, env);
     await ensureProductImagesBucketForEnv(env);
     return jsonResponse({ bucket: "product-images", ready: true });
   } catch (error) {
@@ -330,13 +368,19 @@ function isMissingSupabaseRelation(error) {
 
 async function saveAdminProduct(request, env) {
   try {
-    await requireAdminUser(request, env);
+    const user = await requireAdminOrVendorUser(request, env);
     const payload = await request.json().catch(() => null);
     if (!payload?.product) return jsonResponse({ error: "Producto invalido." }, 400);
     const product = cleanProductPayload(payload.product);
     if (!product.name || !product.category) return jsonResponse({ error: "Completa nombre y categoria." }, 400);
+    if (isVendorUser(user)) {
+      const existing = await supabaseRest(env, \`products?select=id,owner_user_id&id=eq.\${encodeURIComponent(product.id)}\`, { method: "GET" });
+      const ownerId = existing?.[0]?.owner_user_id || "";
+      if (existing?.length && ownerId && ownerId !== user.id) return jsonResponse({ error: "No puedes editar productos de otro vendedor." }, 403);
+      product.owner_user_id = user.id;
+    }
 
-    if (payload.category?.name) {
+    if (payload.category?.name && !isVendorUser(user)) {
       await supabaseRest(env, "categories?on_conflict=name", {
         method: "POST",
         headers: { "prefer": "resolution=merge-duplicates,return=minimal" },
@@ -436,7 +480,7 @@ async function saveAdminProduct(request, env) {
 
 async function uploadAdminProductImage(request, env) {
   try {
-    await requireAdminUser(request, env);
+    await requireAdminOrVendorUser(request, env);
     await ensureProductImagesBucketForEnv(env);
     const url = env.CATALINA_SUPABASE_URL || env.SUPABASE_URL || "";
     const serviceKey = env.CATALINA_SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_ROLE_KEY || "";
@@ -858,6 +902,15 @@ export default {
 
     if (url.pathname === "/supabase-realtime-sync.sql") {
       return new Response(realtimeSql, {
+        headers: securityHeaders({
+          "content-type": "text/plain; charset=utf-8",
+          "cache-control": "public, max-age=300"
+        })
+      });
+    }
+
+    if (url.pathname === "/supabase-vendor-roles.sql") {
+      return new Response(vendorRolesSql, {
         headers: securityHeaders({
           "content-type": "text/plain; charset=utf-8",
           "cache-control": "public, max-age=300"

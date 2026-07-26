@@ -16,6 +16,7 @@ create table if not exists public.products (
   stock integer not null default 0 check (stock >= 0),
   low_stock_threshold integer not null default 5 check (low_stock_threshold >= 0),
   image_url text,
+  owner_user_id uuid references auth.users(id) on delete set null,
   is_active boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -27,6 +28,7 @@ alter table public.products add column if not exists sku text;
 alter table public.products add column if not exists compare_at_price numeric(10,2) check (compare_at_price is null or compare_at_price >= 0);
 alter table public.products add column if not exists discount_percent numeric(5,2) not null default 0 check (discount_percent >= 0 and discount_percent <= 100);
 alter table public.products add column if not exists low_stock_threshold integer not null default 5 check (low_stock_threshold >= 0);
+alter table public.products add column if not exists owner_user_id uuid references auth.users(id) on delete set null;
 
 create table if not exists public.product_images (
   id uuid primary key default gen_random_uuid(),
@@ -140,6 +142,7 @@ create table if not exists public.shipment_events (
 );
 
 create index if not exists idx_products_active_category on public.products (is_active, category);
+create index if not exists idx_products_owner_active on public.products (owner_user_id, is_active);
 create index if not exists idx_product_images_product_sort on public.product_images (product_id, sort_order);
 create index if not exists idx_product_variants_product_sort on public.product_variants (product_id, sort_order);
 create index if not exists idx_categories_active_name on public.categories (is_active, name);
@@ -219,6 +222,14 @@ as $$
   select coalesce((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin', false);
 $$;
 
+create or replace function public.is_vendor()
+returns boolean
+language sql
+stable
+as $$
+  select coalesce((auth.jwt() -> 'app_metadata' ->> 'role') = 'vendor', false);
+$$;
+
 drop policy if exists "Anyone can read active products" on public.products;
 create policy "Anyone can read active products"
 on public.products for select
@@ -231,6 +242,13 @@ on public.products for all
 to authenticated
 using (public.is_admin())
 with check (public.is_admin());
+
+drop policy if exists "Vendors manage own products" on public.products;
+create policy "Vendors manage own products"
+on public.products for all
+to authenticated
+using (public.is_admin() or (public.is_vendor() and owner_user_id = (select auth.uid())))
+with check (public.is_admin() or (public.is_vendor() and owner_user_id = (select auth.uid())));
 
 drop policy if exists "Anyone can read product images" on public.product_images;
 create policy "Anyone can read product images"
@@ -384,6 +402,7 @@ with check (public.is_admin());
 
 grant usage on schema public to anon, authenticated;
 grant execute on function public.is_admin() to authenticated;
+grant execute on function public.is_vendor() to authenticated;
 grant select on public.categories to anon;
 grant all on public.categories to authenticated;
 grant select on public.site_content to anon;

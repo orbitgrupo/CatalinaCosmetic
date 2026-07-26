@@ -129,14 +129,14 @@
       </div>
       <nav class="space-y-1 px-3 py-5 text-sm font-semibold text-muted">
         <button class="side-link active flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left" data-view="overview"><span class="material-symbols-outlined text-lg">dashboard</span>Dashboard</button>
-        <button class="side-link flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left" data-view="home"><span class="material-symbols-outlined text-lg">home</span>Inicio</button>
+        <button class="side-link flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left" data-admin-only="true" data-view="home"><span class="material-symbols-outlined text-lg">home</span>Inicio</button>
         <button class="side-link flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left" data-view="orders"><span class="material-symbols-outlined text-lg">local_shipping</span>Pedidos <span id="side-orders" class="ml-auto rounded-full bg-violet px-2 py-0.5 text-[10px] text-white">0</span></button>
         <button class="side-link flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left" data-view="products"><span class="material-symbols-outlined text-lg">inventory_2</span>Productos <span id="side-products" class="ml-auto rounded-full bg-violet px-2 py-0.5 text-[10px] text-white">0</span></button>
-        <button class="side-link flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left" data-view="customers"><span class="material-symbols-outlined text-lg">groups</span>Clientes <span id="side-customers" class="ml-auto rounded-full bg-violet px-2 py-0.5 text-[10px] text-white">0</span></button>
+        <button class="side-link flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left" data-admin-only="true" data-view="customers"><span class="material-symbols-outlined text-lg">groups</span>Clientes <span id="side-customers" class="ml-auto rounded-full bg-violet px-2 py-0.5 text-[10px] text-white">0</span></button>
         <button class="side-link flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left" data-view="reviews"><span class="material-symbols-outlined text-lg">rate_review</span>Resenas <span id="side-reviews" class="ml-auto rounded-full bg-violet px-2 py-0.5 text-[10px] text-white">0</span></button>
         <a class="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left hover:bg-slate-50" href="./catalina.html"><span class="material-symbols-outlined text-lg">storefront</span>Tienda</a>
         <div class="my-5 border-t border-line"></div>
-        <button class="side-link flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left" data-view="settings"><span class="material-symbols-outlined text-lg">settings</span>Supabase</button>
+        <button class="side-link flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left" data-admin-only="true" data-view="settings"><span class="material-symbols-outlined text-lg">settings</span>Supabase</button>
       </nav>
     </aside>
 
@@ -474,7 +474,7 @@
               <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Categoria
                 <select id="product-category" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" required></select>
               </label>
-              <div class="grid gap-2 rounded-lg border border-dashed border-line p-3">
+              <div id="category-create-panel" class="grid gap-2 rounded-lg border border-dashed border-line p-3">
                 <p class="text-xs font-bold uppercase tracking-widest text-muted">Crear categoria nueva</p>
                 <input id="category-name" class="rounded-lg border-line text-sm" placeholder="Ej: Maquillaje" />
                 <input id="category-description" class="rounded-lg border-line text-sm" placeholder="Descripcion para la pagina de categoria" />
@@ -619,6 +619,10 @@
                 <input id="new-admin-name" class="rounded-lg border-line" type="text" placeholder="Nombre del usuario" />
                 <input id="new-admin-email" class="rounded-lg border-line" type="email" placeholder="usuario@email.com" />
                 <input id="new-admin-password" class="rounded-lg border-line" type="password" minlength="8" placeholder="Contrasena temporal" />
+                <select id="new-admin-role" class="rounded-lg border-line">
+                  <option value="vendor">Vendedor colaborador</option>
+                  <option value="user">Usuario normal</option>
+                </select>
                 <button id="new-admin-create" class="rounded-lg bg-navy px-4 py-3 text-sm font-bold text-white" type="button">Crear usuario</button>
                 <p id="new-admin-message" class="hidden rounded-lg bg-shell px-4 py-3 text-sm font-semibold text-muted"></p>
               </div>
@@ -632,6 +636,7 @@
                 <a class="rounded-lg border border-line px-4 py-3 hover:text-violet" href="./supabase-product-images.sql">supabase-product-images.sql</a>
                 <a class="rounded-lg border border-line px-4 py-3 hover:text-violet" href="./supabase-product-management.sql">supabase-product-management.sql</a>
                 <a class="rounded-lg border border-line px-4 py-3 hover:text-violet" href="./supabase-customer-engagement.sql">supabase-customer-engagement.sql</a>
+                <a class="rounded-lg border border-line px-4 py-3 hover:text-violet" href="./supabase-vendor-roles.sql">supabase-vendor-roles.sql</a>
                 <a class="rounded-lg border border-line px-4 py-3 hover:text-violet" href="./supabase-realtime-sync.sql">supabase-realtime-sync.sql</a>
                 <a class="rounded-lg border border-line px-4 py-3 hover:text-violet" href="./SUPABASE_SETUP.md">SUPABASE_SETUP.md</a>
               </div>
@@ -1005,6 +1010,42 @@
       return currentUser?.app_metadata?.role === "admin";
     }
 
+    function isCurrentVendor() {
+      return currentUser?.app_metadata?.role === "vendor";
+    }
+
+    function canUseDashboard() {
+      return isCurrentAdmin() || isCurrentVendor();
+    }
+
+    function productBelongsToCurrentUser(product = {}) {
+      return !isCurrentVendor() || product.ownerUserId === currentUser?.id;
+    }
+
+    function visibleProducts() {
+      return isCurrentVendor() ? state.products.filter(productBelongsToCurrentUser) : state.products;
+    }
+
+    function visibleOrders() {
+      if (!isCurrentVendor()) return state.orders;
+      const productIds = new Set(visibleProducts().map(product => product.id));
+      return state.orders.map(order => ({
+        ...order,
+        items: (order.items || []).filter(item => productIds.has(item.productId))
+      })).filter(order => (order.items || []).length);
+    }
+
+    function visibleReviews() {
+      if (!isCurrentVendor()) return state.reviews || [];
+      const productIds = new Set(visibleProducts().map(product => product.id));
+      return (state.reviews || []).filter(review => productIds.has(review.productId));
+    }
+
+    function canAccessView(view) {
+      if (!isCurrentVendor()) return true;
+      return ["overview", "orders", "products", "reviews"].includes(view);
+    }
+
     function showToast(message) {
       const toast = document.getElementById("toast");
       toast.textContent = message;
@@ -1041,7 +1082,7 @@
     function updateAdminGate() {
       const gate = document.getElementById("admin-login-screen");
       if (!gate) return;
-      gate.classList.toggle("hidden", Boolean(currentUser && isCurrentAdmin()));
+      gate.classList.toggle("hidden", Boolean(currentUser && canUseDashboard()));
     }
 
     function isPasswordRecoveryReturn() {
@@ -1165,6 +1206,7 @@
     }
 
     function renderAll() {
+      applyRolePermissions();
       renderMetrics();
       renderHomeEditor();
       renderOverviewOrders();
@@ -1176,6 +1218,21 @@
       renderAuthState();
       renderTopbar();
       renderProductionChecklist();
+    }
+
+    function applyRolePermissions() {
+      document.querySelectorAll("[data-admin-only='true']").forEach(node => {
+        node.classList.toggle("hidden", isCurrentVendor());
+      });
+      document.getElementById("view-home")?.classList.toggle("hidden", isCurrentVendor());
+      document.getElementById("view-customers")?.classList.toggle("hidden", isCurrentVendor());
+      document.getElementById("view-settings")?.classList.toggle("hidden", isCurrentVendor());
+      if (isCurrentVendor()) {
+        document.getElementById("category-create-panel")?.classList.add("hidden");
+        if (!canAccessView(document.querySelector(".view.active")?.id?.replace("view-", "") || "overview")) switchView("overview");
+      } else {
+        document.getElementById("category-create-panel")?.classList.remove("hidden");
+      }
     }
 
     function relativeTime(timestamp) {
@@ -1190,13 +1247,15 @@
 
     function adminNotificationItems() {
       const items = [];
-      const pendingPayment = state.orders.filter(order => (order.paymentStatus || "Pendiente") !== "Pagado").length;
-      const paidNoTracking = state.orders.filter(order => (order.paymentStatus || "") === "Pagado" && !order.trackingCode).length;
-      const processing = state.orders.filter(order => ["Recibido", "Preparando", "Enviado", "En ruta"].includes(order.status)).length;
-      const lowStock = state.products.filter(product => Number(product.stock || 0) <= Number(product.lowStockThreshold || 5)).length;
+      const scopedOrders = visibleOrders();
+      const scopedProducts = visibleProducts();
+      const pendingPayment = scopedOrders.filter(order => (order.paymentStatus || "Pendiente") !== "Pagado").length;
+      const paidNoTracking = scopedOrders.filter(order => (order.paymentStatus || "") === "Pagado" && !order.trackingCode).length;
+      const processing = scopedOrders.filter(order => ["Recibido", "Preparando", "Enviado", "En ruta"].includes(order.status)).length;
+      const lowStock = scopedProducts.filter(product => Number(product.stock || 0) <= Number(product.lowStockThreshold || 5)).length;
       if (!supabaseClient) items.push({ icon: "cloud_off", title: "Supabase no conectado", detail: "Configura las variables de entorno para sincronizar.", view: "settings", tone: "text-coral bg-coral/10" });
       if (supabaseClient && !currentUser) items.push({ icon: "lock", title: "Admin sin sesion", detail: "Entra para ver clientes, pedidos y envios.", view: "settings", tone: "text-coral bg-coral/10" });
-      if (currentUser && !isCurrentAdmin()) items.push({ icon: "admin_panel_settings", title: "Cuenta sin permisos", detail: "Agrega app_metadata.role = admin en Supabase.", view: "settings", tone: "text-coral bg-coral/10" });
+      if (currentUser && !canUseDashboard()) items.push({ icon: "admin_panel_settings", title: "Cuenta sin permisos", detail: "Agrega app_metadata.role = admin o vendor en Supabase.", view: "settings", tone: "text-coral bg-coral/10" });
       if (pendingPayment) items.push({ icon: "payments", title: `${pendingPayment} pago pendiente`, detail: "Revisa pedidos sin pago confirmado.", view: "orders", tone: "text-coral bg-coral/10" });
       if (paidNoTracking) items.push({ icon: "qr_code_2", title: `${paidNoTracking} etiqueta pendiente`, detail: "Pedidos pagados sin codigo de rastreo.", view: "orders", tone: "text-violet bg-violet/10" });
       if (processing) items.push({ icon: "local_shipping", title: `${processing} pedido activo`, detail: "Pedidos en preparacion o camino.", view: "orders", tone: "text-violet bg-violet/10" });
@@ -1281,7 +1340,7 @@
           </div>
         </div>
         <div class="mt-3 grid gap-2">
-          <button class="rounded-lg border border-line px-4 py-3 text-left text-sm font-bold hover:bg-shell" type="button" data-topbar-action="settings">Supabase y usuarios</button>
+          ${isCurrentVendor() ? "" : `<button class="rounded-lg border border-line px-4 py-3 text-left text-sm font-bold hover:bg-shell" type="button" data-topbar-action="settings">Supabase y usuarios</button>`}
           <button class="rounded-lg border border-line px-4 py-3 text-left text-sm font-bold hover:bg-shell" type="button" data-topbar-action="orders">Pedidos y envios</button>
           <button class="rounded-lg bg-ink px-4 py-3 text-left text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60" type="button" data-topbar-action="logout" ${currentUser ? "" : "disabled"}>Cerrar sesion</button>
         </div>
@@ -1320,24 +1379,28 @@
         productionItem("Categorias activas", hasCategories, hasCategories ? `${categoryNames().length} categorias disponibles para tienda y admin.` : "Crea categorias o corre supabase-seed.sql."),
         productionItem("SQL de imagenes", true, "Debe estar corrido supabase-product-images.sql para subir y leer galerias."),
         productionItem("SQL de variantes", true, "Debe estar corrido supabase-product-management.sql para SKU, descuentos, stock bajo y variantes."),
-        productionItem("SQL de favoritos y resenas", true, "Debe estar corrido supabase-customer-engagement.sql para favoritos, comentarios y panel de resenas.")
+        productionItem("SQL de favoritos y resenas", true, "Debe estar corrido supabase-customer-engagement.sql para favoritos, comentarios y panel de resenas."),
+        productionItem("SQL de vendedores", true, "Debe estar corrido supabase-vendor-roles.sql para colaboradores con productos, ventas y resenas propias.")
       ].join("");
     }
 
     function renderMetrics() {
-      const pending = state.orders.filter(order => order.status !== "Entregado").length;
-      const stock = state.products.reduce((sum, product) => sum + Number(product.stock || 0), 0);
-      document.getElementById("metric-orders").textContent = state.orders.length;
-      document.getElementById("metric-products").textContent = state.products.length;
+      const scopedOrders = visibleOrders();
+      const scopedProducts = visibleProducts();
+      const scopedReviews = visibleReviews();
+      const pending = scopedOrders.filter(order => order.status !== "Entregado").length;
+      const stock = scopedProducts.reduce((sum, product) => sum + Number(product.stock || 0), 0);
+      document.getElementById("metric-orders").textContent = scopedOrders.length;
+      document.getElementById("metric-products").textContent = scopedProducts.length;
       document.getElementById("metric-stock").textContent = stock;
       document.getElementById("metric-pending").textContent = pending;
-      document.getElementById("metric-customers").textContent = state.customers.length;
-      document.getElementById("today-count").textContent = state.orders.length;
-      document.getElementById("side-orders").textContent = state.orders.length;
-      document.getElementById("side-products").textContent = state.products.length;
-      document.getElementById("side-customers").textContent = state.customers.length;
+      document.getElementById("metric-customers").textContent = isCurrentVendor() ? "-" : state.customers.length;
+      document.getElementById("today-count").textContent = scopedOrders.length;
+      document.getElementById("side-orders").textContent = scopedOrders.length;
+      document.getElementById("side-products").textContent = scopedProducts.length;
+      document.getElementById("side-customers").textContent = isCurrentVendor() ? "0" : state.customers.length;
       const reviewBadge = document.getElementById("side-reviews");
-      if (reviewBadge) reviewBadge.textContent = state.reviews.length;
+      if (reviewBadge) reviewBadge.textContent = scopedReviews.length;
     }
 
     function renderHomeEditor() {
@@ -1654,7 +1717,7 @@
     }
 
     function renderOverviewOrders() {
-      const rows = state.orders.map(order => `
+      const rows = visibleOrders().map(order => `
         <tr class="text-muted">
           <td class="py-4"><div class="flex items-center gap-3"><div class="flex h-8 w-8 items-center justify-center rounded-full bg-violet/10 text-xs font-bold text-violet">${customerName(order.customerId).slice(0, 2).toUpperCase()}</div><span class="font-semibold text-ink">${customerName(order.customerId)}</span></div></td>
           <td>${order.status}</td>
@@ -1669,19 +1732,19 @@
     }
 
     function renderProducts() {
-      const isCustomerSession = currentUser && !isCurrentAdmin();
       const term = productAdminSearchTerm.toLowerCase();
-      const filtered = state.products.filter(product => {
+      const scopedProducts = visibleProducts();
+      const filtered = scopedProducts.filter(product => {
         const matchesTerm = !term || [product.name, product.category, product.shortDescription, product.description].join(" ").toLowerCase().includes(term);
         const matchesCategory = !productAdminCategoryFilter || product.category === productAdminCategoryFilter;
         return matchesTerm && matchesCategory;
       });
-      const lowStock = state.products.filter(product => Number(product.stock || 0) <= Number(product.lowStockThreshold || 5)).length;
-      const totalValue = state.products.reduce((sum, product) => sum + Number(product.price || 0) * Number(product.stock || 0), 0);
+      const lowStock = scopedProducts.filter(product => Number(product.stock || 0) <= Number(product.lowStockThreshold || 5)).length;
+      const totalValue = scopedProducts.reduce((sum, product) => sum + Number(product.price || 0) * Number(product.stock || 0), 0);
       const insight = document.getElementById("product-insights");
       if (insight) {
         insight.innerHTML = `
-          <div class="rounded-xl bg-shell p-4"><p class="text-xs font-extrabold uppercase tracking-widest text-muted">Productos</p><p class="mt-1 text-2xl font-extrabold">${state.products.length}</p></div>
+          <div class="rounded-xl bg-shell p-4"><p class="text-xs font-extrabold uppercase tracking-widest text-muted">Productos</p><p class="mt-1 text-2xl font-extrabold">${scopedProducts.length}</p></div>
           <div class="rounded-xl bg-shell p-4"><p class="text-xs font-extrabold uppercase tracking-widest text-muted">Stock bajo</p><p class="mt-1 text-2xl font-extrabold text-coral">${lowStock}</p></div>
           <div class="rounded-xl bg-shell p-4"><p class="text-xs font-extrabold uppercase tracking-widest text-muted">Valor inventario</p><p class="mt-1 text-2xl font-extrabold">${money(totalValue)}</p></div>
         `;
@@ -1692,7 +1755,7 @@
         filterSelect.innerHTML = `<option value="">Todas las categorias</option>${names.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join("")}`;
         filterSelect.value = names.includes(productAdminCategoryFilter) ? productAdminCategoryFilter : "";
       }
-      document.querySelectorAll("#product-form input, #product-form select, #product-form textarea, #product-form button").forEach(field => field.disabled = isCustomerSession);
+      document.querySelectorAll("#product-form input, #product-form select, #product-form textarea, #product-form button").forEach(field => field.disabled = Boolean(currentUser && !canUseDashboard()));
       document.getElementById("admin-products").innerHTML = filtered.map(product => {
         const stock = Number(product.stock || 0);
         const threshold = Number(product.lowStockThreshold || 5);
@@ -1720,7 +1783,7 @@
             <div class="flex flex-col items-start gap-2 md:items-end">
               <p class="text-xl font-extrabold">${money(product.price)}</p>
               ${compareAt > Number(product.price || 0) ? `<p class="text-xs font-bold text-muted line-through">${money(compareAt)}</p>` : ""}
-              ${isCustomerSession ? "" : `<button class="edit-product rounded-full bg-ink px-4 py-2 text-xs font-extrabold uppercase tracking-widest text-white" data-id="${escapeHtml(product.id)}">Editar</button>`}
+              <button class="edit-product rounded-full bg-ink px-4 py-2 text-xs font-extrabold uppercase tracking-widest text-white" data-id="${escapeHtml(product.id)}">Editar</button>
             </div>
           </div>
         </div>
@@ -1738,7 +1801,7 @@
       const list = document.getElementById("admin-categories");
       if (list) {
         list.innerHTML = names.map(name => {
-          const count = state.products.filter(product => product.category === name).length;
+          const count = visibleProducts().filter(product => product.category === name).length;
           return `<button class="rounded-full bg-violet/10 px-3 py-1 text-xs font-extrabold uppercase tracking-widest text-violet" type="button">${name} (${count})</button>`;
         }).join("") || `<p class="text-sm text-muted">Sin categorias.</p>`;
       }
@@ -1763,7 +1826,7 @@
     }
 
     function renderOrders() {
-      const sourceOrders = currentUser && !isCurrentAdmin() ? state.orders.filter(order => order.customerId === currentUser.id) : state.orders;
+      const sourceOrders = visibleOrders();
       const summary = document.getElementById("order-kanban-summary");
       if (summary) {
         summary.innerHTML = orderStatuses.map(status => {
@@ -1793,8 +1856,8 @@
             </div>
           </div>
           <div class="mt-4 grid gap-3 md:grid-cols-2">
-            <label class="text-xs font-bold uppercase tracking-widest text-muted">Estado<select class="order-status mt-2 w-full rounded-lg border-line bg-white text-sm normal-case tracking-normal" data-id="${order.id}" ${currentUser && !isCurrentAdmin() ? "disabled" : ""}>${orderStatuses.map(status => `<option ${status === order.status ? "selected" : ""}>${status}</option>`).join("")}</select></label>
-            <label class="text-xs font-bold uppercase tracking-widest text-muted">Transportista<input class="order-carrier mt-2 w-full rounded-lg border-line text-sm normal-case tracking-normal" data-id="${order.id}" value="${escapeHtml(order.carrier || "")}" ${currentUser && !isCurrentAdmin() ? "disabled" : ""}></label>
+            <label class="text-xs font-bold uppercase tracking-widest text-muted">Estado<select class="order-status mt-2 w-full rounded-lg border-line bg-white text-sm normal-case tracking-normal" data-id="${order.id}" ${isCurrentVendor() ? "disabled" : ""}>${orderStatuses.map(status => `<option ${status === order.status ? "selected" : ""}>${status}</option>`).join("")}</select></label>
+            <label class="text-xs font-bold uppercase tracking-widest text-muted">Transportista<input class="order-carrier mt-2 w-full rounded-lg border-line text-sm normal-case tracking-normal" data-id="${order.id}" value="${escapeHtml(order.carrier || "")}" ${isCurrentVendor() ? "disabled" : ""}></label>
           </div>
           <div class="mt-5 grid gap-4 lg:grid-cols-[1fr_360px]">
             <div class="rounded-lg border border-line bg-soft p-4">
@@ -1843,7 +1906,7 @@
               <div class="rounded-lg bg-white p-2">${trackingCode ? code39BarcodeSvg(trackingCode) : `<div class="flex h-20 items-center justify-center rounded border border-line text-xs font-bold uppercase tracking-widest text-muted">Pago pendiente o sin tracking</div>`}</div>
               <div class="mt-3 flex gap-2 print:hidden">
                 <button class="print-label flex-1 rounded-lg bg-navy px-3 py-2 text-xs font-bold uppercase tracking-widest text-white" data-id="${escapeHtml(order.id)}" ${labelReady ? "" : "disabled"}>Imprimir</button>
-                <button class="generate-tracking rounded-lg border border-line px-3 py-2 text-xs font-bold uppercase tracking-widest text-muted" data-id="${escapeHtml(order.id)}" ${trackingCode || currentUser && !isCurrentAdmin() ? "disabled" : ""}>Tracking</button>
+                <button class="generate-tracking rounded-lg border border-line px-3 py-2 text-xs font-bold uppercase tracking-widest text-muted" data-id="${escapeHtml(order.id)}" ${trackingCode || isCurrentVendor() ? "disabled" : ""}>Tracking</button>
               </div>
             </div>
           </div>
@@ -1856,7 +1919,7 @@
       const insights = document.getElementById("review-insights");
       const list = document.getElementById("admin-reviews");
       if (!insights || !list) return;
-      const reviews = state.reviews || [];
+      const reviews = visibleReviews();
       const average = reviews.length ? reviews.reduce((sum, review) => sum + Number(review.rating || 0), 0) / reviews.length : 0;
       const published = reviews.filter(review => (review.status || "Publicado") === "Publicado").length;
       insights.innerHTML = [
@@ -1899,6 +1962,7 @@
     }
 
     function switchView(id) {
+      if (!canAccessView(id)) id = "overview";
       document.querySelectorAll(".view").forEach(view => view.classList.remove("active"));
       document.getElementById("view-" + id).classList.add("active");
       document.querySelectorAll(".side-link").forEach(link => link.classList.toggle("active", link.dataset.view === id));
@@ -2045,7 +2109,7 @@
     }
 
     async function ensureProductImageBucket() {
-      if (window.location.protocol === "file:" || !supabaseClient || !currentUser || !isCurrentAdmin()) return;
+      if (window.location.protocol === "file:" || !supabaseClient || !currentUser || !canUseDashboard()) return;
       const { data: sessionData } = await supabaseClient.auth.getSession();
       const accessToken = sessionData.session?.access_token;
       if (!accessToken) throw new Error("La sesion admin expiro. Entra de nuevo.");
@@ -2059,7 +2123,7 @@
 
     async function adminApiFetch(path, options = {}) {
       if (window.location.protocol === "file:") throw new Error("Esta accion necesita abrir el admin desde el servidor.");
-      if (!supabaseClient || !currentUser || !isCurrentAdmin()) throw new Error("Entra con una cuenta admin.");
+      if (!supabaseClient || !currentUser || !canUseDashboard()) throw new Error("Entra con una cuenta admin o vendedor.");
       const { data: sessionData } = await supabaseClient.auth.getSession();
       const accessToken = sessionData.session?.access_token;
       if (!accessToken) throw new Error("La sesion admin expiro. Entra de nuevo.");
@@ -2162,6 +2226,7 @@
       const imageUrl = nextGalleryItems[0]?.imageUrl || nextGalleryItems[0]?.image_url || uploadedImages[0]?.url || document.getElementById("product-image").value.trim() || images.skin;
       const product = {
         id,
+        ownerUserId: isCurrentVendor() ? currentUser.id : (state.products.find(item => item.id === id)?.ownerUserId || ""),
         name: document.getElementById("product-name").value.trim(),
         category: createdCategory?.name || document.getElementById("product-category").value,
         sku: document.getElementById("product-sku").value.trim(),
@@ -2364,12 +2429,14 @@
       }
       if (!supabaseClient) {
         setAuthMessage("Supabase no esta configurado en este despliegue. Revisa las variables de entorno en Sites.", true);
-      } else if (currentUser && !isCurrentAdmin()) {
-        setAuthMessage("Entraste, pero esta cuenta no tiene permisos admin. En Supabase Auth, el usuario debe tener app_metadata.role = admin.", true);
+      } else if (currentUser && !canUseDashboard()) {
+        setAuthMessage("Entraste, pero esta cuenta no tiene permisos de dashboard. Usa app_metadata.role = admin o vendor.", true);
       } else if (currentUser && isCurrentAdmin()) {
         setAuthMessage("Sesion admin activa. Ya puedes administrar productos, clientes, pedidos y envios.");
+      } else if (currentUser && isCurrentVendor()) {
+        setAuthMessage("Sesion vendedor activa. Veras solo tus productos, ventas, stock y resenas.");
       } else {
-        setAuthMessage("Entra con una cuenta admin para sincronizar pedidos, clientes y productos.");
+        setAuthMessage("Entra con una cuenta admin o vendedor para sincronizar el dashboard.");
       }
     }
 
@@ -2398,13 +2465,13 @@
       bindAdminSecurityActivity();
       noteAdminActivity(true);
       await pullFromSupabase(false);
-      if (isCurrentAdmin()) {
-        setAuthMessage("Sesion admin activa. Ya puedes administrar productos, clientes, pedidos y envios.");
+      if (canUseDashboard()) {
+        setAuthMessage(isCurrentVendor() ? "Sesion vendedor activa. Veras solo tus productos, ventas, stock y resenas." : "Sesion admin activa. Ya puedes administrar productos, clientes, pedidos y envios.");
         updateAdminGate();
         showToast("Sesion iniciada");
       } else {
-        setAuthMessage("Sesion iniciada, pero esta cuenta no es admin. Agrega app_metadata.role = admin en Supabase.", true);
-        showToast("Cuenta sin permisos admin");
+        setAuthMessage("Sesion iniciada, pero esta cuenta no tiene permisos de dashboard.", true);
+        showToast("Cuenta sin permisos");
       }
     }
 
@@ -2494,6 +2561,7 @@
       const fullName = document.getElementById("new-admin-name").value.trim();
       const email = document.getElementById("new-admin-email").value.trim();
       const password = document.getElementById("new-admin-password").value;
+      const role = document.getElementById("new-admin-role").value === "vendor" ? "vendor" : "user";
       if (!email || !email.includes("@")) return setNewAdminMessage("Escribe un email valido.", true);
       if (password.length < 8) return setNewAdminMessage("La contrasena debe tener minimo 8 caracteres.", true);
 
@@ -2511,14 +2579,14 @@
             "authorization": `Bearer ${accessToken}`,
             "content-type": "application/json"
           },
-          body: JSON.stringify({ fullName, email, password })
+          body: JSON.stringify({ fullName, email, password, role })
         });
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.error || "No se pudo crear el usuario.");
         document.getElementById("new-admin-name").value = "";
         document.getElementById("new-admin-email").value = "";
         document.getElementById("new-admin-password").value = "";
-        setNewAdminMessage(`Usuario creado: ${data.email || email}`);
+        setNewAdminMessage(`Usuario creado: ${data.email || email}. Rol: ${data.role || role}`);
         showToast("Usuario creado");
       } catch (error) {
         setNewAdminMessage(error.message || "No se pudo crear el usuario.", true);
@@ -2541,7 +2609,7 @@
     function mapDatabaseProduct(product) {
       const galleryItems = (product.product_images || []).slice().sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0)).map((image, index) => ({ id: image.id || "", imageUrl: image.image_url, storagePath: image.storage_path || "", altText: image.alt_text || "", sortOrder: Number(image.sort_order || index) }));
       const variants = (product.product_variants || []).slice().sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0)).map((variant, index) => ({ id: variant.id, name: variant.name, value: variant.value, sku: variant.sku || "", priceDelta: Number(variant.price_delta || 0), stock: Number(variant.stock || 0), isActive: variant.is_active !== false, sortOrder: Number(variant.sort_order || index) }));
-      return { id: product.id, name: product.name, category: product.category, sku: product.sku || "", shortDescription: product.short_description || "", description: product.description || "", price: Number(product.price), compareAtPrice: Number(product.compare_at_price || 0), discountPercent: Number(product.discount_percent || 0), stock: Number(product.stock), lowStockThreshold: Number(product.low_stock_threshold || 5), image: product.image_url || galleryItems[0]?.imageUrl || images.skin, galleryItems, gallery: galleryItems.map(image => image.imageUrl), variants };
+      return { id: product.id, ownerUserId: product.owner_user_id || "", name: product.name, category: product.category, sku: product.sku || "", shortDescription: product.short_description || "", description: product.description || "", price: Number(product.price), compareAtPrice: Number(product.compare_at_price || 0), discountPercent: Number(product.discount_percent || 0), stock: Number(product.stock), lowStockThreshold: Number(product.low_stock_threshold || 5), image: product.image_url || galleryItems[0]?.imageUrl || images.skin, galleryItems, gallery: galleryItems.map(image => image.imageUrl), variants };
     }
 
     function mapDatabaseCustomer(customer) {
@@ -2585,7 +2653,7 @@
     }
 
     async function pullAdminSnapshotFromServer() {
-      if (window.location.protocol === "file:" || !supabaseClient || !currentUser || !isCurrentAdmin()) return false;
+      if (window.location.protocol === "file:" || !supabaseClient || !currentUser || !canUseDashboard()) return false;
       const { data: sessionData } = await supabaseClient.auth.getSession();
       const accessToken = sessionData.session?.access_token;
       if (!accessToken) return false;
@@ -2629,9 +2697,9 @@
         if (showMessage) showToast(usedAdminSnapshot ? "Admin sincronizado" : "Catalogo sincronizado");
         return true;
       }
-      let productResponse = await supabaseClient.from("products").select("id,name,category,short_description,description,sku,price,compare_at_price,discount_percent,stock,low_stock_threshold,image_url,is_active,product_images(id,image_url,storage_path,alt_text,sort_order),product_variants(id,name,value,sku,price_delta,stock,is_active,sort_order)").eq("is_active", true).order("created_at", { ascending: false });
+      let productResponse = await supabaseClient.from("products").select("id,name,category,short_description,description,sku,price,compare_at_price,discount_percent,stock,low_stock_threshold,image_url,is_active,owner_user_id,product_images(id,image_url,storage_path,alt_text,sort_order),product_variants(id,name,value,sku,price_delta,stock,is_active,sort_order)").eq("is_active", true).order("created_at", { ascending: false });
       if (productResponse.error) {
-        productResponse = await supabaseClient.from("products").select("id,name,category,description,price,stock,image_url,is_active,product_images(id,image_url,storage_path,alt_text,sort_order)").eq("is_active", true).order("created_at", { ascending: false });
+        productResponse = await supabaseClient.from("products").select("id,name,category,description,price,stock,image_url,is_active,owner_user_id,product_images(id,image_url,storage_path,alt_text,sort_order)").eq("is_active", true).order("created_at", { ascending: false });
       }
       if (productResponse.data) state.products = productResponse.data.map(mapDatabaseProduct);
       const { data: categories } = await supabaseClient.from("categories").select("id,name,slug,description,image_url,is_active").eq("is_active", true).order("name", { ascending: true });
@@ -2764,6 +2832,7 @@
     }
 
     async function updateOrder(id, key, value) {
+      if (isCurrentVendor()) return showToast("Los vendedores solo pueden ver pedidos.");
       const order = state.orders.find(item => item.id === id);
       if (!order) return;
       order[key] = value;
@@ -2779,6 +2848,7 @@
     }
 
     async function generateTrackingForOrder(id) {
+      if (isCurrentVendor()) return showToast("Los vendedores no pueden crear etiquetas.");
       const order = state.orders.find(item => item.id === id);
       if (!order) return;
       if ((order.paymentStatus || "") !== "Pagado") return showToast("El pago debe estar confirmado antes de crear la etiqueta");

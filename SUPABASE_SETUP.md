@@ -9,17 +9,18 @@
 7. If the database already existed before product variants, discounts, SKU and stock alerts were added, run `supabase-product-management.sql` once in the SQL editor. If Supabase shows `Could not find the table 'public.product_variants' in the schema cache`, run this file and wait a few seconds for PostgREST cache reload.
 8. Run `supabase-customer-engagement.sql` once in the SQL editor to activate product favorites and customer reviews. It creates `product_favorites` and `product_reviews` with RLS policies.
 9. Run `supabase-customer-uniqueness.sql` once in the SQL editor to prevent duplicate customer emails and phone numbers.
-10. For immediate admin/storefront sync, run `supabase-realtime-sync.sql` once in the SQL editor. Without it, the site still refreshes from Supabase every 30 seconds.
-11. Create an admin user in Supabase Auth.
-12. Set the admin user's `app_metadata` to:
+10. Run `supabase-vendor-roles.sql` once in the SQL editor to activate collaborator/vendor accounts. Vendors use `app_metadata.role = "vendor"` and only see their own products, sales, stock and reviews.
+11. For immediate admin/storefront sync, run `supabase-realtime-sync.sql` once in the SQL editor. Without it, the site still refreshes from Supabase every 30 seconds.
+12. Create an admin user in Supabase Auth.
+13. Set the admin user's `app_metadata` to:
 
 ```json
 { "role": "admin" }
 ```
 
-After that first admin can sign in at `/admin.html`. The admin panel can create normal users only; principal administrator permissions must be assigned directly in Supabase by updating the user's `app_metadata`. The service role key must never be pasted into any public HTML file.
+After that first admin can sign in at `/admin.html`. The admin panel can create normal users and vendor collaborators. Principal administrator permissions must be assigned directly in Supabase by updating the user's `app_metadata`. The service role key must never be pasted into any public HTML file.
 
-13. Add these Sites environment variables:
+14. Add these Sites environment variables:
 
 ```text
 CATALINA_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
@@ -29,9 +30,9 @@ STRIPE_SECRET_KEY=sk_test_or_live_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 ```
 
-14. Mark `CATALINA_SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`, and `STRIPE_WEBHOOK_SECRET` as secrets in Sites. Never place them in `catalina.html`.
+15. Mark `CATALINA_SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`, and `STRIPE_WEBHOOK_SECRET` as secrets in Sites. Never place them in `catalina.html`.
 
-15. In Stripe, create a webhook endpoint pointing to:
+16. In Stripe, create a webhook endpoint pointing to:
 
 ```text
 https://YOUR_SITE_URL/api/stripe-webhook
@@ -39,7 +40,7 @@ https://YOUR_SITE_URL/api/stripe-webhook
 
 Subscribe it to `checkout.session.completed`, then copy the signing secret into `STRIPE_WEBHOOK_SECRET`.
 
-16. Redeploy the latest Sites version after setting the variables.
+17. Redeploy the latest Sites version after setting the variables.
 
 Password recovery:
 
