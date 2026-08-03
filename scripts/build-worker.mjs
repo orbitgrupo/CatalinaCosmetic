@@ -557,13 +557,14 @@ async function saveAdminProduct(request, env) {
     }
 
     let imagesSkipped = false;
+    let insertedImages = [];
     const uploadedImages = Array.isArray(payload.uploadedImages) ? payload.uploadedImages : [];
     if (uploadedImages.length) {
       const offset = Math.max(0, Number(payload.imageOffset || 0));
       try {
-        await supabaseRest(env, "product_images", {
+        insertedImages = await supabaseRest(env, "product_images", {
           method: "POST",
-          headers: { "prefer": "return=minimal" },
+          headers: { "prefer": "return=representation" },
           body: JSON.stringify(uploadedImages.slice(0, 25).map((image, index) => ({
             product_id: product.id,
             image_url: String(image.url || "").slice(0, 1200),
@@ -607,7 +608,7 @@ async function saveAdminProduct(request, env) {
       }
     }
 
-    return jsonResponse({ product: savedProducts?.[0] || product, imagesSkipped, variantsSkipped });
+    return jsonResponse({ product: savedProducts?.[0] || product, insertedImages: insertedImages || [], imagesSkipped, variantsSkipped });
   } catch (error) {
     const status = /admin|permisos|sesion/i.test(error.message || "") ? 403 : 500;
     return jsonResponse({ error: error.message || "No se pudo guardar el producto." }, status);

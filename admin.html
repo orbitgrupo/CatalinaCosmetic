@@ -594,7 +594,7 @@
               </div>
 
               <div class="sticky bottom-4 z-10 grid gap-2 rounded-2xl border border-line bg-white/95 p-3 shadow-soft backdrop-blur sm:grid-cols-2">
-                <button class="rounded-xl bg-violet px-5 py-3 font-extrabold text-white shadow-lg shadow-violet/20">Guardar producto</button>
+                <button id="product-save" class="rounded-xl bg-violet px-5 py-3 font-extrabold text-white shadow-lg shadow-violet/20">Guardar producto</button>
                 <button type="button" id="product-reset" class="rounded-xl border border-line px-5 py-3 font-extrabold text-muted">Limpiar</button>
               </div>
             </form>
@@ -925,6 +925,7 @@
     let activeHomeScreen = "web";
     let editingProductImages = [];
     let editingProductVariants = [];
+    let productSaveInProgress = false;
 
     function vendorName(id) {
       if (!id) return "Sin vendedor";
@@ -2206,6 +2207,19 @@
       return [...(document.getElementById("product-image-file")?.files || [])].filter(file => file.type.startsWith("image/"));
     }
 
+    function setProductSaveState(isSaving, label = "Guardando...") {
+      productSaveInProgress = Boolean(isSaving);
+      const saveButton = document.getElementById("product-save");
+      const resetButton = document.getElementById("product-reset");
+      if (saveButton) {
+        saveButton.disabled = productSaveInProgress;
+        saveButton.textContent = productSaveInProgress ? label : "Guardar producto";
+        saveButton.classList.toggle("opacity-60", productSaveInProgress);
+        saveButton.classList.toggle("cursor-wait", productSaveInProgress);
+      }
+      if (resetButton) resetButton.disabled = productSaveInProgress;
+    }
+
     function renderProductImagePreview(files = selectedProductImageFiles()) {
       const preview = document.getElementById("product-image-preview");
       if (!preview) return;
@@ -2434,60 +2448,63 @@
 
     async function saveProduct(event) {
       event.preventDefault();
-      const existingProductId = document.getElementById("product-id").value;
-      const id = existingProductId || crypto.randomUUID();
-      const isEditingProduct = Boolean(existingProductId);
-      const newCategoryName = document.getElementById("category-name").value.trim();
-      const newCategoryDescription = document.getElementById("category-description").value.trim();
-      const createdCategory = newCategoryName ? ensureCategory(newCategoryName, newCategoryDescription) : null;
-      let uploadedImages = [];
+      if (productSaveInProgress) return;
+      setProductSaveState(true, "Preparando...");
       try {
+        const existingProductId = document.getElementById("product-id").value;
+        const id = existingProductId || crypto.randomUUID();
+        const isEditingProduct = Boolean(existingProductId);
+        const newCategoryName = document.getElementById("category-name").value.trim();
+        const newCategoryDescription = document.getElementById("category-description").value.trim();
+        const createdCategory = newCategoryName ? ensureCategory(newCategoryName, newCategoryDescription) : null;
+        setProductSaveState(true, selectedProductImageFiles().length ? "Subiendo imagenes..." : "Guardando...");
+        let uploadedImages = [];
         uploadedImages = await uploadProductImages(id);
+        const nextGalleryItems = [
+          ...editingProductImages,
+          ...uploadedImages.map((image, index) => ({
+            imageUrl: image.url,
+            image_url: image.url,
+            storagePath: image.path,
+            storage_path: image.path,
+            altText: `Foto ${editingProductImages.length + index + 1}`,
+            sortOrder: editingProductImages.length + index
+          }))
+        ];
+        const imageUrl = nextGalleryItems[0]?.imageUrl || nextGalleryItems[0]?.image_url || uploadedImages[0]?.url || document.getElementById("product-image").value.trim() || images.skin;
+        const product = {
+          id,
+          ownerUserId: isCurrentVendor() ? currentUser.id : (document.getElementById("product-owner-user")?.value || state.products.find(item => item.id === id)?.ownerUserId || ""),
+          name: document.getElementById("product-name").value.trim(),
+          category: createdCategory?.name || document.getElementById("product-category").value,
+          sku: document.getElementById("product-sku").value.trim(),
+          price: Number(document.getElementById("product-price").value),
+          compareAtPrice: Number(document.getElementById("product-compare-price").value || 0),
+          discountPercent: Number(document.getElementById("product-discount").value || 0),
+          stock: Number(document.getElementById("product-stock").value),
+          lowStockThreshold: Number(document.getElementById("product-low-stock").value || 5),
+          image: imageUrl,
+          shortDescription: document.getElementById("product-short-description").value.trim(),
+          description: document.getElementById("product-description").value.trim(),
+          galleryItems: nextGalleryItems,
+          gallery: nextGalleryItems.map(image => image.imageUrl || image.image_url || image.url).filter(Boolean),
+          variants: editingProductVariants
+        };
+        setProductSaveState(true, "Guardando producto...");
+        await saveProductToSupabase(product, { category: createdCategory, uploadedImages, imageOffset: editingProductImages.length, variants: editingProductVariants });
+        const index = state.products.findIndex(item => item.id === id);
+        if (index >= 0) state.products[index] = product;
+        else state.products.unshift(product);
+        persist();
+        setProductSaveState(true, "Sincronizando...");
+        if (supabaseClient && currentUser) await pullFromSupabase(false).catch(() => false);
+        resetProductEditor();
+        showToast(isEditingProduct ? "Producto guardado" : "Producto creado");
       } catch (error) {
-        return showToast(error.message || "No se pudo subir la imagen");
+        showToast(error.message || "No se pudo guardar el producto");
+      } finally {
+        setProductSaveState(false);
       }
-      const nextGalleryItems = [
-        ...editingProductImages,
-        ...uploadedImages.map((image, index) => ({
-          imageUrl: image.url,
-          image_url: image.url,
-          storagePath: image.path,
-          storage_path: image.path,
-          altText: `Foto ${editingProductImages.length + index + 1}`,
-          sortOrder: editingProductImages.length + index
-        }))
-      ];
-      const imageUrl = nextGalleryItems[0]?.imageUrl || nextGalleryItems[0]?.image_url || uploadedImages[0]?.url || document.getElementById("product-image").value.trim() || images.skin;
-      const product = {
-        id,
-        ownerUserId: isCurrentVendor() ? currentUser.id : (document.getElementById("product-owner-user")?.value || state.products.find(item => item.id === id)?.ownerUserId || ""),
-        name: document.getElementById("product-name").value.trim(),
-        category: createdCategory?.name || document.getElementById("product-category").value,
-        sku: document.getElementById("product-sku").value.trim(),
-        price: Number(document.getElementById("product-price").value),
-        compareAtPrice: Number(document.getElementById("product-compare-price").value || 0),
-        discountPercent: Number(document.getElementById("product-discount").value || 0),
-        stock: Number(document.getElementById("product-stock").value),
-        lowStockThreshold: Number(document.getElementById("product-low-stock").value || 5),
-        image: imageUrl,
-        shortDescription: document.getElementById("product-short-description").value.trim(),
-        description: document.getElementById("product-description").value.trim(),
-        galleryItems: nextGalleryItems,
-        gallery: nextGalleryItems.map(image => image.imageUrl || image.image_url || image.url).filter(Boolean),
-        variants: editingProductVariants
-      };
-      const index = state.products.findIndex(item => item.id === id);
-      if (index >= 0) state.products[index] = product;
-      else state.products.unshift(product);
-      let saveResult = {};
-      try {
-        saveResult = await saveProductToSupabase(product, { category: createdCategory, uploadedImages, imageOffset: editingProductImages.length, variants: editingProductVariants });
-      } catch (error) {
-        return showToast(error.message || "No se pudo guardar el producto");
-      }
-      resetProductEditor();
-      persist();
-      showToast(isEditingProduct ? "Producto guardado" : "Producto creado");
     }
 
     async function createCategoryFromForm() {
