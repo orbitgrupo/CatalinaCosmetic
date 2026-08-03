@@ -328,7 +328,12 @@
         return null;
       }
       supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey, {
-        auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+        auth: {
+          storageKey: "catalina-customer-auth-v1",
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true
+        }
       });
       return supabaseClient;
     }

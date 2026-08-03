@@ -1105,20 +1105,19 @@
               </div>
             </section>
             <section id="profile-address-manager" class="hidden">
-              <div class="mb-5 rounded-xl bg-surface-container-lowest p-4">
-                <p class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-primary">Datos de cuenta</p>
-                <div id="profile-account-summary" class="mt-3 grid gap-2 text-sm text-on-surface-variant"></div>
-              </div>
               <div class="mb-5">
                 <div class="mb-3 flex items-center justify-between gap-3">
                   <h3 class="text-lg font-extrabold">Mis direcciones</h3>
-                  <span id="profile-address-count" class="rounded-full bg-primary-container px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-on-primary-container">0</span>
+                  <div class="flex items-center gap-2">
+                    <span id="profile-address-count" class="rounded-full bg-primary-container px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-on-primary-container">0</span>
+                    <button id="profile-address-add" class="rounded-full bg-primary px-4 py-2 text-[10px] font-extrabold uppercase tracking-widest text-on-primary" type="button">Agregar direccion</button>
+                  </div>
                 </div>
                 <div id="profile-address-list" class="grid gap-3"></div>
               </div>
             </section>
-            <h2 id="profile-address-form-title" class="mb-4 text-xl font-extrabold">Agregar direccion</h2>
-            <form id="profile-form" class="space-y-3">
+            <h2 id="profile-address-form-title" class="mb-4 hidden text-xl font-extrabold">Agregar direccion</h2>
+            <form id="profile-form" class="hidden space-y-3">
               <input id="profile-address-label" class="w-full rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm" placeholder="Nombre de direccion: Casa, Trabajo, Oficina"/>
               <input id="profile-name" class="w-full rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm" placeholder="Nombre completo"/>
               <input id="profile-email" class="w-full rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm" type="email" placeholder="Email"/>
@@ -1133,7 +1132,10 @@
                 <select id="profile-city" class="rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm"></select>
               </div>
               <input id="profile-reference" class="w-full rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm" placeholder="Referencia"/>
-              <button class="w-full rounded-lg bg-primary py-3 text-xs font-bold uppercase tracking-[0.1em] text-on-primary" type="submit">Guardar direccion</button>
+              <div class="grid gap-3 sm:grid-cols-2">
+                <button class="rounded-lg bg-primary py-3 text-xs font-bold uppercase tracking-[0.1em] text-on-primary" type="submit">Guardar direccion</button>
+                <button id="profile-address-cancel" class="rounded-lg bg-surface-container-lowest py-3 text-xs font-bold uppercase tracking-[0.1em] text-on-surface" type="button">Cancelar</button>
+              </div>
             </form>
           </aside>
         </section>
@@ -2095,6 +2097,7 @@
     if (currentCustomerUser && !synced) return;
     localStorage.setItem(CUSTOMER_PROFILE_KEY, JSON.stringify(profile));
     editingCustomerAddressId = "";
+    addressFormOpen = false;
     renderCustomerProfile();
     applyProfileToCheckout(profile);
     showToast(synced ? 'Perfil guardado en Supabase' : 'Perfil guardado localmente. Inicia sesion para sincronizar.');
@@ -2126,24 +2129,22 @@
     const formTitle = document.getElementById('profile-address-form-title');
     if (gate) gate.classList.toggle('hidden', Boolean(currentCustomerUser));
     if (manager) manager.classList.toggle('hidden', !currentCustomerUser);
-    if (form) form.classList.toggle('hidden', !currentCustomerUser);
-    if (formTitle) formTitle.classList.toggle('hidden', !currentCustomerUser);
+    if (form) form.classList.toggle('hidden', !currentCustomerUser || !addressFormOpen);
+    if (formTitle) formTitle.classList.toggle('hidden', !currentCustomerUser || !addressFormOpen);
     if (!currentCustomerUser) return;
-    const summary = document.getElementById('profile-account-summary');
-    if (summary) {
-      summary.innerHTML = [
-        `<div><span class="font-extrabold text-on-surface">Nombre:</span> ${escapeHtml(profile.name || 'Pendiente')}</div>`,
-        `<div><span class="font-extrabold text-on-surface">Email:</span> ${escapeHtml(profile.email || currentCustomerUser.email || 'Pendiente')}</div>`,
-        `<div><span class="font-extrabold text-on-surface">Telefono:</span> ${escapeHtml(profile.phone || 'Pendiente')}</div>`
-      ].join('');
-    }
     const addresses = normalizeCustomerAddresses(profile);
     const count = document.getElementById('profile-address-count');
     if (count) count.textContent = addresses.length;
     const list = document.getElementById('profile-address-list');
     if (!list) return;
     if (!addresses.length) {
-      list.innerHTML = '<div class="rounded-xl bg-surface-container-lowest p-4 text-sm font-bold text-on-surface-variant">Aun no tienes direcciones. Agrega una direccion para poder completar tu compra.</div>';
+      list.innerHTML = `
+        <div class="rounded-xl bg-surface-container-lowest p-5 text-sm text-on-surface-variant">
+          <p class="font-extrabold text-on-surface">Aun no tienes direcciones guardadas.</p>
+          <p class="mt-2 text-xs leading-5">Agrega una direccion de Republica Dominicana para poder completar tu compra.</p>
+          <button class="profile-address-add mt-4 rounded-full bg-primary px-4 py-2 text-[10px] font-extrabold uppercase tracking-widest text-on-primary" type="button">Crear direccion</button>
+        </div>
+      `;
       return;
     }
     list.innerHTML = addresses.map(address => {
@@ -2191,12 +2192,31 @@
     const address = normalizeCustomerAddresses(profile).find(item => item.id === addressId);
     if (!address) return;
     editingCustomerAddressId = address.id;
+    addressFormOpen = true;
     setAddressFields('profile', address);
     document.getElementById('profile-address-label').value = address.label || "";
     document.getElementById('profile-name').value = profile.name || "";
     document.getElementById('profile-email').value = profile.email || "";
     document.getElementById('profile-phone').value = profile.phone || "";
     showToast('Edita los campos y guarda la direccion.');
+  }
+
+  function openCustomerAddressForm() {
+    if (!currentCustomerUser) {
+      window.location.href = './auth.html?mode=signup';
+      return;
+    }
+    editingCustomerAddressId = "";
+    addressFormOpen = true;
+    document.getElementById('profile-address-label').value = "";
+    setAddressFields('profile', {});
+    renderCustomerAddressManager(mergeProfileWithAuth());
+  }
+
+  function closeCustomerAddressForm() {
+    editingCustomerAddressId = "";
+    addressFormOpen = false;
+    renderCustomerProfile();
   }
 
   async function deleteCustomerAddress(addressId) {
@@ -2396,6 +2416,7 @@
   let storefrontSyncInterval = null;
   let selectedTrackingOrderNumber = "";
   let editingCustomerAddressId = "";
+  let addressFormOpen = false;
 
   function catalinaBasePath() {
     const configured = String((window.__CATALINA_CONFIG__ || {}).basePath || "").replace(/\/+$/, "");
@@ -3990,6 +4011,18 @@
   }
 
   document.addEventListener('click', (e) => {
+    const addressAdd = e.target.closest('#profile-address-add, .profile-address-add');
+    if (addressAdd) {
+      e.preventDefault();
+      openCustomerAddressForm();
+      return;
+    }
+    const addressCancel = e.target.closest('#profile-address-cancel');
+    if (addressCancel) {
+      e.preventDefault();
+      closeCustomerAddressForm();
+      return;
+    }
     const addressSelect = e.target.closest('.profile-address-select');
     if (addressSelect) {
       e.preventDefault();
