@@ -176,6 +176,14 @@ function isVendorUser(user) {
   return user?.app_metadata?.role === "vendor";
 }
 
+function normalizeAccountEmail(value = "") {
+  return String(value || "").trim().toLowerCase();
+}
+
+function normalizeAccountPhone(value = "") {
+  return String(value || "").replace(/\D/g, "");
+}
+
 function bytesToHex(buffer) {
   return [...new Uint8Array(buffer)].map(byte => byte.toString(16).padStart(2, "0")).join("");
 }
@@ -230,6 +238,47 @@ async function supabaseRest(env, path, options = {}) {
 
 async function getActiveProducts(env) {
   return supabaseRest(env, "products?select=id,name,price,stock,image_url,is_active&is_active=eq.true", { method: "GET" });
+}
+
+async function listAuthUsersForDuplicateCheck(env) {
+  const url = env.CATALINA_SUPABASE_URL || env.SUPABASE_URL || "";
+  const serviceKey = env.CATALINA_SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_ROLE_KEY || "";
+  if (!url || !serviceKey) return [];
+  const response = await fetch(url + "/auth/v1/admin/users?page=1&per_page=1000", {
+    headers: {
+      "apikey": serviceKey,
+      "authorization": "Bearer " + serviceKey
+    }
+  });
+  if (!response.ok) return [];
+  const data = await response.json().catch(() => ({}));
+  return Array.isArray(data.users) ? data.users : Array.isArray(data) ? data : [];
+}
+
+async function checkAccountAvailability(request, env) {
+  try {
+    const payload = await request.json().catch(() => ({}));
+    const email = normalizeAccountEmail(payload.email);
+    const phone = normalizeAccountPhone(payload.phone);
+    if (!email || !email.includes("@")) return jsonResponse({ available: false, field: "email", message: "Escribe un email valido." }, 400);
+    if (!phone || phone.length < 7) return jsonResponse({ available: false, field: "phone", message: "Escribe un telefono valido." }, 400);
+
+    const authUsers = await listAuthUsersForDuplicateCheck(env);
+    if (authUsers.some(user => normalizeAccountEmail(user.email) === email)) {
+      return jsonResponse({ available: false, field: "email", message: "Ya existe una cuenta con ese email. Inicia sesion o recupera tu contrasena. Si quieres vender, usa Conviertete en vendedor con esa cuenta." }, 409);
+    }
+
+    const profiles = await supabaseRest(env, "customer_profiles?select=id,email,phone&limit=5000", { method: "GET" });
+    const duplicate = (profiles || []).find(profile => normalizeAccountEmail(profile.email) === email || normalizeAccountPhone(profile.phone) === phone);
+    if (duplicate) {
+      const field = normalizeAccountEmail(duplicate.email) === email ? "email" : "phone";
+      return jsonResponse({ available: false, field, message: field === "email" ? "Ya existe una cuenta con ese email. Inicia sesion o recupera tu contrasena." : "Ya existe una cuenta con ese telefono. Inicia sesion o usa otro telefono." }, 409);
+    }
+
+    return jsonResponse({ available: true });
+  } catch (error) {
+    return jsonResponse({ available: false, message: error.message || "No se pudo verificar la cuenta." }, 500);
+  }
 }
 
 async function getCatalog(env) {
@@ -344,6 +393,10 @@ async function createUserAccount(request, env) {
     const url = env.CATALINA_SUPABASE_URL || env.SUPABASE_URL || "";
     const serviceKey = env.CATALINA_SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_ROLE_KEY || "";
     if (!url || !serviceKey) return jsonResponse({ error: "Supabase service role no esta configurado en Sites." }, 503);
+    const existingUsers = await listAuthUsersForDuplicateCheck(env);
+    if (existingUsers.some(user => normalizeAccountEmail(user.email) === account.email)) {
+      return jsonResponse({ error: "Ya existe una cuenta con ese email. No crees otra cuenta; si quiere vender, debe solicitar ser vendedor desde su cuenta actual." }, 409);
+    }
 
     const response = await fetch(\`\${url}/auth/v1/admin/users\`, {
       method: "POST",
@@ -948,6 +1001,10 @@ export default {
       } catch (error) {
         return jsonResponse({ error: error.message || "No se pudo cargar el catalogo." }, 500);
       }
+    }
+
+    if (url.pathname === "/api/check-account-availability" && request.method === "POST") {
+      return checkAccountAvailability(request, env || {});
     }
 
     if (url.pathname === "/api/admin/snapshot" && request.method === "GET") {

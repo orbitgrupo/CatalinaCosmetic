@@ -1100,6 +1100,7 @@
               <p class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-primary">Crear cuenta</p>
               <input id="signup-name" class="rounded-lg border-none bg-surface-container-low px-4 py-3 text-sm" placeholder="Nombre completo" required/>
               <input id="signup-email" class="rounded-lg border-none bg-surface-container-low px-4 py-3 text-sm" type="email" placeholder="Email" required/>
+              <input id="signup-phone" class="rounded-lg border-none bg-surface-container-low px-4 py-3 text-sm" placeholder="Telefono" required/>
               <input id="signup-password" class="rounded-lg border-none bg-surface-container-low px-4 py-3 text-sm" type="password" minlength="6" placeholder="Password" required/>
               <button class="rounded-lg bg-primary py-3 text-xs font-bold uppercase tracking-[0.1em] text-on-primary" type="submit">Crear cuenta</button>
             </form>
@@ -2894,9 +2895,24 @@
     if (!client) return showToast('Configura Supabase para crear cuentas.');
     const name = document.getElementById('signup-name').value.trim();
     const email = document.getElementById('signup-email').value.trim();
+    const phone = document.getElementById('signup-phone').value.trim();
     const password = document.getElementById('signup-password').value;
-    const { data, error } = await client.auth.signUp({ email, password, options: { data: { full_name: name } } });
-    if (error) return showToast(error.message);
+    if (!phone) return showToast('Escribe tu telefono para crear la cuenta.');
+    try {
+      const availability = await fetch(catalinaApiPath('/api/check-account-availability'), {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email, phone })
+      });
+      const availabilityData = await availability.json().catch(() => ({}));
+      if (!availability.ok || availabilityData.available === false) {
+        return showToast(availabilityData.message || 'Ya existe una cuenta con ese email o telefono. Inicia sesion o solicita ser vendedor desde tu cuenta.');
+      }
+    } catch {
+      return showToast('No se pudo verificar si la cuenta ya existe. Intenta de nuevo.');
+    }
+    const { data, error } = await client.auth.signUp({ email, password, options: { data: { full_name: name, phone } } });
+    if (error) return showToast(/already|registered|exists|duplicate/i.test(error.message || '') ? 'Ya existe una cuenta con ese email. Inicia sesion o recupera tu contrasena.' : error.message);
     currentCustomerUser = data.user || currentCustomerUser;
     if (currentCustomerUser) {
       bindCustomerSecurityActivity();
@@ -2904,10 +2920,11 @@
     }
     document.getElementById('profile-name').value = name;
     document.getElementById('profile-email').value = email;
+    document.getElementById('profile-phone').value = phone;
     if (currentCustomerUser) await saveCustomerProfileToSupabase({
       name,
       email,
-      phone: document.getElementById('profile-phone').value.trim(),
+      phone,
       ...getAddressFrom('profile')
     });
     renderCustomerAuthState();
