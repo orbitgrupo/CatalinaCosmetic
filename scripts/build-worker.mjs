@@ -2,6 +2,7 @@ import fs from "node:fs";
 const root = new URL("..", import.meta.url);
 const html = fs.readFileSync(new URL("catalina.html", root), "utf8");
 const admin = fs.readFileSync(new URL("admin.html", root), "utf8");
+const auth = fs.readFileSync(new URL("auth.html", root), "utf8");
 const resetPassword = fs.readFileSync(new URL("reset-password.html", root), "utf8");
 const schema = fs.readFileSync(new URL("supabase-schema.sql", root), "utf8");
 const seed = fs.readFileSync(new URL("supabase-seed.sql", root), "utf8");
@@ -26,6 +27,7 @@ fs.copyFileSync(new URL(".openai/hosting.json", root), new URL("hosting.json", d
 
 const worker = `const html = ${JSON.stringify(html)};
 const admin = ${JSON.stringify(admin)};
+const auth = ${JSON.stringify(auth)};
 const resetPassword = ${JSON.stringify(resetPassword)};
 const schema = ${JSON.stringify(schema)};
 const seed = ${JSON.stringify(seed)};
@@ -1147,6 +1149,15 @@ export default {
       });
     }
 
+    if (url.pathname === "/auth" || url.pathname === "/auth.html" || url.pathname === "/login" || url.pathname === "/login.html" || url.pathname === "/cuenta" || url.pathname === "/cuenta.html") {
+      return new Response(withRuntimeConfig(auth, env || {}), {
+        headers: securityHeaders({
+          "content-type": "text/html; charset=utf-8",
+          "cache-control": "no-store"
+        })
+      });
+    }
+
     if (url.pathname === "/favicon.svg") {
       return new Response(favicon, {
         headers: securityHeaders({
@@ -1197,4 +1208,4 @@ fs.writeFileSync(new URL("index.js", distServer), worker);
 fs.mkdirSync(new URL("worker/", root), { recursive: true });
 fs.writeFileSync(new URL("worker/index.js", root), worker);
 
-console.log(`built worker with ${html.length} shop bytes, ${admin.length} admin bytes, ${resetPassword.length} reset bytes and ${schema.length} sql bytes`);
+console.log(`built worker with ${html.length} shop bytes, ${admin.length} admin bytes, ${auth.length} auth bytes, ${resetPassword.length} reset bytes and ${schema.length} sql bytes`);

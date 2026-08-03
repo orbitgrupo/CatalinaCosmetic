@@ -1,6 +1,6 @@
 import fs from "node:fs";
 
-const files = ["catalina.html", "admin.html", "reset-password.html"];
+const files = ["catalina.html", "admin.html", "auth.html", "reset-password.html"];
 let total = 0;
 
 for (const file of files) {

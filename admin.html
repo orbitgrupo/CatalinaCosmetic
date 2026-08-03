@@ -308,6 +308,21 @@
               </div>
               <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Nombre de marca<input id="home-brand-name" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
               <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Titulo del navegador<input id="home-site-title" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+              <div class="rounded-xl border border-line bg-shell p-4">
+                <div class="mb-3">
+                  <p class="text-xs font-extrabold uppercase tracking-[0.18em] text-violet">Acceso clientes</p>
+                  <p class="text-sm text-muted">Texto e imagen para login, crear cuenta, confirmar correo y recuperar cuenta.</p>
+                </div>
+                <div class="grid gap-4 md:grid-cols-2">
+                  <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Titulo acceso<input id="home-auth-title" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+                  <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Subtitulo acceso<input id="home-auth-subtitle" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
+                </div>
+                <div class="mt-4 grid gap-4 md:grid-cols-3">
+                  <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Tipo media acceso<select id="home-auth-media-type" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal"><option value="image">Imagen</option><option value="video">Video</option></select></label>
+                  <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">URL media acceso<input id="home-auth-media-url" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" placeholder="Imagen o video .mp4" /></label>
+                  <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Producto sugerido<select id="home-auth-product-id" class="home-product-link rounded-lg border-line text-sm font-normal normal-case tracking-normal"></select></label>
+                </div>
+              </div>
               <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Eyebrow<input id="home-hero-eyebrow" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" /></label>
               <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Titulo hero<textarea id="home-hero-title" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" rows="2"></textarea></label>
               <label class="grid gap-2 text-xs font-bold uppercase tracking-widest text-muted">Descripcion hero<textarea id="home-hero-body" class="rounded-lg border-line text-sm font-normal normal-case tracking-normal" rows="3"></textarea></label>
@@ -816,6 +831,11 @@
       mobileBannerMediaType: "image",
       mobileBannerMediaUrl: "",
       mobileBannerProductId: "",
+      authTitle: "Login",
+      authSubtitle: "Accede a tu perfil Catalina.",
+      authMediaType: "image",
+      authMediaUrl: "https://images.unsplash.com/photo-1612817288484-6f916006741a?auto=format&fit=crop&w=900&q=80",
+      authProductId: "",
       batchLabel: "Batch ID: CL-2024X",
       batchCopy: "\"98% Pure Hyaluronic Acid derived through bio-fermentation.\"",
       newEyebrow: "New Arrivals",
@@ -1561,6 +1581,11 @@
         mobileBannerMediaType: "home-mobile-banner-media-type",
         mobileBannerMediaUrl: "home-mobile-banner-media-url",
         mobileBannerProductId: "home-mobile-banner-product-id",
+        authTitle: "home-auth-title",
+        authSubtitle: "home-auth-subtitle",
+        authMediaType: "home-auth-media-type",
+        authMediaUrl: "home-auth-media-url",
+        authProductId: "home-auth-product-id",
         batchLabel: "home-batch-label",
         batchCopy: "home-batch-copy",
         newEyebrow: "home-new-eyebrow",
@@ -1648,6 +1673,7 @@
           ]
         : [
             { urlKey: "heroMediaUrl", typeKey: "heroMediaType", productKey: "heroProductId", label: "Web - hero principal", detail: "Imagen o video grande de la primera pantalla." },
+            { urlKey: "authMediaUrl", typeKey: "authMediaType", productKey: "authProductId", label: "Acceso clientes", detail: "Imagen o video para login, registro, confirmacion y recuperacion." },
             { urlKey: "featuredMediaUrl", typeKey: "featuredMediaType", productKey: "featuredProductId", label: "Web - producto destacado", detail: "Bloque grande dentro de novedades." },
             { urlKey: "secondaryMediaUrl", typeKey: "secondaryMediaType", productKey: "secondaryProductId", label: "Web - imagen superior pH Balance Mist", detail: "Imagen o video de la tarjeta grande marcada en la parte superior." },
             { urlKey: "newCardOneMediaUrl", typeKey: "newCardOneMediaType", productKey: "newCardOneProductId", label: "Web - tarjeta C-Complex", detail: "Tarjeta pequeña izquierda bajo la tarjeta secundaria." },

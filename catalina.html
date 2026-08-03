@@ -1109,7 +1109,7 @@
               <input id="login-email" class="rounded-lg border-none bg-surface-container-low px-4 py-3 text-sm" type="email" placeholder="Email" required/>
               <input id="login-password" class="rounded-lg border-none bg-surface-container-low px-4 py-3 text-sm" type="password" placeholder="Password" required/>
               <button class="rounded-lg bg-on-surface py-3 text-xs font-bold uppercase tracking-[0.1em] text-white" type="submit">Entrar</button>
-              <a class="text-xs font-extrabold uppercase tracking-[0.1em] text-primary" href="./reset-password.html">Recuperar contrasena</a>
+              <a class="text-xs font-extrabold uppercase tracking-[0.1em] text-primary" href="./auth.html?mode=recovery">Recuperar contrasena</a>
             </form>
             <h2 class="mb-4 text-xl font-extrabold">Perfil y envio</h2>
             <form id="profile-form" class="space-y-3">
@@ -2233,6 +2233,11 @@
     return `${catalinaBasePath()}${cleanPath}`;
   }
 
+  function catalinaAuthUrl(mode = "login") {
+    const cleanMode = encodeURIComponent(mode || "login");
+    return `${window.location.origin}${catalinaBasePath()}/auth.html?mode=${cleanMode}`;
+  }
+
   function getStorefrontSupabaseClient() {
     if (storefrontSupabaseClient) return storefrontSupabaseClient;
     const config = window.__CATALINA_CONFIG__ || {};
@@ -2328,9 +2333,11 @@
       status.textContent = 'Supabase no esta configurado en esta version. Puedes guardar localmente.';
       return;
     }
-    status.textContent = currentCustomerUser
-      ? `Sesion iniciada: ${currentCustomerUser.email}. Tu perfil se guarda en la base de datos.`
-      : 'Sin sesion iniciada. Crea una cuenta o entra para guardar tu perfil en Supabase.';
+    if (currentCustomerUser) {
+      status.textContent = `Sesion iniciada: ${currentCustomerUser.email}. Tu perfil se guarda en la base de datos.`;
+    } else {
+      status.innerHTML = `Sin sesion iniciada. <a class="font-extrabold text-primary underline" href="./auth.html?mode=login">Entrar al portal de cliente</a> o crea una cuenta para guardar tu perfil en Supabase.`;
+    }
     renderSellerApplicationAuth();
   }
 
@@ -2911,7 +2918,14 @@
     } catch {
       return showToast('No se pudo verificar si la cuenta ya existe. Intenta de nuevo.');
     }
-    const { data, error } = await client.auth.signUp({ email, password, options: { data: { full_name: name, phone } } });
+    const { data, error } = await client.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name: name, phone },
+        emailRedirectTo: catalinaAuthUrl("confirmed")
+      }
+    });
     if (error) return showToast(/already|registered|exists|duplicate/i.test(error.message || '') ? 'Ya existe una cuenta con ese email. Inicia sesion o recupera tu contrasena.' : error.message);
     currentCustomerUser = data.user || currentCustomerUser;
     if (currentCustomerUser) {

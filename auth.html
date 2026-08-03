@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Catalina | Acceso</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800;900&display=swap" rel="stylesheet" />
+  <script src="./vendor/supabase.js"></script>
+  <style>
+    :root {
+      --ink: #173f3b;
+      --ink-strong: #0f312e;
+      --mint: #9bcfc9;
+      --paper: #f7f5ef;
+      --line: rgba(23, 63, 59, 0.18);
+      --accent: #ff6a1a;
+      --muted: #6f817e;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(90deg, var(--paper) 0 50%, var(--mint) 50% 100%);
+      color: var(--ink);
+    }
+    a { color: inherit; }
+    .shell {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 48px 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .dots {
+      position: absolute;
+      left: clamp(18px, 5vw, 58px);
+      top: clamp(26px, 7vw, 70px);
+      display: grid;
+      grid-template-columns: repeat(3, 44px);
+      gap: 18px;
+      pointer-events: none;
+    }
+    .dots span {
+      width: 44px;
+      height: 44px;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+    .card {
+      width: min(940px, 100%);
+      min-height: 520px;
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      border: 7px solid var(--ink);
+      border-radius: 32px;
+      overflow: hidden;
+      background: var(--paper);
+      box-shadow: 0 30px 80px rgba(15, 49, 46, 0.18);
+      position: relative;
+      z-index: 1;
+    }
+    .visual {
+      min-height: 100%;
+      display: grid;
+      place-items: center;
+      padding: 46px;
+      position: relative;
+      background: #f9f7f1;
+    }
+    .visual img,
+    .visual video {
+      width: 100%;
+      height: 100%;
+      max-height: 370px;
+      object-fit: contain;
+      border-radius: 20px;
+    }
+    .visual video { object-fit: cover; }
+    .panel {
+      background: var(--ink);
+      color: white;
+      padding: clamp(34px, 6vw, 72px) clamp(28px, 5vw, 58px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+    }
+    .brand {
+      position: absolute;
+      top: 26px;
+      left: 34px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      color: var(--ink);
+    }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin: 0 0 26px;
+      flex-wrap: wrap;
+    }
+    .tab {
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.72);
+      border-radius: 999px;
+      padding: 9px 13px;
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .tab.active {
+      background: white;
+      color: var(--ink);
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(34px, 6vw, 52px);
+      line-height: 0.95;
+      letter-spacing: -0.05em;
+    }
+    .subtitle {
+      margin: 12px 0 24px;
+      font-weight: 800;
+      color: rgba(255,255,255,0.86);
+    }
+    form { display: none; gap: 14px; }
+    form.active { display: grid; }
+    input {
+      width: 100%;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.06);
+      color: white;
+      border-radius: 6px;
+      padding: 14px 15px;
+      font: inherit;
+      outline: none;
+    }
+    input::placeholder { color: rgba(255,255,255,0.62); }
+    input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,106,26,0.18); }
+    .check {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      color: rgba(255,255,255,0.7);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .check input { width: 13px; height: 13px; padding: 0; accent-color: var(--accent); }
+    .primary {
+      margin-top: 14px;
+      border: 0;
+      border-radius: 12px;
+      background: var(--accent);
+      color: white;
+      padding: 15px;
+      font: inherit;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 14px 28px rgba(255,106,26,0.26);
+    }
+    .secondary-link {
+      border: 0;
+      background: transparent;
+      color: var(--accent);
+      font-weight: 900;
+      cursor: pointer;
+      width: fit-content;
+      padding: 0;
+    }
+    .message {
+      min-height: 20px;
+      margin-top: 18px;
+      color: rgba(255,255,255,0.78);
+      font-size: 13px;
+      line-height: 1.5;
+      font-weight: 700;
+    }
+    .back {
+      position: absolute;
+      right: 28px;
+      top: 24px;
+      z-index: 2;
+      color: rgba(255,255,255,0.82);
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+    .presented {
+      position: fixed;
+      right: 28px;
+      bottom: 24px;
+      border-radius: 999px;
+      background: white;
+      padding: 12px 18px;
+      font-size: 13px;
+      font-weight: 900;
+      color: var(--ink);
+      box-shadow: 0 12px 36px rgba(15,49,46,0.16);
+    }
+    @media (max-width: 760px) {
+      body { background: var(--mint); }
+      .shell { padding: 20px; align-items: stretch; }
+      .dots { grid-template-columns: repeat(3, 24px); gap: 10px; left: 20px; top: 18px; }
+      .dots span { width: 24px; height: 24px; }
+      .card {
+        margin-top: 52px;
+        min-height: auto;
+        grid-template-columns: 1fr;
+        border-width: 5px;
+        border-radius: 26px;
+      }
+      .visual { min-height: 210px; padding: 34px 24px 20px; }
+      .visual img, .visual video { max-height: 210px; }
+      .panel { padding: 32px 24px 36px; }
+      .brand { top: 18px; left: 24px; }
+      .back { right: 22px; top: 19px; color: var(--ink); }
+      .presented { position: static; margin: 20px auto 0; width: fit-content; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="dots" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    <a class="back" href="./catalina.html">Tienda</a>
+    <section class="card">
+      <div class="visual">
+        <div class="brand">Catalina</div>
+        <img id="auth-image" alt="Catalina account access" src="https://images.unsplash.com/photo-1612817288484-6f916006741a?auto=format&fit=crop&w=900&q=80" />
+      </div>
+      <div class="panel">
+        <div class="tabs">
+          <button class="tab active" data-mode="login" type="button">Entrar</button>
+          <button class="tab" data-mode="signup" type="button">Crear cuenta</button>
+          <button class="tab" data-mode="recovery" type="button">Recuperar</button>
+        </div>
+        <h1 id="auth-title">Login</h1>
+        <p id="auth-subtitle" class="subtitle">Accede a tu perfil Catalina.</p>
+
+        <form id="login-form" class="active">
+          <input id="login-email" type="email" placeholder="Email" autocomplete="email" required />
+          <input id="login-password" type="password" placeholder="Contrasena" autocomplete="current-password" required />
+          <label class="check"><input id="remember-session" type="checkbox" checked /> Mantener sesion iniciada</label>
+          <button class="primary" type="submit">Entrar</button>
+          <button class="secondary-link" data-mode="recovery" type="button">Olvide mi contrasena</button>
+        </form>
+
+        <form id="signup-form">
+          <input id="signup-name" placeholder="Nombre completo" autocomplete="name" required />
+          <input id="signup-email" type="email" placeholder="Email" autocomplete="email" required />
+          <input id="signup-phone" placeholder="Telefono" autocomplete="tel" required />
+          <input id="signup-password" type="password" minlength="6" placeholder="Contrasena" autocomplete="new-password" required />
+          <button class="primary" type="submit">Crear cuenta</button>
+          <button class="secondary-link" data-mode="login" type="button">Ya tengo cuenta</button>
+        </form>
+
+        <form id="recovery-form">
+          <input id="recovery-email" type="email" placeholder="Email de tu cuenta" autocomplete="email" required />
+          <button class="primary" type="submit">Enviar recuperacion</button>
+          <button class="secondary-link" data-mode="login" type="button">Volver a entrar</button>
+        </form>
+
+        <form id="new-password-form">
+          <input id="new-password" type="password" minlength="6" placeholder="Nueva contrasena" autocomplete="new-password" required />
+          <input id="confirm-password" type="password" minlength="6" placeholder="Confirmar contrasena" autocomplete="new-password" required />
+          <button class="primary" type="submit">Guardar contrasena</button>
+        </form>
+
+        <p id="message" class="message"></p>
+      </div>
+    </section>
+    <div class="presented">Catalina Cosmetic</div>
+  </main>
+
+  <script>
+    const runtimeConfig = window.__CATALINA_CONFIG__ || window.CATALINA_CONFIG || {};
+    const modeCopy = {
+      login: ["Login", "Accede a tu perfil Catalina."],
+      signup: ["Crear cuenta", "Compra, guarda favoritos y consulta tus pedidos."],
+      recovery: ["Recuperar cuenta", "Te enviaremos un enlace seguro por email."],
+      reset: ["Nueva contrasena", "Crea una contrasena nueva para volver a entrar."],
+      confirmed: ["Cuenta confirmada", "Tu correo fue confirmado. Ya puedes entrar a tu perfil."]
+    };
+    let supabaseClient = null;
+
+    function normalizeBasePath(value) {
+      const clean = String(value || "").trim().replace(/\/+$/, "");
+      if (clean) return clean.startsWith("/") ? clean : `/${clean}`;
+      return location.pathname.startsWith("/catalina-cosmetic") ? "/catalina-cosmetic" : "";
+    }
+
+    function basePath() {
+      return normalizeBasePath(runtimeConfig.basePath || "");
+    }
+
+    function pageUrl(mode) {
+      return `${location.origin}${basePath()}/auth.html?mode=${encodeURIComponent(mode)}`;
+    }
+
+    function storeUrl() {
+      return `${basePath() || "."}/catalina.html`;
+    }
+
+    function setMessage(text) {
+      document.getElementById("message").textContent = text || "";
+    }
+
+    function getClient() {
+      if (supabaseClient) return supabaseClient;
+      const supabaseUrl = runtimeConfig.supabaseUrl || runtimeConfig.SUPABASE_URL || "";
+      const supabaseKey = runtimeConfig.supabasePublishableKey || runtimeConfig.SUPABASE_PUBLISHABLE_KEY || "";
+      if (!supabaseUrl || !supabaseKey || !window.supabase?.createClient) {
+        setMessage("Configura Supabase en el servidor antes de entrar.");
+        return null;
+      }
+      supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey, {
+        auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+      });
+      return supabaseClient;
+    }
+
+    function apiPath(path) {
+      return `${basePath()}${path}`;
+    }
+
+    function setMode(nextMode) {
+      const mode = modeCopy[nextMode] ? nextMode : "login";
+      document.querySelectorAll(".tab").forEach(tab => tab.classList.toggle("active", tab.dataset.mode === mode));
+      document.querySelectorAll("form").forEach(form => form.classList.remove("active"));
+      const formId = mode === "reset" ? "new-password-form" : mode === "confirmed" ? "login-form" : `${mode}-form`;
+      const form = document.getElementById(formId);
+      if (form) form.classList.add("active");
+      document.getElementById("auth-title").textContent = modeCopy[mode][0];
+      document.getElementById("auth-subtitle").textContent = modeCopy[mode][1];
+      history.replaceState(null, "", `?mode=${mode}`);
+      setMessage(mode === "confirmed" ? "Correo confirmado correctamente. Puedes entrar con tu email y contrasena." : "");
+    }
+
+    async function loadAuthContent(preferredMode) {
+      const client = getClient();
+      if (!client) return;
+      const { data } = await client.from("site_content").select("content").eq("key", "page_home").maybeSingle();
+      const content = data?.content || {};
+      const mediaUrl = content.authMediaUrl || "";
+      const mediaType = content.authMediaType === "video" ? "video" : "image";
+      const visual = document.querySelector(".visual");
+      const current = document.getElementById("auth-image");
+      if (mediaUrl && visual && current) {
+        const media = document.createElement(mediaType === "video" ? "video" : "img");
+        media.id = "auth-image";
+        media.alt = "Catalina account access";
+        media.src = mediaUrl;
+        if (mediaType === "video") {
+          media.muted = true;
+          media.playsInline = true;
+          media.autoplay = true;
+          media.loop = true;
+        }
+        current.replaceWith(media);
+      }
+      if (content.authTitle) modeCopy.login[0] = content.authTitle;
+      if (content.authSubtitle) modeCopy.login[1] = content.authSubtitle;
+      setMode(preferredMode || new URLSearchParams(location.search).get("mode") || currentAuthMode());
+    }
+
+    function currentAuthMode() {
+      const params = new URLSearchParams(location.search);
+      const hash = new URLSearchParams(location.hash.replace(/^#/, ""));
+      const type = params.get("type") || hash.get("type");
+      if (type === "recovery") return "reset";
+      if (params.get("code") || hash.get("access_token")) return params.get("mode") === "reset" ? "reset" : "confirmed";
+      return params.get("mode") || "login";
+    }
+
+    async function handleAuthReturn() {
+      const client = getClient();
+      if (!client) return;
+      const params = new URLSearchParams(location.search);
+      const hash = new URLSearchParams(location.hash.replace(/^#/, ""));
+      const code = params.get("code");
+      const accessToken = hash.get("access_token");
+      const refreshToken = hash.get("refresh_token");
+      if (code) {
+        const { error } = await client.auth.exchangeCodeForSession(code);
+        if (error) setMessage(error.message);
+      } else if (accessToken && refreshToken) {
+        const { error } = await client.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+        if (error) setMessage(error.message);
+      }
+    }
+
+    document.querySelectorAll("[data-mode]").forEach(button => {
+      button.addEventListener("click", () => setMode(button.dataset.mode));
+    });
+
+    document.getElementById("login-form").addEventListener("submit", async event => {
+      event.preventDefault();
+      const client = getClient();
+      if (!client) return;
+      const email = document.getElementById("login-email").value.trim();
+      const password = document.getElementById("login-password").value;
+      const { error } = await client.auth.signInWithPassword({ email, password });
+      if (error) return setMessage(error.message);
+      location.href = storeUrl();
+    });
+
+    document.getElementById("signup-form").addEventListener("submit", async event => {
+      event.preventDefault();
+      const client = getClient();
+      if (!client) return;
+      const name = document.getElementById("signup-name").value.trim();
+      const email = document.getElementById("signup-email").value.trim();
+      const phone = document.getElementById("signup-phone").value.trim();
+      const password = document.getElementById("signup-password").value;
+      try {
+        const availability = await fetch(apiPath("/api/check-account-availability"), {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ email, phone })
+        });
+        const availabilityData = await availability.json().catch(() => ({}));
+        if (!availability.ok || availabilityData.available === false) {
+          return setMessage(availabilityData.message || "Ya existe una cuenta con ese email o telefono.");
+        }
+      } catch {
+        return setMessage("No se pudo verificar la cuenta. Intenta de nuevo.");
+      }
+      const { error } = await client.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { full_name: name, phone },
+          emailRedirectTo: pageUrl("confirmed")
+        }
+      });
+      if (error) return setMessage(error.message);
+      setMessage("Cuenta creada. Revisa tu email para confirmar el correo.");
+    });
+
+    document.getElementById("recovery-form").addEventListener("submit", async event => {
+      event.preventDefault();
+      const client = getClient();
+      if (!client) return;
+      const email = document.getElementById("recovery-email").value.trim();
+      const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo: pageUrl("reset") });
+      if (error) return setMessage(error.message);
+      setMessage("Te enviamos un enlace para crear una contrasena nueva.");
+    });
+
+    document.getElementById("new-password-form").addEventListener("submit", async event => {
+      event.preventDefault();
+      const client = getClient();
+      if (!client) return;
+      const password = document.getElementById("new-password").value;
+      const confirm = document.getElementById("confirm-password").value;
+      if (password !== confirm) return setMessage("Las contrasenas no coinciden.");
+      const { error } = await client.auth.updateUser({ password });
+      if (error) return setMessage(error.message);
+      setMessage("Contrasena actualizada. Ya puedes entrar.");
+      setMode("login");
+    });
+
+    (async function init() {
+      const mode = currentAuthMode();
+      await handleAuthReturn();
+      await loadAuthContent(mode);
+    })();
+  </script>
+</body>
+</html>
