@@ -309,6 +309,19 @@
       return `${basePath() || "."}/catalina.html`;
     }
 
+    function saveLocalProfile(user, fallback = {}) {
+      if (!user && !fallback.email) return;
+      const metadata = user?.user_metadata || {};
+      const profile = {
+        name: fallback.name || metadata.full_name || metadata.name || "",
+        email: fallback.email || user?.email || "",
+        phone: fallback.phone || metadata.phone || "",
+        addresses: [],
+        selectedAddressId: ""
+      };
+      localStorage.setItem("catalina-customer-profile-v1", JSON.stringify(profile));
+    }
+
     function goToStore(delay = 900) {
       window.setTimeout(() => {
         location.href = storeUrl();
@@ -457,8 +470,9 @@
       if (!client) return;
       const email = document.getElementById("login-email").value.trim();
       const password = document.getElementById("login-password").value;
-      const { error } = await client.auth.signInWithPassword({ email, password });
+      const { data, error } = await client.auth.signInWithPassword({ email, password });
       if (error) return setMessage(error.message);
+      saveLocalProfile(data.user, { email });
       location.href = storeUrl();
     });
 
@@ -483,7 +497,7 @@
       } catch {
         return setMessage("No se pudo verificar la cuenta. Intenta de nuevo.");
       }
-      const { error } = await client.auth.signUp({
+      const { data, error } = await client.auth.signUp({
         email,
         password,
         options: {
@@ -492,6 +506,7 @@
         }
       });
       if (error) return setMessage(error.message);
+      saveLocalProfile(data.user, { name, email, phone });
       setMessage("Cuenta creada correctamente. Te llevaremos al inicio. Revisa tu email para confirmar el correo.");
       goToStore(1500);
     });
