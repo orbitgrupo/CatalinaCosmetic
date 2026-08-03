@@ -309,6 +309,12 @@
       return `${basePath() || "."}/catalina.html`;
     }
 
+    function goToStore(delay = 900) {
+      window.setTimeout(() => {
+        location.href = storeUrl();
+      }, delay);
+    }
+
     function setMessage(text) {
       document.getElementById("message").textContent = text || "";
     }
@@ -376,25 +382,64 @@
       const hash = new URLSearchParams(location.hash.replace(/^#/, ""));
       const type = params.get("type") || hash.get("type");
       if (type === "recovery") return "reset";
+      if (params.get("token_hash") && type === "recovery") return "reset";
+      if (params.get("token_hash")) return "confirmed";
       if (params.get("code") || hash.get("access_token")) return params.get("mode") === "reset" ? "reset" : "confirmed";
       return params.get("mode") || "login";
     }
 
     async function handleAuthReturn() {
       const client = getClient();
-      if (!client) return;
+      if (!client) return "";
       const params = new URLSearchParams(location.search);
       const hash = new URLSearchParams(location.hash.replace(/^#/, ""));
       const code = params.get("code");
+      const tokenHash = params.get("token_hash");
+      const otpType = params.get("type") || "email";
       const accessToken = hash.get("access_token");
       const refreshToken = hash.get("refresh_token");
+      const hashError = hash.get("error_description") || params.get("error_description");
+      if (hashError) {
+        setMessage(decodeURIComponent(hashError));
+        return "";
+      }
+      if (tokenHash) {
+        const type = otpType === "signup" || otpType === "magiclink" ? "email" : otpType;
+        const { error } = await client.auth.verifyOtp({ token_hash: tokenHash, type });
+        if (error) {
+          setMessage(error.message);
+          return "";
+        }
+        if (type === "recovery") {
+          setMessage("Verificacion correcta. Crea tu contrasena nueva.");
+          return "reset";
+        }
+        setMessage("Correo confirmado correctamente. Te llevaremos al inicio.");
+        goToStore(1200);
+        return "confirmed";
+      }
       if (code) {
         const { error } = await client.auth.exchangeCodeForSession(code);
-        if (error) setMessage(error.message);
+        if (error) {
+          setMessage(error.message);
+          return "";
+        }
+        if (params.get("mode") === "reset") return "reset";
+        setMessage("Correo confirmado correctamente. Te llevaremos al inicio.");
+        goToStore(1200);
+        return "confirmed";
       } else if (accessToken && refreshToken) {
         const { error } = await client.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
-        if (error) setMessage(error.message);
+        if (error) {
+          setMessage(error.message);
+          return "";
+        }
+        if (hash.get("type") === "recovery") return "reset";
+        setMessage("Correo confirmado correctamente. Te llevaremos al inicio.");
+        goToStore(1200);
+        return "confirmed";
       }
+      return "";
     }
 
     document.querySelectorAll("[data-mode]").forEach(button => {
@@ -442,7 +487,8 @@
         }
       });
       if (error) return setMessage(error.message);
-      setMessage("Cuenta creada. Revisa tu email para confirmar el correo.");
+      setMessage("Cuenta creada correctamente. Te llevaremos al inicio. Revisa tu email para confirmar el correo.");
+      goToStore(1500);
     });
 
     document.getElementById("recovery-form").addEventListener("submit", async event => {
@@ -464,14 +510,14 @@
       if (password !== confirm) return setMessage("Las contrasenas no coinciden.");
       const { error } = await client.auth.updateUser({ password });
       if (error) return setMessage(error.message);
-      setMessage("Contrasena actualizada. Ya puedes entrar.");
-      setMode("login");
+      setMessage("Contrasena actualizada correctamente. Te llevaremos al inicio.");
+      goToStore(1200);
     });
 
     (async function init() {
       const mode = currentAuthMode();
-      await handleAuthReturn();
-      await loadAuthContent(mode);
+      const returnMode = await handleAuthReturn();
+      await loadAuthContent(returnMode || mode);
     })();
   </script>
 </body>
