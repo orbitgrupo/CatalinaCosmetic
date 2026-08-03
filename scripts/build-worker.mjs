@@ -11,6 +11,7 @@ const productImagesSql = fs.readFileSync(new URL("supabase-product-images.sql", 
 const productManagementSql = fs.readFileSync(new URL("supabase-product-management.sql", root), "utf8");
 const customerEngagementSql = fs.readFileSync(new URL("supabase-customer-engagement.sql", root), "utf8");
 const customerUniquenessSql = fs.readFileSync(new URL("supabase-customer-uniqueness.sql", root), "utf8");
+const customerAddressesSql = fs.readFileSync(new URL("supabase-customer-addresses.sql", root), "utf8");
 const realtimeSql = fs.readFileSync(new URL("supabase-realtime-sync.sql", root), "utf8");
 const vendorRolesSql = fs.readFileSync(new URL("supabase-vendor-roles.sql", root), "utf8");
 const vendorApplicationsSql = fs.readFileSync(new URL("supabase-vendor-applications.sql", root), "utf8");
@@ -36,6 +37,7 @@ const productImagesSql = ${JSON.stringify(productImagesSql)};
 const productManagementSql = ${JSON.stringify(productManagementSql)};
 const customerEngagementSql = ${JSON.stringify(customerEngagementSql)};
 const customerUniquenessSql = ${JSON.stringify(customerUniquenessSql)};
+const customerAddressesSql = ${JSON.stringify(customerAddressesSql)};
 const realtimeSql = ${JSON.stringify(realtimeSql)};
 const vendorRolesSql = ${JSON.stringify(vendorRolesSql)};
 const vendorApplicationsSql = ${JSON.stringify(vendorApplicationsSql)};
@@ -1093,6 +1095,15 @@ export default {
 
     if (url.pathname === "/supabase-customer-uniqueness.sql") {
       return new Response(customerUniquenessSql, {
+        headers: securityHeaders({
+          "content-type": "text/plain; charset=utf-8",
+          "cache-control": "public, max-age=300"
+        })
+      });
+    }
+
+    if (url.pathname === "/supabase-customer-addresses.sql") {
+      return new Response(customerAddressesSql, {
         headers: securityHeaders({
           "content-type": "text/plain; charset=utf-8",
           "cache-control": "public, max-age=300"

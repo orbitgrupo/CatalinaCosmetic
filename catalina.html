@@ -1096,23 +1096,30 @@
               <h2 class="text-xl font-extrabold">Direcciones</h2>
               <p class="mt-3 rounded-xl bg-surface-container-lowest p-4 text-xs leading-5 text-on-surface-variant">Guarda aqui tus datos de entrega para Republica Dominicana.</p>
             </div>
-            <form id="signup-form" class="mb-4 grid gap-3 rounded-xl bg-surface-container-lowest p-4">
-              <p class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-primary">Crear cuenta</p>
-              <input id="signup-name" class="rounded-lg border-none bg-surface-container-low px-4 py-3 text-sm" placeholder="Nombre completo" required/>
-              <input id="signup-email" class="rounded-lg border-none bg-surface-container-low px-4 py-3 text-sm" type="email" placeholder="Email" required/>
-              <input id="signup-phone" class="rounded-lg border-none bg-surface-container-low px-4 py-3 text-sm" placeholder="Telefono" required/>
-              <input id="signup-password" class="rounded-lg border-none bg-surface-container-low px-4 py-3 text-sm" type="password" minlength="6" placeholder="Password" required/>
-              <button class="rounded-lg bg-primary py-3 text-xs font-bold uppercase tracking-[0.1em] text-on-primary" type="submit">Crear cuenta</button>
-            </form>
-            <form id="login-form" class="mb-6 grid gap-3 rounded-xl bg-surface-container-lowest p-4">
-              <p class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-primary">Iniciar sesion</p>
-              <input id="login-email" class="rounded-lg border-none bg-surface-container-low px-4 py-3 text-sm" type="email" placeholder="Email" required/>
-              <input id="login-password" class="rounded-lg border-none bg-surface-container-low px-4 py-3 text-sm" type="password" placeholder="Password" required/>
-              <button class="rounded-lg bg-on-surface py-3 text-xs font-bold uppercase tracking-[0.1em] text-white" type="submit">Entrar</button>
-              <a class="text-xs font-extrabold uppercase tracking-[0.1em] text-primary" href="./auth.html?mode=recovery">Recuperar contrasena</a>
-            </form>
-            <h2 class="mb-4 text-xl font-extrabold">Perfil y envio</h2>
+            <section id="profile-account-gate" class="mb-5 rounded-xl bg-surface-container-lowest p-4 text-sm text-on-surface-variant">
+              <p class="font-bold text-on-surface">Necesitas una cuenta para guardar direcciones.</p>
+              <p class="mt-2 text-xs leading-5">Crea una cuenta o inicia sesion para administrar tus datos de entrega.</p>
+              <div class="mt-4 flex flex-wrap gap-2">
+                <a class="rounded-full bg-primary px-4 py-2 text-xs font-extrabold uppercase tracking-widest text-on-primary" href="./auth.html?mode=signup">Crear cuenta</a>
+                <a class="rounded-full bg-on-surface px-4 py-2 text-xs font-extrabold uppercase tracking-widest text-white" href="./auth.html?mode=login">Iniciar sesion</a>
+              </div>
+            </section>
+            <section id="profile-address-manager" class="hidden">
+              <div class="mb-5 rounded-xl bg-surface-container-lowest p-4">
+                <p class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-primary">Datos de cuenta</p>
+                <div id="profile-account-summary" class="mt-3 grid gap-2 text-sm text-on-surface-variant"></div>
+              </div>
+              <div class="mb-5">
+                <div class="mb-3 flex items-center justify-between gap-3">
+                  <h3 class="text-lg font-extrabold">Mis direcciones</h3>
+                  <span id="profile-address-count" class="rounded-full bg-primary-container px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-on-primary-container">0</span>
+                </div>
+                <div id="profile-address-list" class="grid gap-3"></div>
+              </div>
+            </section>
+            <h2 id="profile-address-form-title" class="mb-4 text-xl font-extrabold">Agregar direccion</h2>
             <form id="profile-form" class="space-y-3">
+              <input id="profile-address-label" class="w-full rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm" placeholder="Nombre de direccion: Casa, Trabajo, Oficina"/>
               <input id="profile-name" class="w-full rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm" placeholder="Nombre completo"/>
               <input id="profile-email" class="w-full rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm" type="email" placeholder="Email"/>
               <input id="profile-phone" class="w-full rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm" placeholder="Telefono"/>
@@ -1126,7 +1133,7 @@
                 <select id="profile-city" class="rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm"></select>
               </div>
               <input id="profile-reference" class="w-full rounded-lg border-none bg-surface-container-lowest px-4 py-3 text-sm" placeholder="Referencia"/>
-              <button class="w-full rounded-lg bg-primary py-3 text-xs font-bold uppercase tracking-[0.1em] text-on-primary" type="submit">Guardar perfil</button>
+              <button class="w-full rounded-lg bg-primary py-3 text-xs font-bold uppercase tracking-[0.1em] text-on-primary" type="submit">Guardar direccion</button>
             </form>
           </aside>
         </section>
@@ -1906,8 +1913,55 @@
     return `${parts.join(', ')}${data.reference ? `. Ref: ${data.reference}` : ''}`;
   }
 
+  function createAddressId() {
+    if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+    return `addr-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  }
+
+  function normalizeCustomerAddress(address = {}, fallback = {}) {
+    const next = {
+      id: address.id || createAddressId(),
+      label: address.label || fallback.label || "Direccion principal",
+      houseNumber: address.houseNumber || fallback.houseNumber || "",
+      street: address.street || fallback.street || "",
+      sector: address.sector || fallback.sector || "",
+      province: address.province || fallback.province || "Distrito Nacional",
+      city: address.city || fallback.city || "Santo Domingo de Guzman",
+      reference: address.reference || fallback.reference || ""
+    };
+    next.address = address.address || formatDominicanAddress(next);
+    return next;
+  }
+
+  function normalizeCustomerAddresses(profile = {}) {
+    const raw = Array.isArray(profile.addresses) ? profile.addresses : [];
+    const addresses = raw.map(item => normalizeCustomerAddress(item)).filter(item => item.houseNumber || item.street || item.sector);
+    if (!addresses.length && (profile.houseNumber || profile.street || profile.sector)) {
+      addresses.push(normalizeCustomerAddress({}, profile));
+    }
+    return addresses;
+  }
+
+  function selectedCustomerAddress(profile = loadCustomerProfile()) {
+    const addresses = normalizeCustomerAddresses(profile);
+    return addresses.find(item => item.id === profile.selectedAddressId) || addresses[0] || {};
+  }
+
+  function mergeProfileWithAuth(profile = loadCustomerProfile()) {
+    const metadata = currentCustomerUser?.user_metadata || {};
+    const next = { ...profile };
+    next.name = next.name || metadata.full_name || metadata.name || "";
+    next.email = next.email || currentCustomerUser?.email || "";
+    next.phone = next.phone || metadata.phone || "";
+    next.addresses = normalizeCustomerAddresses(next);
+    if (!next.selectedAddressId && next.addresses[0]) next.selectedAddressId = next.addresses[0].id;
+    const selected = selectedCustomerAddress(next);
+    return { ...next, ...selected, name: next.name, email: next.email, phone: next.phone, addresses: next.addresses, selectedAddressId: next.selectedAddressId };
+  }
+
   function getAddressFrom(prefix) {
     const data = {
+      label: document.getElementById(`${prefix}-address-label`)?.value.trim() || "Direccion principal",
       houseNumber: document.getElementById(`${prefix}-house-number`)?.value.trim() || "",
       street: document.getElementById(`${prefix}-street`)?.value.trim() || "",
       sector: document.getElementById(`${prefix}-sector`)?.value.trim() || "",
@@ -1920,6 +1974,8 @@
 
   function setAddressFields(prefix, profile = {}) {
     populateProvinceSelect(`${prefix}-province`, `${prefix}-city`, profile.province || "Distrito Nacional", profile.city || "");
+    const labelNode = document.getElementById(`${prefix}-address-label`);
+    if (labelNode) labelNode.value = profile.label || "";
     const fieldPairs = [["house-number", "houseNumber"], ["street", "street"], ["sector", "sector"], ["reference", "reference"]];
     fieldPairs.forEach(([field, key]) => {
       const node = document.getElementById(`${prefix}-${field}`);
@@ -1943,23 +1999,28 @@
       province: profile.province || "",
       city: profile.city || "",
       reference: profile.address_reference || "",
-      address: profile.shipping_address || ""
+      address: profile.shipping_address || "",
+      addresses: Array.isArray(profile.addresses) ? profile.addresses : [],
+      selectedAddressId: profile.selected_address_id || ""
     };
   }
 
   function getProfilePayload(profile, user = currentCustomerUser) {
+    const selected = selectedCustomerAddress(profile);
     return {
       id: user?.id,
       full_name: profile.name,
       email: profile.email || user?.email || "",
       phone: profile.phone,
-      house_number: profile.houseNumber,
-      street: profile.street,
-      sector: profile.sector,
-      province: profile.province,
-      city: profile.city,
-      address_reference: profile.reference,
-      shipping_address: profile.address
+      house_number: selected.houseNumber || profile.houseNumber,
+      street: selected.street || profile.street,
+      sector: selected.sector || profile.sector,
+      province: selected.province || profile.province,
+      city: selected.city || profile.city,
+      address_reference: selected.reference || profile.reference,
+      shipping_address: selected.address || profile.address,
+      addresses: normalizeCustomerAddresses(profile),
+      selected_address_id: profile.selectedAddressId || selected.id || ""
     };
   }
 
@@ -1977,7 +2038,12 @@
   async function saveCustomerProfileToSupabase(profile) {
     const client = getStorefrontSupabaseClient();
     if (!client || !currentCustomerUser) return false;
-    const { error } = await client.from("customer_profiles").upsert(getProfilePayload(profile));
+    const payload = getProfilePayload(profile);
+    let { error } = await client.from("customer_profiles").upsert(payload);
+    if (error && /addresses|selected_address_id|schema cache/i.test(error.message || "")) {
+      const { addresses, selected_address_id, ...fallbackPayload } = payload;
+      ({ error } = await client.from("customer_profiles").upsert(fallbackPayload));
+    }
     if (error) {
       showToast(customerDuplicateMessage(error));
       return false;
@@ -1990,7 +2056,7 @@
     if (!client || !currentCustomerUser) return;
     const { data, error } = await client
       .from("customer_profiles")
-      .select("full_name,email,phone,house_number,street,sector,province,city,address_reference,shipping_address")
+      .select("*")
       .eq("id", currentCustomerUser.id)
       .maybeSingle();
     if (error) {
@@ -1998,7 +2064,7 @@
       return;
     }
     if (data) {
-      const profile = mapProfileFromDatabase(data);
+      const profile = mergeProfileWithAuth(mapProfileFromDatabase(data));
       localStorage.setItem(CUSTOMER_PROFILE_KEY, JSON.stringify(profile));
       renderCustomerProfile();
       applyProfileToCheckout(profile);
@@ -2007,33 +2073,138 @@
 
   async function saveCustomerProfile(event) {
     event.preventDefault();
+    if (!currentCustomerUser) {
+      showToast('Crea una cuenta o inicia sesion para guardar direcciones.');
+      window.location.href = './auth.html?mode=signup';
+      return;
+    }
+    const existing = mergeProfileWithAuth();
+    const address = normalizeCustomerAddress({ ...getAddressFrom('profile'), id: editingCustomerAddressId || "" });
+    const addresses = normalizeCustomerAddresses(existing).filter(item => item.id !== address.id);
+    addresses.push(address);
     const profile = {
+      ...existing,
       name: document.getElementById('profile-name').value.trim(),
       email: document.getElementById('profile-email').value.trim(),
       phone: document.getElementById('profile-phone').value.trim(),
-      ...getAddressFrom('profile')
+      addresses,
+      selectedAddressId: address.id,
+      ...address
     };
     const synced = await saveCustomerProfileToSupabase(profile);
     if (currentCustomerUser && !synced) return;
     localStorage.setItem(CUSTOMER_PROFILE_KEY, JSON.stringify(profile));
+    editingCustomerAddressId = "";
     renderCustomerProfile();
     applyProfileToCheckout(profile);
     showToast(synced ? 'Perfil guardado en Supabase' : 'Perfil guardado localmente. Inicia sesion para sincronizar.');
   }
 
   function renderCustomerProfile() {
-    const profile = loadCustomerProfile();
+    const profile = mergeProfileWithAuth();
+    localStorage.setItem(CUSTOMER_PROFILE_KEY, JSON.stringify(profile));
     document.getElementById('profile-name').value = profile.name || "";
     document.getElementById('profile-email').value = profile.email || "";
     document.getElementById('profile-phone').value = profile.phone || "";
-    setAddressFields('profile', profile);
-    document.getElementById('profile-address-preview').textContent = profile.address || 'Sin direccion registrada.';
+    setAddressFields('profile', selectedCustomerAddress(profile));
+    renderCustomerAddressManager(profile);
+    document.getElementById('profile-address-preview').textContent = selectedCustomerAddress(profile).address || 'Sin direccion registrada.';
     document.getElementById('profile-display-summary').textContent = profile.email ? `Hola, ${profile.name || profile.email}. ${profile.address || 'Direccion pendiente'}` : 'Guarda tus datos y direccion de Republica Dominicana para acelerar tus pedidos.';
     setProfileSection(activeProfileSection);
   }
 
   function hasCompleteCustomerProfile(profile = loadCustomerProfile()) {
-    return Boolean(profile.name && profile.email && profile.houseNumber && profile.street && profile.sector && profile.province && profile.city);
+    const normalized = mergeProfileWithAuth(profile);
+    const address = selectedCustomerAddress(normalized);
+    return Boolean(normalized.name && normalized.email && address.houseNumber && address.street && address.sector && address.province && address.city);
+  }
+
+  function renderCustomerAddressManager(profile = mergeProfileWithAuth()) {
+    const gate = document.getElementById('profile-account-gate');
+    const manager = document.getElementById('profile-address-manager');
+    const form = document.getElementById('profile-form');
+    const formTitle = document.getElementById('profile-address-form-title');
+    if (gate) gate.classList.toggle('hidden', Boolean(currentCustomerUser));
+    if (manager) manager.classList.toggle('hidden', !currentCustomerUser);
+    if (form) form.classList.toggle('hidden', !currentCustomerUser);
+    if (formTitle) formTitle.classList.toggle('hidden', !currentCustomerUser);
+    if (!currentCustomerUser) return;
+    const summary = document.getElementById('profile-account-summary');
+    if (summary) {
+      summary.innerHTML = [
+        `<div><span class="font-extrabold text-on-surface">Nombre:</span> ${escapeHtml(profile.name || 'Pendiente')}</div>`,
+        `<div><span class="font-extrabold text-on-surface">Email:</span> ${escapeHtml(profile.email || currentCustomerUser.email || 'Pendiente')}</div>`,
+        `<div><span class="font-extrabold text-on-surface">Telefono:</span> ${escapeHtml(profile.phone || 'Pendiente')}</div>`
+      ].join('');
+    }
+    const addresses = normalizeCustomerAddresses(profile);
+    const count = document.getElementById('profile-address-count');
+    if (count) count.textContent = addresses.length;
+    const list = document.getElementById('profile-address-list');
+    if (!list) return;
+    if (!addresses.length) {
+      list.innerHTML = '<div class="rounded-xl bg-surface-container-lowest p-4 text-sm font-bold text-on-surface-variant">Aun no tienes direcciones. Agrega una direccion para poder completar tu compra.</div>';
+      return;
+    }
+    list.innerHTML = addresses.map(address => {
+      const active = address.id === profile.selectedAddressId;
+      return `
+        <article class="rounded-xl ${active ? 'bg-primary-container text-on-primary-container' : 'bg-surface-container-lowest text-on-surface'} p-4">
+          <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+            <div>
+              <p class="text-sm font-extrabold">${escapeHtml(address.label || 'Direccion')}</p>
+              <p class="mt-2 text-xs leading-5 ${active ? 'text-on-primary-container' : 'text-on-surface-variant'}">${escapeHtml(address.address || formatDominicanAddress(address))}</p>
+              ${active ? '<p class="mt-2 text-[10px] font-extrabold uppercase tracking-widest">Usada para compras</p>' : ''}
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button class="profile-address-select rounded-full bg-white/80 px-3 py-2 text-[10px] font-extrabold uppercase tracking-widest text-primary" data-address-id="${escapeHtml(address.id)}" type="button">Usar</button>
+              <button class="profile-address-edit rounded-full bg-white/80 px-3 py-2 text-[10px] font-extrabold uppercase tracking-widest text-on-surface" data-address-id="${escapeHtml(address.id)}" type="button">Editar</button>
+              <button class="profile-address-delete rounded-full bg-white/80 px-3 py-2 text-[10px] font-extrabold uppercase tracking-widest text-error" data-address-id="${escapeHtml(address.id)}" type="button">Borrar</button>
+            </div>
+          </div>
+        </article>
+      `;
+    }).join('');
+  }
+
+  async function persistCustomerProfile(profile, successMessage = 'Perfil guardado') {
+    const normalized = mergeProfileWithAuth(profile);
+    const synced = await saveCustomerProfileToSupabase(normalized);
+    if (currentCustomerUser && !synced) return false;
+    localStorage.setItem(CUSTOMER_PROFILE_KEY, JSON.stringify(normalized));
+    renderCustomerProfile();
+    applyProfileToCheckout(normalized);
+    showToast(synced ? successMessage : 'Guardado localmente. Inicia sesion para sincronizar.');
+    return true;
+  }
+
+  async function selectCustomerAddress(addressId) {
+    const profile = mergeProfileWithAuth();
+    if (!normalizeCustomerAddresses(profile).some(address => address.id === addressId)) return;
+    profile.selectedAddressId = addressId;
+    const selected = selectedCustomerAddress(profile);
+    await persistCustomerProfile({ ...profile, ...selected }, 'Direccion seleccionada para compras');
+  }
+
+  function editCustomerAddress(addressId) {
+    const profile = mergeProfileWithAuth();
+    const address = normalizeCustomerAddresses(profile).find(item => item.id === addressId);
+    if (!address) return;
+    editingCustomerAddressId = address.id;
+    setAddressFields('profile', address);
+    document.getElementById('profile-address-label').value = address.label || "";
+    document.getElementById('profile-name').value = profile.name || "";
+    document.getElementById('profile-email').value = profile.email || "";
+    document.getElementById('profile-phone').value = profile.phone || "";
+    showToast('Edita los campos y guarda la direccion.');
+  }
+
+  async function deleteCustomerAddress(addressId) {
+    const profile = mergeProfileWithAuth();
+    const addresses = normalizeCustomerAddresses(profile).filter(address => address.id !== addressId);
+    const selectedAddressId = profile.selectedAddressId === addressId ? (addresses[0]?.id || "") : profile.selectedAddressId;
+    const selected = selectedCustomerAddress({ ...profile, addresses, selectedAddressId });
+    await persistCustomerProfile({ ...profile, addresses, selectedAddressId, ...selected }, 'Direccion eliminada');
   }
 
   function setProfileSection(section = 'orders') {
@@ -2059,11 +2230,12 @@
   }
 
   function applyProfileToCheckout(profile = loadCustomerProfile()) {
-    const normalizedProfile = { ...profile };
-    normalizedProfile.address = formatDominicanAddress(normalizedProfile);
+    const normalizedProfile = mergeProfileWithAuth(profile);
+    const selectedAddress = selectedCustomerAddress(normalizedProfile);
+    normalizedProfile.address = selectedAddress.address || formatDominicanAddress(selectedAddress);
     document.getElementById('checkout-name').value = normalizedProfile.name || "";
     document.getElementById('checkout-email').value = normalizedProfile.email || "";
-    setAddressFields('checkout', profile);
+    setAddressFields('checkout', selectedAddress);
     renderCheckoutProfileStatus(normalizedProfile);
   }
 
@@ -2074,11 +2246,12 @@
       node.textContent = 'Inicia sesion para continuar. El nombre y la direccion se llenan desde tu perfil.';
       return;
     }
+    const selectedAddress = selectedCustomerAddress(profile);
     if (!hasCompleteCustomerProfile(profile)) {
       node.textContent = 'Completa tu nombre y direccion en Mi Perfil > Direcciones antes de pagar.';
       return;
     }
-    node.textContent = `Se enviara a: ${profile.name} - ${profile.address || formatDominicanAddress(profile)}`;
+    node.textContent = `Se enviara a: ${profile.name} - ${selectedAddress.address || formatDominicanAddress(selectedAddress)}`;
   }
 
   let productCatalog = [
@@ -2222,6 +2395,7 @@
   let storefrontRealtimeChannel = null;
   let storefrontSyncInterval = null;
   let selectedTrackingOrderNumber = "";
+  let editingCustomerAddressId = "";
 
   function catalinaBasePath() {
     const configured = String((window.__CATALINA_CONFIG__ || {}).basePath || "").replace(/\/+$/, "");
@@ -2862,6 +3036,7 @@
     } else {
       customerFavorites = [];
       customerReviews = [];
+      renderCustomerProfile();
       renderCustomerOrders();
       renderProfileCommerce();
       renderCheckoutProfileStatus();
@@ -2889,6 +3064,7 @@
         customerOrders = [];
         customerFavorites = [];
         customerReviews = [];
+        renderCustomerProfile();
         renderCustomerOrders();
         renderProfileCommerce();
         renderCheckoutProfileStatus();
@@ -2974,6 +3150,7 @@
     customerOrders = [];
     customerFavorites = [];
     customerReviews = [];
+    renderCustomerProfile();
     renderCustomerOrders();
     renderProfileCommerce();
     renderCustomerAuthState();
@@ -3466,8 +3643,8 @@
   });
   document.getElementById('detail-review-form').addEventListener('submit', submitProductReview);
   document.getElementById('seller-application-form').addEventListener('submit', submitSellerApplication);
-  document.getElementById('signup-form').addEventListener('submit', signupCustomer);
-  document.getElementById('login-form').addEventListener('submit', loginCustomer);
+  document.getElementById('signup-form')?.addEventListener('submit', signupCustomer);
+  document.getElementById('login-form')?.addEventListener('submit', loginCustomer);
   document.getElementById('profile-logout').addEventListener('click', logoutCustomer);
   document.getElementById('profile-form').addEventListener('submit', saveCustomerProfile);
   document.getElementById('profile-province').addEventListener('change', () => populateCitySelect('profile-province', 'profile-city'));
@@ -3631,21 +3808,24 @@
   }
 
   function getCheckoutCustomer() {
-    const profile = loadCustomerProfile();
+    const profile = mergeProfileWithAuth();
+    const selectedAddress = selectedCustomerAddress(profile);
     const addressData = {
-      houseNumber: profile.houseNumber || "",
-      street: profile.street || "",
-      sector: profile.sector || "",
-      province: profile.province || "",
-      city: profile.city || "",
-      reference: profile.reference || ""
+      houseNumber: selectedAddress.houseNumber || "",
+      street: selectedAddress.street || "",
+      sector: selectedAddress.sector || "",
+      province: selectedAddress.province || "",
+      city: selectedAddress.city || "",
+      reference: selectedAddress.reference || ""
     };
     return {
       name: profile.name || "",
       email: profile.email || currentCustomerUser?.email || "",
       phone: profile.phone || "",
       ...addressData,
-      address: formatDominicanAddress(addressData)
+      address: selectedAddress.address || formatDominicanAddress(addressData),
+      addresses: normalizeCustomerAddresses(profile),
+      selectedAddressId: profile.selectedAddressId || selectedAddress.id || ""
     };
   }
 
@@ -3810,6 +3990,24 @@
   }
 
   document.addEventListener('click', (e) => {
+    const addressSelect = e.target.closest('.profile-address-select');
+    if (addressSelect) {
+      e.preventDefault();
+      selectCustomerAddress(addressSelect.dataset.addressId);
+      return;
+    }
+    const addressEdit = e.target.closest('.profile-address-edit');
+    if (addressEdit) {
+      e.preventDefault();
+      editCustomerAddress(addressEdit.dataset.addressId);
+      return;
+    }
+    const addressDelete = e.target.closest('.profile-address-delete');
+    if (addressDelete) {
+      e.preventDefault();
+      deleteCustomerAddress(addressDelete.dataset.addressId);
+      return;
+    }
     const profileTab = e.target.closest('.profile-section-tab');
     if (profileTab?.dataset.profileSection) {
       e.preventDefault();

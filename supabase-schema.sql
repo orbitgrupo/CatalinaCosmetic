@@ -85,6 +85,8 @@ create table if not exists public.customer_profiles (
   city text,
   address_reference text,
   shipping_address text,
+  addresses jsonb not null default '[]'::jsonb,
+  selected_address_id text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
