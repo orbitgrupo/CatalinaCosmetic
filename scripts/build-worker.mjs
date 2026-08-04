@@ -176,6 +176,12 @@ async function requireAdminOrVendorUser(request, env) {
   return user;
 }
 
+async function requireCustomerUser(request, env) {
+  const user = await getSupabaseUser(request, env);
+  if (!user?.id) throw new Error("Inicia sesion.");
+  return user;
+}
+
 function isVendorUser(user) {
   return user?.app_metadata?.role === "vendor";
 }
@@ -441,6 +447,85 @@ function cleanVendorApplicationReviewPayload(payload = {}) {
   return { id, status, notes };
 }
 
+function cleanVendorApplicationPayload(payload = {}, user = {}) {
+  const fullName = String(payload.full_name || payload.fullName || "").trim().slice(0, 180);
+  const email = String(user.email || payload.email || "").trim().toLowerCase();
+  const phone = String(payload.phone || "").trim().slice(0, 40);
+  const businessName = String(payload.business_name || payload.businessName || "").trim().slice(0, 180);
+  const sellerType = String(payload.seller_type || payload.sellerType || "independent").trim();
+  const productCategories = String(payload.product_categories || payload.productCategories || "").trim().slice(0, 500);
+  const productCount = Math.max(0, Number(payload.product_count || payload.productCount || 0));
+  const experience = String(payload.experience || "").trim().slice(0, 1500);
+  if (!fullName) throw new Error("Escribe tu nombre completo.");
+  if (!email || !email.includes("@")) throw new Error("Tu cuenta no tiene email valido.");
+  if (!businessName) throw new Error("Escribe el nombre de tu marca o negocio.");
+  if (!["brand_owner", "independent", "both"].includes(sellerType)) throw new Error("Tipo de vendedor invalido.");
+  if (!productCategories) throw new Error("Escribe las categorias que venderias.");
+  if (!experience) throw new Error("Describe tu experiencia vendiendo productos.");
+  return {
+    user_id: user.id,
+    full_name: fullName,
+    email,
+    phone,
+    business_name: businessName,
+    seller_type: sellerType,
+    product_categories: productCategories,
+    product_count: productCount,
+    has_inventory: Boolean(payload.has_inventory ?? payload.hasInventory),
+    has_registered_business: Boolean(payload.has_registered_business ?? payload.hasRegisteredBusiness),
+    sells_online: Boolean(payload.sells_online ?? payload.sellsOnline),
+    social_links: String(payload.social_links || payload.socialLinks || "").trim().slice(0, 800),
+    experience,
+    message: String(payload.message || "").trim().slice(0, 1500),
+    status: "Pendiente"
+  };
+}
+
+async function submitVendorApplication(request, env) {
+  try {
+    const user = await requireCustomerUser(request, env);
+    const payload = cleanVendorApplicationPayload(await request.json().catch(() => ({})), user);
+    const existing = await supabaseRest(env, "vendor_applications?select=id,status&user_id=eq." + encodeURIComponent(user.id) + "&status=in.(Pendiente,En%20revision,Aprobado)&limit=1", { method: "GET" });
+    if (existing?.length) return jsonResponse({ error: "Ya tienes una solicitud activa o aprobada. Administracion la revisara desde el panel." }, 409);
+    const rows = await supabaseRest(env, "vendor_applications", {
+      method: "POST",
+      headers: { "prefer": "return=representation" },
+      body: JSON.stringify(payload)
+    });
+    return jsonResponse({ ok: true, application: rows?.[0] || payload }, 201);
+  } catch (error) {
+    const status = /sesion/i.test(error.message || "") ? 401 : /activa|aprobada/i.test(error.message || "") ? 409 : 400;
+    return jsonResponse({ error: error.message || "No se pudo mandar la solicitud." }, status);
+  }
+}
+
+function vendorDashboardUrl(request, env) {
+  const requestUrl = new URL(request.url);
+  return requestUrl.origin + normalizeBasePath(env.BASE_PATH || "") + "/admin.html";
+}
+
+async function sendVendorApprovalEmail(request, env, application) {
+  const dashboardUrl = vendorDashboardUrl(request, env);
+  const apiKey = env.RESEND_API_KEY || "";
+  const from = env.CATALINA_EMAIL_FROM || "";
+  if (!apiKey || !from || !application?.email) return { sent: false, dashboardUrl };
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "authorization": "Bearer " + apiKey,
+      "content-type": "application/json"
+    },
+    body: JSON.stringify({
+      from,
+      to: [application.email],
+      subject: "Bienvenido al panel de vendedores Catalina",
+      html: "<p>Hola " + String(application.full_name || application.email) + ",</p><p>Tu solicitud para vender en Catalina fue aprobada.</p><p>Puedes acceder al panel de vendedor desde este enlace:</p><p><a href=\\"" + dashboardUrl + "\\">Entrar al panel de vendedor</a></p>"
+    })
+  });
+  if (!response.ok) return { sent: false, dashboardUrl };
+  return { sent: true, dashboardUrl };
+}
+
 async function reviewVendorApplication(request, env) {
   try {
     const admin = await requireAdminUser(request, env);
@@ -461,10 +546,12 @@ async function reviewVendorApplication(request, env) {
     });
 
     let vendor = null;
+    let email = { sent: false, dashboardUrl: vendorDashboardUrl(request, env) };
     if (payload.status === "Aprobado") {
       vendor = await updateUserRole(env, application.user_id, "vendor");
+      email = await sendVendorApprovalEmail(request, env, application);
     }
-    return jsonResponse({ ok: true, status: payload.status, vendor });
+    return jsonResponse({ ok: true, status: payload.status, vendor, email });
   } catch (error) {
     const status = /admin|permisos|sesion/i.test(error.message || "") ? 403 : 500;
     return jsonResponse({ error: error.message || "No se pudo revisar la solicitud." }, status);
@@ -1009,6 +1096,10 @@ export default {
 
     if (url.pathname === "/api/check-account-availability" && request.method === "POST") {
       return checkAccountAvailability(request, env || {});
+    }
+
+    if (url.pathname === "/api/vendor/apply" && request.method === "POST") {
+      return submitVendorApplication(request, env || {});
     }
 
     if (url.pathname === "/api/admin/snapshot" && request.method === "GET") {

@@ -1392,9 +1392,11 @@
       const paidNoTracking = scopedOrders.filter(order => (order.paymentStatus || "") === "Pagado" && !order.trackingCode).length;
       const processing = scopedOrders.filter(order => ["Recibido", "Preparando", "Enviado", "En ruta"].includes(order.status)).length;
       const lowStock = scopedProducts.filter(product => Number(product.stock || 0) <= Number(product.lowStockThreshold || 5)).length;
+      const pendingApplications = isCurrentAdmin() ? (state.vendorApplications || []).filter(item => ["Pendiente", "En revision"].includes(item.status || "Pendiente")).length : 0;
       if (!supabaseClient) items.push({ icon: "cloud_off", title: "Supabase no conectado", detail: "Configura las variables de entorno para sincronizar.", view: "settings", tone: "text-coral bg-coral/10" });
       if (supabaseClient && !currentUser) items.push({ icon: "lock", title: "Admin sin sesion", detail: "Entra para ver clientes, pedidos y envios.", view: "settings", tone: "text-coral bg-coral/10" });
       if (currentUser && !canUseDashboard()) items.push({ icon: "admin_panel_settings", title: "Cuenta sin permisos", detail: "Agrega app_metadata.role = admin o vendor en Supabase.", view: "settings", tone: "text-coral bg-coral/10" });
+      if (pendingApplications) items.push({ icon: "storefront", title: `${pendingApplications} solicitud de vendedor`, detail: "Evalua admisiones pendientes para vendedores.", view: "vendors", tone: "text-violet bg-violet/10" });
       if (pendingPayment) items.push({ icon: "payments", title: `${pendingPayment} pago pendiente`, detail: "Revisa pedidos sin pago confirmado.", view: "orders", tone: "text-coral bg-coral/10" });
       if (paidNoTracking) items.push({ icon: "qr_code_2", title: `${paidNoTracking} etiqueta pendiente`, detail: "Pedidos pagados sin codigo de rastreo.", view: "orders", tone: "text-violet bg-violet/10" });
       if (processing) items.push({ icon: "local_shipping", title: `${processing} pedido activo`, detail: "Pedidos en preparacion o camino.", view: "orders", tone: "text-violet bg-violet/10" });
@@ -1996,6 +1998,7 @@
                   <p class="mt-2 text-sm leading-6 text-muted">${escapeHtml(application.experience || "")}</p>
                   ${application.socialLinks ? `<p class="mt-2 text-xs font-bold text-violet">${escapeHtml(application.socialLinks)}</p>` : ""}
                   ${application.adminNotes ? `<p class="mt-3 rounded-lg bg-shell p-3 text-sm font-semibold text-muted">${escapeHtml(application.adminNotes)}</p>` : ""}
+                  ${application.vendorDashboardUrl ? `<p class="mt-3 rounded-lg bg-green/10 p-3 text-sm font-bold text-green">Panel vendedor: <a class="underline" href="${escapeHtml(application.vendorDashboardUrl)}" target="_blank" rel="noreferrer">${escapeHtml(application.vendorDashboardUrl)}</a></p>` : ""}
                 </div>
                 <div class="grid min-w-[220px] gap-2">
                   <textarea class="vendor-application-notes rounded-lg border-line text-sm" data-id="${escapeHtml(application.id)}" rows="3" placeholder="Notas internas">${escapeHtml(application.adminNotes || "")}</textarea>
@@ -2947,6 +2950,8 @@
         message: application.message || "",
         status: application.status || "Pendiente",
         adminNotes: application.admin_notes || "",
+        emailSent: Boolean(application.email_sent || application.emailSent),
+        vendorDashboardUrl: application.vendor_dashboard_url || application.vendorDashboardUrl || "",
         createdAt: application.created_at || ""
       };
     }
@@ -3030,6 +3035,8 @@
           if (orders) state.orders = orders.map(mapDatabaseOrder);
           const { data: reviews } = await supabaseClient.from("product_reviews").select("id,product_id,user_id,rating,title,comment,status,created_at").order("created_at", { ascending: false });
           if (reviews) state.reviews = reviews.map(mapDatabaseReview);
+          const { data: vendorApplications } = await supabaseClient.from("vendor_applications").select("*").order("created_at", { ascending: false });
+          if (vendorApplications) state.vendorApplications = vendorApplications.map(mapVendorApplication);
         }
         persist();
         adminLastSyncAt = Date.now();
@@ -3057,6 +3064,8 @@
         if (orders) state.orders = orders.map(mapDatabaseOrder);
         const { data: reviews } = await supabaseClient.from("product_reviews").select("id,product_id,user_id,rating,title,comment,status,created_at").order("created_at", { ascending: false });
         if (reviews) state.reviews = reviews.map(mapDatabaseReview);
+        const { data: vendorApplications } = await supabaseClient.from("vendor_applications").select("*").order("created_at", { ascending: false });
+        if (vendorApplications) state.vendorApplications = vendorApplications.map(mapVendorApplication);
       }
       persist();
       adminLastSyncAt = Date.now();
@@ -3225,13 +3234,15 @@
         if (application) {
           application.status = status;
           application.adminNotes = notes;
+          application.emailSent = Boolean(data.email?.sent);
+          application.vendorDashboardUrl = data.email?.dashboardUrl || "";
         }
         if (status === "Aprobado" && data.vendor?.id) {
           state.vendors = [mapAuthVendor(data.vendor), ...(state.vendors || []).filter(vendor => vendor.id !== data.vendor.id)];
         }
         renderVendors();
         renderVendorOptions();
-        showToast(status === "Aprobado" ? "Vendedor aprobado" : "Solicitud rechazada");
+        showToast(status === "Aprobado" ? (data.email?.sent ? "Vendedor aprobado y correo enviado" : "Vendedor aprobado. Configura RESEND_API_KEY para enviar el correo automaticamente.") : "Solicitud rechazada");
       } catch (error) {
         showToast(error.message || "No se pudo revisar la solicitud");
       }
